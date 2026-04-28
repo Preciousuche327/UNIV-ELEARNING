@@ -24,7 +24,7 @@ include __DIR__ . '/../partials/sidebar.php';
                             <th class="ps-4">Course Name</th>
                             <th>Students</th>
                             <th>Quizzes</th>
-                            <th>Price</th>
+
                             <th>Status</th>
                             <th class="pe-4">Actions</th>
                         </tr>
@@ -46,7 +46,7 @@ include __DIR__ . '/../partials/sidebar.php';
                                     <td>
                                         <span class="badge bg-soft-success"><?php echo isset($course['QuizCount']) ? $course['QuizCount'] : 0; ?></span>
                                     </td>
-                                    <td>$<?php echo number_format($course['Price'], 2); ?></td>
+
                                     <td>
                                         <span class="badge bg-success">Active</span>
                                     </td>
@@ -72,23 +72,6 @@ include __DIR__ . '/../partials/sidebar.php';
                     </tbody>
                 </table>
             </div>
-        </div>
-    </div>
-</div>
-
-<?php include __DIR__ . '/../partials/footer.php'; ?>
-                                            <li><a class="dropdown-item text-primary" href="#"><i class="bi bi-plus-circle me-2"></i> Add Content</a></li>
-                                            <li><a class="dropdown-item text-info" href="#"><i class="bi bi-patch-question me-2"></i> Add Quiz</a></li>
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-trash me-2"></i> Delete</a></li>
-                                        </ul>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
         </div>
     </div>
 </div>

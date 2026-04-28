@@ -105,13 +105,13 @@ $totalQuizzes = $stats['total_quizzes'] ?? 0;
             <div class="card-body">
                 <h5 class="card-title mb-3">Quick Actions</h5>
                 <div class="d-grid gap-2">
-                    <a href="?page=add-quiz" class="btn btn-outline-dark text-start">
+                    <a href="?page=create-quiz" class="btn btn-outline-dark text-start">
                         <i class="bi bi-plus-square me-2"></i> Create a Quiz
                     </a>
                     <a href="?page=upload-content" class="btn btn-outline-dark text-start">
                         <i class="bi bi-cloud-upload me-2"></i> Upload New Content
                     </a>
-                    <a href="?page=view-analytics" class="btn btn-outline-dark text-start">
+                    <a href="?page=course-results" class="btn btn-outline-dark text-start">
                         <i class="bi bi-bar-chart me-2"></i> View Performance
                     </a>
                 </div>

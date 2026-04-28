@@ -86,8 +86,7 @@ include __DIR__ . '/../partials/sidebar.php';
         <div class="col-lg-4 animate__animated animate__fadeInRight animate__delay-1s">
             <div class="card p-4 sticky-top border-0 shadow-sm" style="top: 20px;">
                 <div class="text-center mb-4">
-                    <h2 class="fw-bold text-primary mb-1 display-5">$<?php echo number_format($course['Price'], 2); ?></h2>
-                    <span class="badge bg-success mb-3">Lifetime Access</span>
+                    <span class="badge bg-success mb-3">Free Course</span>
                 </div>
                 
                 <?php if ($is_enrolled): ?>

@@ -120,6 +120,10 @@ switch ($page) {
         $instructor->addQuestion();
         break;
 
+    case 'upload-content':
+        $instructor->uploadContent();
+        break;
+
     case 'course-results':
         $instructor->courseResults();
         break;

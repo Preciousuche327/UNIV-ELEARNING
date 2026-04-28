@@ -19,7 +19,7 @@ include __DIR__ . '/../partials/sidebar.php';
                             <th class="ps-4">Course Name</th>
                             <th>Instructor</th>
                             <th>Students Enrolled</th>
-                            <th>Price</th>
+
                             <th>Quizzes</th>
                             <th class="pe-4">Created Date</th>
                         </tr>
@@ -39,7 +39,7 @@ include __DIR__ . '/../partials/sidebar.php';
                                     <td>
                                         <span class="badge bg-soft-primary"><?php echo $course['EnrollmentCount']; ?></span>
                                     </td>
-                                    <td>$<?php echo number_format($course['Price'], 2); ?></td>
+
                                     <td>
                                         <span class="badge bg-soft-info">0</span>
                                     </td>

@@ -48,11 +48,9 @@ class InstructorController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $course_name = $_POST['course_name'] ?? '';
             $description = $_POST['description'] ?? '';
-            $price = $_POST['price'] ?? 0;
-
             if (!empty($course_name)) {
-                $stmt = $this->pdo->prepare("INSERT INTO courses (CourseName, Description, Price) VALUES (?, ?, ?)");
-                $stmt->execute([$course_name, $description, $price]);
+                $stmt = $this->pdo->prepare("INSERT INTO courses (CourseName, Description) VALUES (?, ?)");
+                $stmt->execute([$course_name, $description]);
 
                 $course_id = $this->pdo->lastInsertId();
 
@@ -114,10 +112,8 @@ class InstructorController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $course_name = $_POST['course_name'] ?? '';
             $description = $_POST['description'] ?? '';
-            $price = $_POST['price'] ?? 0;
-
-            $stmt = $this->pdo->prepare("UPDATE courses SET CourseName = ?, Description = ?, Price = ? WHERE CourseID = ?");
-            $stmt->execute([$course_name, $description, $price, $course_id]);
+            $stmt = $this->pdo->prepare("UPDATE courses SET CourseName = ?, Description = ? WHERE CourseID = ?");
+            $stmt->execute([$course_name, $description, $course_id]);
 
             header("Location: index.php?page=manage-courses");
             exit;
@@ -288,6 +284,41 @@ class InstructorController {
         $results = $stmt->fetchAll();
 
         require '../app/views/instructor/course_results.php';
+    }
+
+    // Upload content
+    public function uploadContent() {
+        if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'Instructor') {
+            header("Location: index.php?page=login");
+            exit;
+        }
+
+        $instructor_id = $_SESSION['user_id'];
+
+        // Get instructor's courses
+        $stmt = $this->pdo->prepare("SELECT c.* FROM courses c 
+                                     JOIN instructor_courses ic ON c.CourseID = ic.CourseID 
+                                     WHERE ic.InstructorID = ? 
+                                     ORDER BY c.CourseName");
+        $stmt->execute([$instructor_id]);
+        $courses = $stmt->fetchAll();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $course_id = $_POST['course_id'] ?? null;
+            $title = $_POST['content_title'] ?? '';
+            $type = $_POST['content_type'] ?? 'Text';
+            $url = $_POST['content_url'] ?? '';
+
+            if ($course_id && !empty($title)) {
+                $stmt = $this->pdo->prepare("INSERT INTO course_contents (CourseID, ContentType, ContentTitle, ContentURL) VALUES (?, ?, ?, ?)");
+                $stmt->execute([$course_id, $type, $title, $url]);
+
+                header("Location: index.php?page=manage-courses");
+                exit;
+            }
+        }
+
+        require '../app/views/instructor/upload_content.php';
     }
 
     // Helper methods

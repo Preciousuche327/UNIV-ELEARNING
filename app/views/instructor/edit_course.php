@@ -30,10 +30,7 @@ include __DIR__ . '/../partials/sidebar.php';
                             <textarea class="form-control" id="description" name="description" rows="5"><?php echo htmlspecialchars($course['Description']); ?></textarea>
                         </div>
 
-                        <div class="mb-4">
-                            <label for="price" class="form-label fw-bold">Price ($)</label>
-                            <input type="number" class="form-control" id="price" name="price" value="<?php echo $course['Price']; ?>" step="0.01" min="0">
-                        </div>
+
 
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary btn-lg">
