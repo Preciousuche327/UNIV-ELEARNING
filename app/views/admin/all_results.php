@@ -82,18 +82,4 @@ include __DIR__ . '/../partials/sidebar.php';
 </div>
 
 <?php include __DIR__ . '/../partials/footer.php'; ?>
-                                        <span class="badge bg-soft-danger px-3 py-1">Fail</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td class="pe-4 text-muted small"><?php echo date('M d, Y', strtotime($result['SubmittedAt'])); ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<?php include __DIR__ . '/../partials/footer.php'; ?>
 

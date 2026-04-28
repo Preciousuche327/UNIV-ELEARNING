@@ -3,6 +3,8 @@ require_once 'config/config.php';
 require_once 'app/controllers/AuthController.php';
 require_once 'app/controllers/CourseController.php';
 require_once 'app/controllers/QuizController.php';
+require_once 'app/controllers/AdminController.php';
+require_once 'app/controllers/InstructorController.php';
 
 // Route handling
 $page = $_GET['page'] ?? 'dashboard';
@@ -11,6 +13,8 @@ $page = $_GET['page'] ?? 'dashboard';
 $auth = new AuthController($pdo);
 $courseCtrl = new CourseController($pdo);
 $quizCtrl = new QuizController($pdo);
+$adminCtrl = new AdminController($pdo);
+$instructorCtrl = new InstructorController($pdo);
 
 // Simple Router
 switch ($page) {
@@ -31,23 +35,23 @@ switch ($page) {
         
         $user_type = $_SESSION['user_type'];
         if ($user_type === 'Admin') {
-            include 'app/views/admin/dashboard.php';
+            $adminCtrl->dashboard();
         } elseif ($user_type === 'Instructor') {
-            include 'app/views/instructor/dashboard.php';
+            $instructorCtrl->dashboard();
         } else {
-            include 'app/views/student/dashboard.php';
+            $courseCtrl->dashboard();
         }
         break;
 
     case 'courses':
         if (!isLoggedIn()) redirect('?page=login');
-        $courseCtrl->index();
+        $courseCtrl->courses();
         break;
 
     case 'course-details':
         if (!isLoggedIn()) redirect('?page=login');
         $courseId = $_GET['id'] ?? null;
-        if ($courseId) $courseCtrl->view($courseId);
+        if ($courseId) $courseCtrl->courseDetails($courseId);
         break;
 
     case 'enroll':
@@ -61,19 +65,20 @@ switch ($page) {
         break;
 
     case 'manage-courses':
+    case 'my-courses': // Alias for instructor
         if (!isLoggedIn()) redirect('?page=login');
-        $courseCtrl->manageCourses();
+        $instructorCtrl->manageCourses();
         break;
 
     case 'create-course':
         if (!isLoggedIn()) redirect('?page=login');
-        $courseCtrl->create();
+        $instructorCtrl->createCourse();
         break;
 
     case 'take-quiz':
         if (!isLoggedIn()) redirect('?page=login');
         $quizId = $_GET['id'] ?? null;
-        if ($quizId) $quizCtrl->take($quizId);
+        if ($quizId) $quizCtrl->takeQuiz($quizId);
         break;
 
     case 'my-results':
@@ -83,12 +88,68 @@ switch ($page) {
 
     case 'all-results':
         if (!isLoggedIn()) redirect('?page=login');
-        $quizCtrl->allResults();
+        $adminCtrl->allResults();
         break;
 
-    case 'student-results': // Alias for instructor view
+    case 'admin-users':
+    case 'manage-users': // Alias
         if (!isLoggedIn()) redirect('?page=login');
-        $quizCtrl->allResults();
+        $adminCtrl->users();
+        break;
+
+    case 'admin-edit-user':
+        if (!isLoggedIn()) redirect('?page=login');
+        $adminCtrl->editUser();
+        break;
+
+    case 'admin-delete-user':
+        if (!isLoggedIn()) redirect('?page=login');
+        $adminCtrl->deleteUser();
+        break;
+
+    case 'admin-courses':
+        if (!isLoggedIn()) redirect('?page=login');
+        $adminCtrl->courses();
+        break;
+
+    case 'course-results':
+        if (!isLoggedIn()) redirect('?page=login');
+        $instructorCtrl->courseResults();
+        break;
+
+    case 'student-results':
+        if (!isLoggedIn()) redirect('?page=login');
+        $instructorCtrl->courseResults(); // Instructors should see their own course results
+        break;
+
+    case 'create-quiz':
+        if (!isLoggedIn()) redirect('?page=login');
+        $instructorCtrl->createQuiz();
+        break;
+
+    case 'manage-quiz':
+        if (!isLoggedIn()) redirect('?page=login');
+        $instructorCtrl->manageQuiz();
+        break;
+
+    case 'upload-content':
+        if (!isLoggedIn()) redirect('?page=login');
+        $instructorCtrl->uploadContent();
+        break;
+
+    case 'edit-course':
+        if (!isLoggedIn()) redirect('?page=login');
+        $instructorCtrl->editCourse();
+        break;
+
+    case 'delete-course':
+        if (!isLoggedIn()) redirect('?page=login');
+        $instructorCtrl->deleteCourse();
+        break;
+
+    case 'add-question':
+        if (!isLoggedIn()) redirect('?page=login');
+        $instructorCtrl->addQuestion();
         break;
 
     default:

@@ -26,7 +26,7 @@ class AdminController {
             'total_quizzes' => $this->getTotalQuizzes(),
         ];
 
-        require '../app/views/admin/dashboard.php';
+        require __DIR__ . '/../views/admin/dashboard.php';
     }
 
     // View all users
@@ -59,7 +59,7 @@ class AdminController {
         $stmt->execute($params);
         $users = $stmt->fetchAll();
 
-        require '../app/views/admin/users.php';
+        require __DIR__ . '/../views/admin/users.php';
     }
 
     // Edit user type
@@ -85,7 +85,7 @@ class AdminController {
         $stmt->execute([$user_id]);
         $user = $stmt->fetch();
 
-        require '../app/views/admin/edit_user.php';
+        require __DIR__ . '/../views/admin/edit_user.php';
     }
 
     // Delete user
@@ -118,7 +118,7 @@ class AdminController {
                                    GROUP BY c.CourseID ORDER BY c.CreatedAt DESC");
         $courses = $stmt->fetchAll();
 
-        require '../app/views/admin/courses.php';
+        require __DIR__ . '/../views/admin/courses.php';
     }
 
     // View all results
@@ -152,7 +152,7 @@ class AdminController {
         $stmt = $this->pdo->query("SELECT * FROM courses ORDER BY CourseName");
         $courses = $stmt->fetchAll();
 
-        require '../app/views/admin/all_results.php';
+        require __DIR__ . '/../views/admin/all_results.php';
     }
 
     // Helper methods

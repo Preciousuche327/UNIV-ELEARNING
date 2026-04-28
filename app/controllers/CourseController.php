@@ -38,7 +38,7 @@ class CourseController {
         // Pass pdo to view for additional queries
         $pdo = $this->pdo;
 
-        require '../app/views/student/dashboard.php';
+        require __DIR__ . '/../views/student/dashboard.php';
     }
 
     public function courses() {
@@ -82,7 +82,7 @@ class CourseController {
         $stmt->execute($params);
         $courses = $stmt->fetchAll();
 
-        require '../app/views/student/courses.php';
+        require __DIR__ . '/../views/student/courses.php';
     }
 
     public function courseDetails() {
@@ -123,7 +123,7 @@ class CourseController {
         $stmt->execute([$course_id]);
         $quizzes = $stmt->fetchAll();
 
-        require '../app/views/student/course_details.php';
+        require __DIR__ . '/../views/student/course_details.php';
     }
 
     public function myEnrollments() {
@@ -142,7 +142,7 @@ class CourseController {
         $stmt->execute([$user_id]);
         $enrollments = $stmt->fetchAll();
 
-        require '../app/views/student/my_enrollments.php';
+        require __DIR__ . '/../views/student/my_enrollments.php';
     }
 
     public function myResults() {
@@ -162,7 +162,7 @@ class CourseController {
         $stmt->execute([$user_id]);
         $results = $stmt->fetchAll();
 
-        require '../app/views/student/results.php';
+        require __DIR__ . '/../views/student/results.php';
     }
 
     public function enroll() {

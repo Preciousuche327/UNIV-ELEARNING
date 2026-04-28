@@ -30,7 +30,7 @@ class AuthController {
             }
         }
 
-        require '../app/views/auth/login.php';
+        require __DIR__ . '/../views/auth/login.php';
     }
 
     public function register() {
@@ -91,7 +91,7 @@ class AuthController {
             }
         }
 
-        require '../app/views/auth/register.php';
+        require __DIR__ . '/../views/auth/register.php';
     }
 
     public function logout() {

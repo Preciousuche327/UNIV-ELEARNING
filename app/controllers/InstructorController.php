@@ -35,7 +35,7 @@ class InstructorController {
             'total_quizzes' => $this->getTotalQuizzes($instructor_id),
         ];
 
-        require '../app/views/instructor/dashboard.php';
+        require __DIR__ . '/../views/instructor/dashboard.php';
     }
 
     // Create new course
@@ -63,7 +63,7 @@ class InstructorController {
             }
         }
 
-        require '../app/views/instructor/create_course.php';
+        require __DIR__ . '/../views/instructor/create_course.php';
     }
 
     // Manage courses
@@ -84,7 +84,7 @@ class InstructorController {
         $stmt->execute([$instructor_id]);
         $courses = $stmt->fetchAll();
 
-        require '../app/views/instructor/manage_courses.php';
+        require __DIR__ . '/../views/instructor/manage_courses.php';
     }
 
     // Edit course
@@ -119,7 +119,7 @@ class InstructorController {
             exit;
         }
 
-        require '../app/views/instructor/edit_course.php';
+        require __DIR__ . '/../views/instructor/edit_course.php';
     }
 
     // Delete course
@@ -177,7 +177,7 @@ class InstructorController {
             exit;
         }
 
-        require '../app/views/instructor/create_quiz.php';
+        require __DIR__ . '/../views/instructor/create_quiz.php';
     }
 
     // Manage quiz questions
@@ -215,7 +215,7 @@ class InstructorController {
             $questions[$key]['options'] = $stmt->fetchAll();
         }
 
-        require '../app/views/instructor/manage_quiz.php';
+        require __DIR__ . '/../views/instructor/manage_quiz.php';
     }
 
     // Add question to quiz
@@ -252,7 +252,6 @@ class InstructorController {
         exit;
     }
 
-    // View course results
     public function courseResults() {
         if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'Instructor') {
             header("Location: index.php?page=login");
@@ -262,28 +261,44 @@ class InstructorController {
         $course_id = $_GET['id'] ?? null;
         $instructor_id = $_SESSION['user_id'];
 
-        // Verify course belongs to instructor
-        $stmt = $this->pdo->prepare("SELECT c.* FROM courses c 
-                                     JOIN instructor_courses ic ON c.CourseID = ic.CourseID 
-                                     WHERE c.CourseID = ? AND ic.InstructorID = ?");
-        $stmt->execute([$course_id, $instructor_id]);
-        $course = $stmt->fetch();
+        if ($course_id) {
+            // Verify course belongs to instructor
+            $stmt = $this->pdo->prepare("SELECT c.* FROM courses c 
+                                         JOIN instructor_courses ic ON c.CourseID = ic.CourseID 
+                                         WHERE c.CourseID = ? AND ic.InstructorID = ?");
+            $stmt->execute([$course_id, $instructor_id]);
+            $course = $stmt->fetch();
 
-        if (!$course) {
-            header("Location: index.php?page=dashboard");
-            exit;
+            if (!$course) {
+                header("Location: index.php?page=dashboard");
+                exit;
+            }
+
+            // Get results for this course
+            $stmt = $this->pdo->prepare("SELECT r.*, u.Username, q.QuizName, q.TotalMarks, c.CourseName FROM results r 
+                                         JOIN users u ON r.UserID = u.UserID 
+                                         JOIN quizzes q ON r.QuizID = q.QuizID 
+                                         JOIN courses c ON r.CourseID = c.CourseID
+                                         WHERE r.CourseID = ? 
+                                         ORDER BY r.SubmittedAt DESC");
+            $stmt->execute([$course_id]);
+            $results = $stmt->fetchAll();
+            $page_title = "Results for " . $course['CourseName'];
+        } else {
+            // Get results for ALL instructor's courses
+            $stmt = $this->pdo->prepare("SELECT r.*, u.Username, q.QuizName, q.TotalMarks, c.CourseName FROM results r 
+                                         JOIN users u ON r.UserID = u.UserID 
+                                         JOIN quizzes q ON r.QuizID = q.QuizID 
+                                         JOIN courses c ON r.CourseID = c.CourseID
+                                         JOIN instructor_courses ic ON c.CourseID = ic.CourseID
+                                         WHERE ic.InstructorID = ? 
+                                         ORDER BY r.SubmittedAt DESC");
+            $stmt->execute([$instructor_id]);
+            $results = $stmt->fetchAll();
+            $page_title = "All Course Performance";
         }
 
-        // Get results for this course
-        $stmt = $this->pdo->prepare("SELECT r.*, u.Username, q.QuizName FROM results r 
-                                     JOIN users u ON r.UserID = u.UserID 
-                                     JOIN quizzes q ON r.QuizID = q.QuizID 
-                                     WHERE r.CourseID = ? 
-                                     ORDER BY r.SubmittedAt DESC");
-        $stmt->execute([$course_id]);
-        $results = $stmt->fetchAll();
-
-        require '../app/views/instructor/course_results.php';
+        require __DIR__ . '/../views/instructor/course_results.php';
     }
 
     // Upload content
@@ -318,7 +333,7 @@ class InstructorController {
             }
         }
 
-        require '../app/views/instructor/upload_content.php';
+        require __DIR__ . '/../views/instructor/upload_content.php';
     }
 
     // Helper methods

@@ -84,7 +84,7 @@ class QuizController {
             $questions[$key]['user_answer'] = $stmt->fetch();
         }
 
-        require '../app/views/student/take_quiz.php';
+        require __DIR__ . '/../views/student/take_quiz.php';
     }
 
     private function submitQuiz($user_id, $quiz_id) {
@@ -129,7 +129,7 @@ class QuizController {
         $stmt->execute([$user_id]);
         $results = $stmt->fetchAll();
 
-        require '../app/views/student/results.php';
+        require __DIR__ . '/../views/student/results.php';
     }
 
     public function quizDetail() {
@@ -172,6 +172,6 @@ class QuizController {
             $questions[$key]['options'] = $stmt->fetchAll();
         }
 
-        require '../app/views/student/quiz_detail.php';
+        require __DIR__ . '/../views/student/quiz_detail.php';
     }
 }
