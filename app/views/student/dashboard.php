@@ -1,12 +1,24 @@
 <?php
 // app/views/student/dashboard.php
-include 'app/views/partials/header.php';
-include 'app/views/partials/sidebar.php';
+include __DIR__ . '/../partials/header.php';
+include __DIR__ . '/../partials/sidebar.php';
 
-// Fetch some stats (dummy for now, real queries later)
-$enrolledCourses = 3;
-$completedCourses = 1;
-$averageScore = "85%";
+// Calculate completed courses
+$completed_count = 0;
+foreach ($enrolled_courses as $course) {
+    if ($course['CompletionStatus'] === 'Completed') {
+        $completed_count++;
+    }
+}
+
+// Calculate average score from results
+$average_score = 0;
+if ($completed_quizzes > 0) {
+    $stmt = $pdo->prepare("SELECT AVG(Score) as avg_score FROM results WHERE UserID = ?");
+    $stmt->execute([$_SESSION['user_id']]);
+    $score_data = $stmt->fetch();
+    $average_score = $score_data['avg_score'] ? round($score_data['avg_score'], 2) : 0;
+}
 ?>
 
 <div class="row g-4 mb-4">
@@ -18,7 +30,7 @@ $averageScore = "85%";
                 </div>
                 <div>
                     <h6 class="text-muted mb-0">Enrolled Courses</h6>
-                    <h3 class="mb-0 fw-bold"><?php echo $enrolledCourses; ?></h3>
+                    <h3 class="mb-0 fw-bold"><?php echo $enrolled_count; ?></h3>
                 </div>
             </div>
         </div>
@@ -31,7 +43,7 @@ $averageScore = "85%";
                 </div>
                 <div>
                     <h6 class="text-muted mb-0">Completed</h6>
-                    <h3 class="mb-0 fw-bold"><?php echo $completedCourses; ?></h3>
+                    <h3 class="mb-0 fw-bold"><?php echo $completed_count; ?></h3>
                 </div>
             </div>
         </div>
@@ -44,7 +56,7 @@ $averageScore = "85%";
                 </div>
                 <div>
                     <h6 class="text-muted mb-0">Average Score</h6>
-                    <h3 class="mb-0 fw-bold"><?php echo $averageScore; ?></h3>
+                    <h3 class="mb-0 fw-bold"><?php echo $average_score; ?>%</h3>
                 </div>
             </div>
         </div>
@@ -70,41 +82,41 @@ $averageScore = "85%";
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- Mock Data -->
-                            <tr>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="p-2 bg-light rounded me-2">
-                                            <i class="bi bi-code-slash text-primary"></i>
-                                        </div>
-                                        <span>Introduction to PHP</span>
-                                    </div>
-                                </td>
-                                <td style="width: 200px;">
-                                    <div class="progress" style="height: 6px;">
-                                        <div class="progress-bar bg-primary" style="width: 75%"></div>
-                                    </div>
-                                </td>
-                                <td><span class="badge bg-soft-primary px-2 py-1">In Progress</span></td>
-                                <td><a href="#" class="btn btn-sm btn-light">Continue</a></td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="p-2 bg-light rounded me-2">
-                                            <i class="bi bi-database text-success"></i>
-                                        </div>
-                                        <span>MySQL Fundamentals</span>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="progress" style="height: 6px;">
-                                        <div class="progress-bar bg-success" style="width: 100%"></div>
-                                    </div>
-                                </td>
-                                <td><span class="badge bg-soft-success px-2 py-1">Completed</span></td>
-                                <td><a href="#" class="btn btn-sm btn-light">Review</a></td>
-                            </tr>
+                            <?php if (!empty($enrolled_courses)): ?>
+                                <?php foreach (array_slice($enrolled_courses, 0, 5) as $course): ?>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="p-2 bg-light rounded me-2">
+                                                    <i class="bi bi-book text-primary"></i>
+                                                </div>
+                                                <span><?php echo htmlspecialchars($course['CourseName']); ?></span>
+                                            </div>
+                                        </td>
+                                        <td style="width: 200px;">
+                                            <div class="progress" style="height: 6px;">
+                                                <div class="progress-bar bg-primary" style="width: 50%"></div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <?php 
+                                            $badge_class = ($course['CompletionStatus'] === 'Completed') ? 'bg-soft-success' : 'bg-soft-primary';
+                                            $badge_text = ($course['CompletionStatus'] === 'Completed') ? 'Completed' : 'In Progress';
+                                            ?>
+                                            <span class="badge <?php echo $badge_class; ?> px-2 py-1"><?php echo $badge_text; ?></span>
+                                        </td>
+                                        <td>
+                                            <a href="?page=course-details&id=<?php echo $course['CourseID']; ?>" class="btn btn-sm btn-light">View</a>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">
+                                        No courses enrolled yet. <a href="?page=courses">Browse courses</a>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
@@ -123,4 +135,5 @@ $averageScore = "85%";
     </div>
 </div>
 
-<?php include 'app/views/partials/footer.php'; ?>
+<?php include __DIR__ . '/../partials/footer.php'; ?>
+

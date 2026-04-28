@@ -16,7 +16,6 @@ CREATE TABLE IF NOT EXISTS courses (
     CourseID INT AUTO_INCREMENT PRIMARY KEY,
     CourseName VARCHAR(100) NOT NULL,
     Description TEXT,
-    Price DECIMAL(10, 2) DEFAULT 0.00,
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
@@ -62,6 +61,76 @@ CREATE TABLE IF NOT EXISTS results (
     FOREIGN KEY (UserID) REFERENCES users(UserID) ON DELETE CASCADE,
     FOREIGN KEY (CourseID) REFERENCES courses(CourseID) ON DELETE CASCADE,
     FOREIGN KEY (QuizID) REFERENCES quizzes(QuizID) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Table 7: Questions
+CREATE TABLE IF NOT EXISTS questions (
+    QuestionID INT AUTO_INCREMENT PRIMARY KEY,
+    QuizID INT NOT NULL,
+    QuestionText TEXT NOT NULL,
+    QuestionType ENUM('Multiple Choice', 'True/False', 'Short Answer') DEFAULT 'Multiple Choice',
+    Marks INT DEFAULT 1,
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (QuizID) REFERENCES quizzes(QuizID) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Table 8: Question Options (for Multiple Choice)
+CREATE TABLE IF NOT EXISTS question_options (
+    OptionID INT AUTO_INCREMENT PRIMARY KEY,
+    QuestionID INT NOT NULL,
+    OptionText TEXT NOT NULL,
+    IsCorrect BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (QuestionID) REFERENCES questions(QuestionID) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Table 9: User Answers (track student responses)
+CREATE TABLE IF NOT EXISTS user_answers (
+    AnswerID INT AUTO_INCREMENT PRIMARY KEY,
+    UserID INT NOT NULL,
+    QuestionID INT NOT NULL,
+    SelectedOptionID INT,
+    AnswerText TEXT,
+    IsCorrect BOOLEAN,
+    SubmittedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (UserID) REFERENCES users(UserID) ON DELETE CASCADE,
+    FOREIGN KEY (QuestionID) REFERENCES questions(QuestionID) ON DELETE CASCADE,
+    FOREIGN KEY (SelectedOptionID) REFERENCES question_options(OptionID) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- Table 10: Quiz Attempts (track quiz submissions)
+CREATE TABLE IF NOT EXISTS quiz_attempts (
+    AttemptID INT AUTO_INCREMENT PRIMARY KEY,
+    UserID INT NOT NULL,
+    QuizID INT NOT NULL,
+    StartedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    SubmittedAt TIMESTAMP NULL DEFAULT NULL,
+    Score INT,
+    Status ENUM('In Progress', 'Submitted', 'Graded') DEFAULT 'In Progress',
+    FOREIGN KEY (UserID) REFERENCES users(UserID) ON DELETE CASCADE,
+    FOREIGN KEY (QuizID) REFERENCES quizzes(QuizID) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Table 11: Instructor Courses
+CREATE TABLE IF NOT EXISTS instructor_courses (
+    InstructorCourseID INT AUTO_INCREMENT PRIMARY KEY,
+    InstructorID INT NOT NULL,
+    CourseID INT NOT NULL,
+    AssignedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_instructor_course (InstructorID, CourseID),
+    FOREIGN KEY (InstructorID) REFERENCES users(UserID) ON DELETE CASCADE,
+    FOREIGN KEY (CourseID) REFERENCES courses(CourseID) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Table 12: Course Progress Tracking
+CREATE TABLE IF NOT EXISTS course_progress (
+    ProgressID INT AUTO_INCREMENT PRIMARY KEY,
+    UserID INT NOT NULL,
+    CourseID INT NOT NULL,
+    CompletedLessons INT DEFAULT 0,
+    TotalLessons INT DEFAULT 0,
+    LastAccessedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (UserID) REFERENCES users(UserID) ON DELETE CASCADE,
+    FOREIGN KEY (CourseID) REFERENCES courses(CourseID) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- Seed Admin User (password: admin123)

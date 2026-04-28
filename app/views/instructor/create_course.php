@@ -1,7 +1,7 @@
 <?php
 // app/views/instructor/create_course.php
-include 'app/views/partials/header.php';
-include 'app/views/partials/sidebar.php';
+include __DIR__ . '/../partials/header.php';
+include __DIR__ . '/../partials/sidebar.php';
 ?>
 
 <div class="mb-4">
@@ -15,24 +15,13 @@ include 'app/views/partials/sidebar.php';
             <form method="POST">
                 <div class="mb-4">
                     <label class="form-label fw-bold">Course Title</label>
-                    <input type="text" name="name" class="form-control form-control-lg" required placeholder="e.g. Advanced PHP and MySQL Mastery">
+                    <input type="text" name="course_name" class="form-control form-control-lg" required placeholder="e.g. Advanced PHP and MySQL Mastery">
                     <div class="form-text">Choose a descriptive name that invites students to learn.</div>
                 </div>
 
                 <div class="mb-4">
                     <label class="form-label fw-bold">Description</label>
                     <textarea name="description" class="form-control" rows="6" required placeholder="Describe what the course covers, who it's for, and what students will achieve..."></textarea>
-                </div>
-
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Price ($)</label>
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            <input type="number" step="0.01" name="price" class="form-control" required placeholder="0.00">
-                        </div>
-                        <div class="form-text">Set it to 0.00 for a free course.</div>
-                    </div>
                 </div>
 
                 <div class="d-flex gap-2">
@@ -54,4 +43,5 @@ include 'app/views/partials/sidebar.php';
     </div>
 </div>
 
-<?php include 'app/views/partials/footer.php'; ?>
+<?php include __DIR__ . '/../partials/footer.php'; ?>
+

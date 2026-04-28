@@ -46,7 +46,7 @@ class Course {
 
     public function getCourseContent($courseId) {
         $stmt = $this->pdo->prepare("SELECT * FROM course_contents WHERE CourseID = ?");
-        $stmt->execute([courseId]);
+        $stmt->execute([$courseId]);
         return $stmt->fetchAll();
     }
 }

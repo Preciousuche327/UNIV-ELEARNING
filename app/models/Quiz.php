@@ -48,5 +48,33 @@ class Quiz {
         ");
         return $stmt->fetchAll();
     }
+
+    public function getQuestionsByQuiz($quizId) {
+        $stmt = $this->pdo->prepare("SELECT * FROM questions WHERE QuizID = ? ORDER BY QuestionID");
+        $stmt->execute([$quizId]);
+        return $stmt->fetchAll();
+    }
+
+    public function getOptionsByQuestion($questionId) {
+        $stmt = $this->pdo->prepare("SELECT * FROM question_options WHERE QuestionID = ? ORDER BY OptionID");
+        $stmt->execute([$questionId]);
+        return $stmt->fetchAll();
+    }
+
+    public function getOptionById($optionId) {
+        $stmt = $this->pdo->prepare("SELECT * FROM question_options WHERE OptionID = ?");
+        $stmt->execute([$optionId]);
+        return $stmt->fetch();
+    }
+
+    public function saveUserAnswer($userId, $quizId, $questionId, $selectedOptionId, $isCorrect, $pointsEarned) {
+        $stmt = $this->pdo->prepare("INSERT INTO user_answers (UserID, QuizID, QuestionID, SelectedOptionID, IsCorrect, PointsEarned) VALUES (?, ?, ?, ?, ?, ?)");
+        return $stmt->execute([$userId, $quizId, $questionId, $selectedOptionId, $isCorrect, $pointsEarned]);
+    }
+
+    public function logQuizAttempt($userId, $quizId, $score, $status = 'Graded') {
+        $stmt = $this->pdo->prepare("INSERT INTO quiz_attempts (UserID, QuizID, Score, Status, SubmittedAt) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)");
+        return $stmt->execute([$userId, $quizId, $score, $status]);
+    }
 }
 ?>
