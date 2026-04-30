@@ -28,8 +28,8 @@ include __DIR__ . '/../partials/sidebar.php';
                     <div class="d-flex justify-content-between align-items-center position-relative" style="z-index: 1;">
                         <div>
                             <span class="badge bg-white text-primary mb-3 px-3 py-2 rounded-pill shadow-sm">Assessment</span>
-                            <h2 class="fw-bold mb-2"><?php echo htmlspecialchars($quiz['QuizName'] ?? 'Quiz'); ?></h2>
-                            <p class="mb-0 text-white-50"><i class="bi bi-info-circle me-1"></i> <?php echo htmlspecialchars($quiz['Description'] ?? 'Please answer all questions carefully.'); ?></p>
+                            <h2 class="fw-bold mb-2"><?php echo htmlspecialchars(($quiz && isset($quiz['QuizName'])) ? $quiz['QuizName'] : 'Quiz'); ?></h2>
+                            <p class="mb-0 text-white-50"><i class="bi bi-info-circle me-1"></i> <?php echo htmlspecialchars(($quiz && isset($quiz['Description'])) ? $quiz['Description'] : 'Please answer all questions carefully.'); ?></p>
                         </div>
                         <div class="text-end bg-white bg-opacity-25 rounded-3 p-3 backdrop-blur shadow-sm">
                             <h4 class="text-white mb-1 fw-bold"><?php echo isset($quiz['TotalMarks']) ? $quiz['TotalMarks'] : '100'; ?> <small class="fw-normal fs-6">Pts</small></h4>
@@ -72,13 +72,13 @@ include __DIR__ . '/../partials/sidebar.php';
                                         <?php if (isset($question['QuestionType']) && $question['QuestionType'] === 'Multiple Choice'): ?>
                                             <?php if(isset($question['options'])): ?>
                                                 <?php foreach ($question['options'] as $oindex => $option): ?>
-                                                    <label class="quiz-option w-100 <?php echo (isset($question['user_answer']) && $question['user_answer']['SelectedOptionID'] == $option['OptionID']) ? 'selected' : ''; ?>" for="option_<?php echo $option['OptionID']; ?>">
+                                                    <label class="quiz-option w-100 <?php echo (!empty($question['user_answer']) && is_array($question['user_answer']) && $question['user_answer']['SelectedOptionID'] == $option['OptionID']) ? 'selected' : ''; ?>" for="option_<?php echo $option['OptionID']; ?>">
                                                         <input type="radio" 
                                                                name="answer_<?php echo $question['QuestionID']; ?>" 
                                                                id="option_<?php echo $option['OptionID']; ?>"
                                                                value="<?php echo $option['OptionID']; ?>"
                                                                required
-                                                               <?php echo (isset($question['user_answer']) && $question['user_answer']['SelectedOptionID'] == $option['OptionID']) ? 'checked' : ''; ?>>
+                                                               <?php echo (!empty($question['user_answer']) && is_array($question['user_answer']) && $question['user_answer']['SelectedOptionID'] == $option['OptionID']) ? 'checked' : ''; ?>>
                                                         <span class="fs-6 text-dark fw-medium"><?php echo htmlspecialchars($option['OptionText']); ?></span>
                                                     </label>
                                                 <?php endforeach; ?>

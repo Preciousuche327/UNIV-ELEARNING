@@ -19,7 +19,7 @@ include __DIR__ . '/../partials/sidebar.php';
                 </div>
 
                 <div class="card-body p-4">
-                    <?php if (isset($user)): ?>
+                    <?php if (!empty($user) && is_array($user)): ?>
                         <form method="POST">
                             <input type="hidden" name="user_id" value="<?php echo $user['UserID']; ?>">
 

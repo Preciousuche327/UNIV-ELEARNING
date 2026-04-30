@@ -92,7 +92,7 @@ class QuizController {
         $stmt = $this->pdo->prepare("SELECT SUM(q.Marks) as total_marks FROM questions q WHERE q.QuizID = ?");
         $stmt->execute([$quiz_id]);
         $result = $stmt->fetch();
-        $total_marks = $result['total_marks'] ?? 0;
+        $total_marks = ($result && isset($result['total_marks'])) ? $result['total_marks'] : 0;
 
         // Count correct answers
         $stmt = $this->pdo->prepare("SELECT SUM(q.Marks) as score FROM user_answers ua 
@@ -100,12 +100,13 @@ class QuizController {
                                      WHERE ua.UserID = ? AND q.QuizID = ? AND ua.IsCorrect = 1");
         $stmt->execute([$user_id, $quiz_id]);
         $result = $stmt->fetch();
-        $score = $result['score'] ?? 0;
+        $score = ($result && isset($result['score'])) ? $result['score'] : 0;
 
         // Get course ID
         $stmt = $this->pdo->prepare("SELECT CourseID FROM quizzes WHERE QuizID = ?");
         $stmt->execute([$quiz_id]);
-        $course_id = $stmt->fetch()['CourseID'];
+        $quiz_data = $stmt->fetch();
+        $course_id = $quiz_data ? $quiz_data['CourseID'] : null;
 
         // Save result
         $stmt = $this->pdo->prepare("INSERT INTO results (UserID, CourseID, QuizID, Score) VALUES (?, ?, ?, ?)");

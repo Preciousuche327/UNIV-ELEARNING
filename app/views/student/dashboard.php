@@ -17,7 +17,7 @@ if ($completed_quizzes > 0) {
     $stmt = $pdo->prepare("SELECT AVG(Score) as avg_score FROM results WHERE UserID = ?");
     $stmt->execute([$_SESSION['user_id']]);
     $score_data = $stmt->fetch();
-    $average_score = $score_data['avg_score'] ? round($score_data['avg_score'], 2) : 0;
+    $average_score = ($score_data && isset($score_data['avg_score'])) ? round($score_data['avg_score'], 2) : 0;
 }
 ?>
 
