@@ -79,14 +79,6 @@
                             <div class="invalid-feedback">Password confirmation is required.</div>
                         </div>
 
-                        <div class="form-check mb-4">
-                            <input class="form-check-input" type="checkbox" id="termsCheck" required>
-                            <label class="form-check-label text-muted small" for="termsCheck">
-                                I agree to the <a href="#" class="text-primary">Terms of Service</a> and <a href="#" class="text-primary">Privacy Policy</a>
-                            </label>
-                            <div class="invalid-feedback">You must agree before registering.</div>
-                        </div>
-
                         <button type="submit" class="btn btn-primary w-100 py-3 mb-3 fw-bold shadow-sm rounded-3 fs-5 position-relative overflow-hidden group">
                             <span class="position-relative z-1">Create Account</span>
                         </button>
