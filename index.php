@@ -152,6 +152,11 @@ switch ($page) {
         $instructorCtrl->addQuestion();
         break;
 
+    case 'quiz-detail':
+        if (!isLoggedIn()) redirect('?page=login');
+        $quizCtrl->quizDetail();
+        break;
+
     default:
         // Handle 404
         echo "404 Page Not Found";
