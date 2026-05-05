@@ -34,9 +34,21 @@ class User {
         return $stmt->fetch();
     }
 
-    public function getAllUsers() {
-        $stmt = $this->pdo->query("SELECT * FROM users ORDER BY CreatedAt DESC");
+    public function getPendingInstructors() {
+        $stmt = $this->pdo->prepare("SELECT * FROM users WHERE UserType = 'Instructor' AND Status = 'Pending' ORDER BY CreatedAt DESC");
+        $stmt->execute();
         return $stmt->fetchAll();
+    }
+
+    public function getAllInstructors() {
+        $stmt = $this->pdo->prepare("SELECT * FROM users WHERE UserType = 'Instructor' ORDER BY CreatedAt DESC");
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public function updateStatus($userId, $status) {
+        $stmt = $this->pdo->prepare("UPDATE users SET Status = ? WHERE UserID = ?");
+        return $stmt->execute([$status, $userId]);
     }
 }
 ?>

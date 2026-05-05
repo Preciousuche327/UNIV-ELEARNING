@@ -11,15 +11,13 @@ class AdminController {
 
     // Admin Dashboard with statistics
     public function dashboard() {
-        if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'Admin') {
-            header("Location: index.php?page=login");
-            exit;
-        }
+        requireRole('Admin');
 
         // Get statistics
         $stats = [
             'total_users' => $this->getTotalUsers(),
             'total_instructors' => $this->countUsersByType('Instructor'),
+            'pending_instructors' => $this->countUsersByStatus('Instructor', 'Pending'),
             'total_students' => $this->countUsersByType('Student'),
             'total_courses' => $this->getTotalCourses(),
             'total_enrollments' => $this->getTotalEnrollments(),
@@ -31,10 +29,7 @@ class AdminController {
 
     // View all users
     public function users() {
-        if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'Admin') {
-            header("Location: index.php?page=login");
-            exit;
-        }
+        requireRole('Admin');
 
         $search = $_GET['search'] ?? '';
         $type = $_GET['type'] ?? '';
@@ -64,10 +59,7 @@ class AdminController {
 
     // Edit user type
     public function editUser() {
-        if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'Admin') {
-            header("Location: index.php?page=login");
-            exit;
-        }
+        requireRole('Admin');
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user_id = $_POST['user_id'];
@@ -90,10 +82,7 @@ class AdminController {
 
     // Delete user
     public function deleteUser() {
-        if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'Admin') {
-            header("Location: index.php?page=login");
-            exit;
-        }
+        requireRole('Admin');
 
         $user_id = $_POST['user_id'] ?? null;
 
@@ -108,10 +97,7 @@ class AdminController {
 
     // View all courses
     public function courses() {
-        if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'Admin') {
-            header("Location: index.php?page=login");
-            exit;
-        }
+        requireRole('Admin');
 
         $stmt = $this->pdo->query("SELECT c.*, COUNT(e.EnrollmentID) as EnrollmentCount FROM courses c 
                                    LEFT JOIN enrollments e ON c.CourseID = e.CourseID 
@@ -123,10 +109,7 @@ class AdminController {
 
     // View all results
     public function allResults() {
-        if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'Admin') {
-            header("Location: index.php?page=login");
-            exit;
-        }
+        requireRole('Admin');
 
         $filter_course = $_GET['course'] ?? '';
 
@@ -155,6 +138,59 @@ class AdminController {
         require __DIR__ . '/../views/admin/all_results.php';
     }
 
+    // Manage instructors (Approval flow)
+    public function manageInstructors() {
+        requireRole('Admin');
+
+        $status_filter = $_GET['status'] ?? 'Pending';
+        
+        $query = "SELECT * FROM users WHERE UserType = 'Instructor'";
+        $params = [];
+
+        if (!empty($status_filter)) {
+            $query .= " AND Status = ?";
+            $params[] = $status_filter;
+        }
+
+        $query .= " ORDER BY CreatedAt DESC";
+
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute($params);
+        $instructors = $stmt->fetchAll();
+
+        require __DIR__ . '/../views/admin/manage_instructors.php';
+    }
+
+    // Approve instructor
+    public function approveInstructor() {
+        requireRole('Admin');
+
+        $user_id = $_GET['id'] ?? null;
+        if ($user_id) {
+            $userModel = new User($this->pdo);
+            $userModel->updateStatus($user_id, 'Approved');
+            $_SESSION['success'] = "Instructor approved successfully!";
+        }
+
+        header("Location: index.php?page=manage-instructors");
+        exit;
+    }
+
+    // Reject instructor
+    public function rejectInstructor() {
+        requireRole('Admin');
+
+        $user_id = $_GET['id'] ?? null;
+        if ($user_id) {
+            $userModel = new User($this->pdo);
+            $userModel->updateStatus($user_id, 'Rejected');
+            $_SESSION['error'] = "Instructor registration rejected.";
+        }
+
+        header("Location: index.php?page=manage-instructors");
+        exit;
+    }
+
     // Helper methods
     private function getTotalUsers() {
         $stmt = $this->pdo->query("SELECT COUNT(*) FROM users");
@@ -164,6 +200,12 @@ class AdminController {
     private function countUsersByType($type) {
         $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM users WHERE UserType = ?");
         $stmt->execute([$type]);
+        return $stmt->fetchColumn();
+    }
+
+    private function countUsersByStatus($type, $status) {
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM users WHERE UserType = ? AND Status = ?");
+        $stmt->execute([$type, $status]);
         return $stmt->fetchColumn();
     }
 

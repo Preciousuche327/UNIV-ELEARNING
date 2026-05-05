@@ -112,9 +112,29 @@ switch ($page) {
         $adminCtrl->courses();
         break;
 
+    case 'manage-instructors':
+        if (!isLoggedIn()) redirect('?page=login');
+        $adminCtrl->manageInstructors();
+        break;
+
+    case 'approve-instructor':
+        if (!isLoggedIn()) redirect('?page=login');
+        $adminCtrl->approveInstructor();
+        break;
+
+    case 'reject-instructor':
+        if (!isLoggedIn()) redirect('?page=login');
+        $adminCtrl->rejectInstructor();
+        break;
+
     case 'course-results':
         if (!isLoggedIn()) redirect('?page=login');
         $instructorCtrl->courseResults();
+        break;
+
+    case 'course-quizzes':
+        if (!isLoggedIn()) redirect('?page=login');
+        $instructorCtrl->quizzesByCourse();
         break;
 
     case 'student-results':

@@ -11,7 +11,7 @@ define('DB_PASS', '');
    APP CONFIGURATION
 ------------------------------*/
 define('APP_NAME', 'Univ E-Learning');
-define('BASE_URL', 'http://localhost/univ-elearning/');
+define('BASE_URL', 'http://localhost/univ_elearning/');
 
 /* -----------------------------
    START SESSION (SAFE)

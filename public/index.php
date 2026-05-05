@@ -1,5 +1,5 @@
 <?php
-session_start();
+// Session is started in config.php
 
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../app/controllers/AuthController.php';
@@ -87,6 +87,18 @@ switch ($page) {
         $admin->allResults();
         break;
 
+    case 'manage-instructors':
+        $admin->manageInstructors();
+        break;
+
+    case 'approve-instructor':
+        $admin->approveInstructor();
+        break;
+
+    case 'reject-instructor':
+        $admin->rejectInstructor();
+        break;
+
     // Instructor routes
     case 'instructor-dashboard':
         $instructor->dashboard();
@@ -126,6 +138,10 @@ switch ($page) {
 
     case 'course-results':
         $instructor->courseResults();
+        break;
+
+    case 'course-quizzes':
+        $instructor->quizzesByCourse();
         break;
 
     default:

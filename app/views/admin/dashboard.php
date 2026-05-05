@@ -10,9 +10,22 @@ $totalEnrollments = $stats['total_enrollments'] ?? 0;
 $totalQuizzes = $stats['total_quizzes'] ?? 0;
 $totalInstructors = $stats['total_instructors'] ?? 0;
 $totalStudents = $stats['total_students'] ?? 0;
+$pendingInstructors = $stats['pending_instructors'] ?? 0;
 ?>
 
 <div class="row g-4 mb-4">
+    <?php if ($pendingInstructors > 0): ?>
+    <div class="col-12">
+        <div class="alert alert-warning border-0 shadow-sm d-flex justify-content-between align-items-center mb-0">
+            <div>
+                <i class="bi bi-exclamation-circle-fill me-2"></i>
+                There are <strong><?php echo $pendingInstructors; ?></strong> instructor registration(s) waiting for your approval.
+            </div>
+            <a href="?page=manage-instructors" class="btn btn-warning btn-sm fw-bold">Review Now</a>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <div class="col-md-3">
         <div class="card p-3 stat-card" style="border-left-color: #6366f1;">
             <div class="d-flex align-items-center">
@@ -98,6 +111,11 @@ $totalStudents = $stats['total_students'] ?? 0;
                                 <td class="fw-bold">Total Students</td>
                                 <td><?php echo $totalStudents; ?></td>
                                 <td><?php echo $totalUsers > 0 ? round(($totalStudents / $totalUsers) * 100, 1) : 0; ?>%</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold text-warning">Pending Instructors</td>
+                                <td class="text-warning fw-bold"><?php echo $pendingInstructors; ?></td>
+                                <td><?php echo $totalUsers > 0 ? round(($pendingInstructors / $totalUsers) * 100, 1) : 0; ?>%</td>
                             </tr>
                             <tr>
                                 <td class="fw-bold">Average Students per Course</td>

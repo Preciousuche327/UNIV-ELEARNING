@@ -83,7 +83,7 @@ $totalQuizzes = $stats['total_quizzes'] ?? 0;
                                         <td><?php echo $course['QuizCount']; ?></td>
                                         <td>
                                             <a href="?page=edit-course&id=<?php echo $course['CourseID']; ?>" class="btn btn-sm btn-light border"><i class="bi bi-pencil"></i></a>
-                                            <a href="?page=manage-quiz&course_id=<?php echo $course['CourseID']; ?>" class="btn btn-sm btn-light border text-primary"><i class="bi bi-plus-circle"></i></a>
+                                            <a href="?page=course-quizzes&course_id=<?php echo $course['CourseID']; ?>" class="btn btn-sm btn-light border text-primary" title="Manage Quizzes"><i class="bi bi-patch-question"></i></a>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>

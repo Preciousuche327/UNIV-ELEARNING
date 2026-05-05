@@ -11,8 +11,8 @@ class AuthController {
 
     public function login() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $email = $_POST['email'] ?? '';
-            $password = $_POST['password'] ?? '';
+            $email = trim($_POST['email'] ?? '');
+            $password = trim($_POST['password'] ?? '');
 
             // Try to find user by email first, then by username
             $stmt = $this->pdo->prepare("SELECT * FROM users WHERE Email = ? OR Username = ?");
@@ -20,11 +20,17 @@ class AuthController {
             $user = $stmt->fetch();
 
             if ($user && password_verify($password, $user['Password'])) {
-                $_SESSION['user_id'] = $user['UserID'];
-                $_SESSION['username'] = $user['Username'];
-                $_SESSION['user_type'] = $user['UserType'];
-                header("Location: index.php?page=dashboard");
-                exit;
+                if ($user['Status'] === 'Pending') {
+                    $error = "Your account is currently waiting for admin approval. Please check back later.";
+                } elseif ($user['Status'] === 'Rejected') {
+                    $error = "Your account registration has been rejected. Please contact support.";
+                } else {
+                    $_SESSION['user_id'] = $user['UserID'];
+                    $_SESSION['username'] = $user['Username'];
+                    $_SESSION['user_type'] = $user['UserType'];
+                    header("Location: index.php?page=dashboard");
+                    exit;
+                }
             } else {
                 $error = "Invalid email/username or password";
             }
@@ -59,6 +65,9 @@ class AuthController {
             if (strlen($password) < 6) {
                 $errors[] = "Password must be at least 6 characters";
             }
+            if ($user_type === 'Admin') {
+                $errors[] = "Administrator accounts cannot be created via public registration.";
+            }
 
             if (empty($errors)) {
                 try {
@@ -78,9 +87,16 @@ class AuthController {
 
                     if (empty($errors)) {
                         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                        $status = ($user_type === 'Instructor') ? 'Pending' : 'Approved';
 
-                        $stmt = $this->pdo->prepare("INSERT INTO users (Username, Email, Password, UserType) VALUES (?, ?, ?, ?)");
-                        $stmt->execute([$username, $email, $hashed_password, $user_type]);
+                        $stmt = $this->pdo->prepare("INSERT INTO users (Username, Email, Password, UserType, Status) VALUES (?, ?, ?, ?, ?)");
+                        $stmt->execute([$username, $email, $hashed_password, $user_type, $status]);
+
+                        if ($status === 'Pending') {
+                            $success_message = "Your account has been created successfully! However, instructor accounts require admin approval. You will be able to log in once your account is approved.";
+                            require __DIR__ . '/../views/auth/login.php';
+                            exit;
+                        }
 
                         header("Location: index.php?page=login");
                         exit;

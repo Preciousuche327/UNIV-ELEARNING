@@ -77,9 +77,14 @@ class InstructorController {
 
         $instructor_id = $_SESSION['user_id'];
 
-        $stmt = $this->pdo->prepare("SELECT c.*, COUNT(e.EnrollmentID) as StudentCount 
+        $stmt = $this->pdo->prepare("SELECT c.*, COUNT(DISTINCT e.EnrollmentID) as StudentCount, COUNT(DISTINCT q.QuizID) as QuizCount 
                                      FROM courses c 
                                      LEFT JOIN enrollments e ON c.CourseID = e.CourseID 
+<<<<<<< Updated upstream
+=======
+                                     LEFT JOIN quizzes q ON c.CourseID = q.CourseID 
+                                     WHERE ic.InstructorID = ? 
+>>>>>>> Stashed changes
                                      GROUP BY c.CourseID");
         $stmt->execute();
         $courses = $stmt->fetchAll();
@@ -215,6 +220,29 @@ class InstructorController {
         }
 
         require __DIR__ . '/../views/instructor/manage_quiz.php';
+    }
+
+    // List quizzes for a specific course
+    public function quizzesByCourse() {
+        if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'Instructor') {
+            header("Location: index.php?page=login");
+            exit;
+        }
+
+        $course_id = $_GET['course_id'] ?? null;
+        $instructor_id = $_SESSION['user_id'];
+
+        // Get course details
+        $stmt = $this->pdo->prepare("SELECT * FROM courses WHERE CourseID = ?");
+        $stmt->execute([$course_id]);
+        $course = $stmt->fetch();
+
+        // Get quizzes
+        $stmt = $this->pdo->prepare("SELECT * FROM quizzes WHERE CourseID = ? ORDER BY QuizID");
+        $stmt->execute([$course_id]);
+        $quizzes = $stmt->fetchAll();
+
+        require __DIR__ . '/../views/instructor/course_quizzes.php';
     }
 
     // Add question to quiz
