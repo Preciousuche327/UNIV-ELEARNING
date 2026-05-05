@@ -108,6 +108,15 @@ $totalQuizzes = $stats['total_quizzes'] ?? 0;
                     <a href="?page=create-quiz" class="btn btn-outline-dark text-start">
                         <i class="bi bi-plus-square me-2"></i> Create a Quiz
                     </a>
+                    <a href="?page=create-quiz&type=midterm" class="btn btn-outline-dark text-start">
+                        <i class="bi bi-file-earmark-text me-2"></i> Create a Midterm
+                    </a>
+                    <a href="?page=create-quiz&type=final" class="btn btn-outline-dark text-start">
+                        <i class="bi bi-award me-2"></i> Create a Final
+                    </a>
+                    <a href="?page=create-quiz&type=assignment" class="btn btn-outline-dark text-start">
+                        <i class="bi bi-clipboard-check me-2"></i> Create an Assignment
+                    </a>
                     <a href="?page=upload-content" class="btn btn-outline-dark text-start">
                         <i class="bi bi-cloud-upload me-2"></i> Upload New Content
                     </a>

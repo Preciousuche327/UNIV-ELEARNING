@@ -160,10 +160,8 @@ class InstructorController {
 
         // Get instructor's courses
         $stmt = $this->pdo->prepare("SELECT c.* FROM courses c 
-                                     JOIN instructor_courses ic ON c.CourseID = ic.CourseID 
-                                     WHERE ic.InstructorID = ? 
                                      ORDER BY c.CourseName");
-        $stmt->execute([$instructor_id]);
+        $stmt->execute();
         $courses = $stmt->fetchAll();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {

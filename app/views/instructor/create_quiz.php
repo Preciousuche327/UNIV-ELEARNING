@@ -15,15 +15,15 @@ include __DIR__ . '/../partials/sidebar.php';
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-primary text-white p-4">
-                    <h4 class="card-title mb-0">Create New Quiz</h4>
+                    <h4 class="card-title mb-0">Create New Assessment</h4>
                 </div>
 
                 <div class="card-body p-4">
                     <form method="POST">
                         <div class="mb-3">
-                            <label for="quiz_name" class="form-label fw-bold">Quiz Title <span class="text-danger">*</span></label>
+                            <label for="quiz_name" class="form-label fw-bold">Assessment Title <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="quiz_name" name="quiz_name" required>
-                            <small class="text-muted">Enter the name of the quiz</small>
+                            <small class="text-muted">Enter the name of the assessment</small>
                         </div>
 
                         <div class="mb-3">
@@ -42,29 +42,29 @@ include __DIR__ . '/../partials/sidebar.php';
                         <div class="mb-3">
                             <label for="quiz_type" class="form-label fw-bold">Assessment Type <span class="text-danger">*</span></label>
                             <select class="form-select" id="quiz_type" name="quiz_type" required>
-                                <option value="Quiz">Quiz</option>
-                                <option value="Midterm">Midterm</option>
-                                <option value="Final">Final</option>
-                                <option value="Assignment">Assignment</option>
+                                <option value="Quiz" <?php if (isset($_GET['type']) && $_GET['type'] == 'quiz') echo 'selected'; ?>>Quiz</option>
+                                <option value="Midterm" <?php if (isset($_GET['type']) && $_GET['type'] == 'midterm') echo 'selected'; ?>>Midterm</option>
+                                <option value="Final" <?php if (isset($_GET['type']) && $_GET['type'] == 'final') echo 'selected'; ?>>Final</option>
+                                <option value="Assignment" <?php if (isset($_GET['type']) && $_GET['type'] == 'assignment') echo 'selected'; ?>>Assignment</option>
                             </select>
                             <small class="text-muted">Select the type of assessment</small>
                         </div>
 
                         <div class="mb-3">
                             <label for="description" class="form-label fw-bold">Description</label>
-                            <textarea class="form-control" id="description" name="description" rows="4" placeholder="Describe the quiz..."></textarea>
-                            <small class="text-muted">Optional: Add instructions or details about the quiz</small>
+                            <textarea class="form-control" id="description" name="description" rows="4" placeholder="Describe the assessment..."></textarea>
+                            <small class="text-muted">Optional: Add instructions or details about the assessment</small>
                         </div>
 
                         <div class="mb-4">
                             <label for="total_marks" class="form-label fw-bold">Total Marks</label>
                             <input type="number" class="form-control" id="total_marks" name="total_marks" value="100" min="1">
-                            <small class="text-muted">Maximum score for this quiz</small>
+                            <small class="text-muted">Maximum score for this assessment</small>
                         </div>
 
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="bi bi-plus-circle me-2"></i> Create Quiz
+                                <i class="bi bi-plus-circle me-2"></i> Create Assessment
                             </button>
                             <a href="?page=dashboard" class="btn btn-outline-secondary">Cancel</a>
                         </div>
