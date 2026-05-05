@@ -277,25 +277,73 @@ class InstructorController {
                 exit;
             }
 
-            // Get results for this course
-            $stmt = $this->pdo->prepare("SELECT r.*, u.Username, q.QuizName, q.QuizType, q.TotalMarks, c.CourseName FROM results r 
-                                         JOIN users u ON r.UserID = u.UserID 
+            // Get stats for this course
+            $stmt = $this->pdo->prepare("SELECT q.QuizType, COUNT(*) as count FROM results r 
                                          JOIN quizzes q ON r.QuizID = q.QuizID 
-                                         JOIN courses c ON r.CourseID = c.CourseID 
                                          WHERE r.CourseID = ? 
-                                         ORDER BY r.SubmittedAt DESC");
+                                         GROUP BY q.QuizType");
+            $stmt->execute([$course_id]);
+            $stats = ['Quiz' => 0, 'Midterm' => 0, 'Final' => 0, 'Assignment' => 0];
+            foreach ($stmt->fetchAll() as $row) {
+                if (isset($stats[$row['QuizType']])) {
+                    $stats[$row['QuizType']] = $row['count'];
+                }
+            }
+
+            // Aggregate results by student for this course
+            $stmt = $this->pdo->prepare("SELECT u.UserID, u.Username, c.CourseID, c.CourseName,
+                                         SUM(CASE WHEN q.QuizType = 'Quiz' THEN r.Score ELSE 0 END) AS QuizScore,
+                                         SUM(CASE WHEN q.QuizType = 'Quiz' THEN q.TotalMarks ELSE 0 END) AS QuizTotal,
+                                         SUM(CASE WHEN q.QuizType = 'Midterm' THEN r.Score ELSE 0 END) AS MidtermScore,
+                                         SUM(CASE WHEN q.QuizType = 'Midterm' THEN q.TotalMarks ELSE 0 END) AS MidtermTotal,
+                                         SUM(CASE WHEN q.QuizType = 'Final' THEN r.Score ELSE 0 END) AS FinalScore,
+                                         SUM(CASE WHEN q.QuizType = 'Final' THEN q.TotalMarks ELSE 0 END) AS FinalTotal,
+                                         SUM(CASE WHEN q.QuizType = 'Assignment' THEN r.Score ELSE 0 END) AS AssignmentScore,
+                                         SUM(CASE WHEN q.QuizType = 'Assignment' THEN q.TotalMarks ELSE 0 END) AS AssignmentTotal
+                                         FROM results r
+                                         JOIN users u ON r.UserID = u.UserID
+                                         JOIN quizzes q ON r.QuizID = q.QuizID
+                                         JOIN courses c ON r.CourseID = c.CourseID
+                                         WHERE r.CourseID = ?
+                                         GROUP BY u.UserID, u.Username, c.CourseID, c.CourseName
+                                         ORDER BY u.Username");
             $stmt->execute([$course_id]);
             $results = $stmt->fetchAll();
             $page_title = "Results for " . $course['CourseName'];
         } else {
-            // Get results for ALL instructor's courses
-            $stmt = $this->pdo->prepare("SELECT r.*, u.Username, q.QuizName, q.QuizType, q.TotalMarks, c.CourseName FROM results r 
-                                         JOIN users u ON r.UserID = u.UserID 
+            // Get stats for all instructor courses
+            $stmt = $this->pdo->prepare("SELECT q.QuizType, COUNT(*) as count FROM results r 
                                          JOIN quizzes q ON r.QuizID = q.QuizID 
                                          JOIN courses c ON r.CourseID = c.CourseID
                                          JOIN instructor_courses ic ON c.CourseID = ic.CourseID
                                          WHERE ic.InstructorID = ? 
-                                         ORDER BY r.SubmittedAt DESC");
+                                         GROUP BY q.QuizType");
+            $stmt->execute([$instructor_id]);
+            $stats = ['Quiz' => 0, 'Midterm' => 0, 'Final' => 0, 'Assignment' => 0];
+            foreach ($stmt->fetchAll() as $row) {
+                if (isset($stats[$row['QuizType']])) {
+                    $stats[$row['QuizType']] = $row['count'];
+                }
+            }
+
+            // Aggregate results by student across all instructor courses
+            $stmt = $this->pdo->prepare("SELECT u.UserID, u.Username, c.CourseID, c.CourseName,
+                                         SUM(CASE WHEN q.QuizType = 'Quiz' THEN r.Score ELSE 0 END) AS QuizScore,
+                                         SUM(CASE WHEN q.QuizType = 'Quiz' THEN q.TotalMarks ELSE 0 END) AS QuizTotal,
+                                         SUM(CASE WHEN q.QuizType = 'Midterm' THEN r.Score ELSE 0 END) AS MidtermScore,
+                                         SUM(CASE WHEN q.QuizType = 'Midterm' THEN q.TotalMarks ELSE 0 END) AS MidtermTotal,
+                                         SUM(CASE WHEN q.QuizType = 'Final' THEN r.Score ELSE 0 END) AS FinalScore,
+                                         SUM(CASE WHEN q.QuizType = 'Final' THEN q.TotalMarks ELSE 0 END) AS FinalTotal,
+                                         SUM(CASE WHEN q.QuizType = 'Assignment' THEN r.Score ELSE 0 END) AS AssignmentScore,
+                                         SUM(CASE WHEN q.QuizType = 'Assignment' THEN q.TotalMarks ELSE 0 END) AS AssignmentTotal
+                                         FROM results r
+                                         JOIN users u ON r.UserID = u.UserID
+                                         JOIN quizzes q ON r.QuizID = q.QuizID
+                                         JOIN courses c ON r.CourseID = c.CourseID
+                                         JOIN instructor_courses ic ON c.CourseID = ic.CourseID
+                                         WHERE ic.InstructorID = ?
+                                         GROUP BY u.UserID, u.Username, c.CourseID, c.CourseName
+                                         ORDER BY u.Username, c.CourseName");
             $stmt->execute([$instructor_id]);
             $results = $stmt->fetchAll();
             $page_title = "All Course Performance";

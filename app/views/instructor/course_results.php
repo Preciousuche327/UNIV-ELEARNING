@@ -66,18 +66,17 @@ include __DIR__ . '/../partials/sidebar.php';
                     <thead class="bg-light">
                         <tr>
                             <th class="ps-4">Student</th>
-                            <th>Type</th>
                             <th>Course</th>
-                            <th>Quiz Name</th>
-                            <th>Score</th>
-                            <th>Status</th>
-                            <th class="pe-4">Date</th>
+                            <th>Quiz</th>
+                            <th>Midterm</th>
+                            <th>Final</th>
+                            <th>Assignment</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($results)): ?>
                             <tr>
-                                <td colspan="7" class="text-center py-5">
+                                <td colspan="6" class="text-center py-5">
                                     <div class="text-muted">
                                         <i class="bi bi-info-circle fs-2 d-block mb-2"></i>
                                         No results recorded yet for your courses.
@@ -86,11 +85,6 @@ include __DIR__ . '/../partials/sidebar.php';
                             </tr>
                         <?php else: ?>
                             <?php foreach ($results as $result): ?>
-                                <?php 
-                                    $total_marks = $result['TotalMarks'] ?: 100;
-                                    $percentage = ($result['Score'] / $total_marks) * 100;
-                                    $is_pass = $percentage >= 70;
-                                ?>
                                 <tr>
                                     <td class="ps-4">
                                         <div class="d-flex align-items-center">
@@ -101,37 +95,37 @@ include __DIR__ . '/../partials/sidebar.php';
                                         </div>
                                     </td>
                                     <td>
-                                        <?php 
-                                        $type_class = 'bg-secondary';
-                                        switch($result['QuizType']) {
-                                            case 'Midterm': $type_class = 'bg-info'; break;
-                                            case 'Final': $type_class = 'bg-dark'; break;
-                                            case 'Assignment': $type_class = 'bg-primary'; break;
-                                            case 'Quiz': $type_class = 'bg-warning text-dark'; break;
-                                        }
-                                        ?>
-                                        <span class="badge <?php echo $type_class; ?>"><?php echo $result['QuizType']; ?></span>
-                                    </td>
-                                    <td>
                                         <span class="badge bg-soft-primary text-primary border border-primary-subtle">
                                             <?php echo htmlspecialchars($result['CourseName']); ?>
                                         </span>
                                     </td>
-                                    <td><?php echo htmlspecialchars($result['QuizName']); ?></td>
                                     <td>
-                                        <span class="fw-bold <?php echo $is_pass ? 'text-success' : 'text-danger'; ?>">
-                                            <?php echo $result['Score']; ?>/<?php echo $total_marks; ?>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <?php if ($is_pass): ?>
-                                            <span class="badge bg-success">Pass</span>
+                                        <?php if ($result['QuizTotal'] > 0): ?>
+                                            <span class="fw-semibold"><?php echo $result['QuizScore']; ?>/<?php echo $result['QuizTotal']; ?></span>
                                         <?php else: ?>
-                                            <span class="badge bg-danger">Fail</span>
+                                            <span class="text-muted">-</span>
                                         <?php endif; ?>
                                     </td>
-                                    <td class="pe-4 text-muted small">
-                                        <?php echo date('M d, Y', strtotime($result['SubmittedAt'])); ?>
+                                    <td>
+                                        <?php if ($result['MidtermTotal'] > 0): ?>
+                                            <span class="fw-semibold"><?php echo $result['MidtermScore']; ?>/<?php echo $result['MidtermTotal']; ?></span>
+                                        <?php else: ?>
+                                            <span class="text-muted">-</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php if ($result['FinalTotal'] > 0): ?>
+                                            <span class="fw-semibold"><?php echo $result['FinalScore']; ?>/<?php echo $result['FinalTotal']; ?></span>
+                                        <?php else: ?>
+                                            <span class="text-muted">-</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php if ($result['AssignmentTotal'] > 0): ?>
+                                            <span class="fw-semibold"><?php echo $result['AssignmentScore']; ?>/<?php echo $result['AssignmentTotal']; ?></span>
+                                        <?php else: ?>
+                                            <span class="text-muted">-</span>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
