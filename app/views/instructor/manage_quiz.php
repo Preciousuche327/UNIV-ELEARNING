@@ -21,17 +21,23 @@ include __DIR__ . '/../partials/sidebar.php';
                 <div class="card-body p-4">
                     <div class="mb-4 p-3 bg-light rounded">
                         <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <small class="text-muted d-block mb-1">Total Questions</small>
                                 <h5 class="mb-0"><?php echo count($questions); ?></h5>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
+                                <small class="text-muted d-block mb-1">Assessment Type</small>
+                                <h5 class="mb-0">
+                                    <span class="badge bg-secondary"><?php echo $quiz['QuizType']; ?></span>
+                                </h5>
+                            </div>
+                            <div class="col-md-3">
                                 <small class="text-muted d-block mb-1">Total Marks</small>
                                 <h5 class="mb-0"><?php echo $quiz['TotalMarks']; ?></h5>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <small class="text-muted d-block mb-1">Description</small>
-                                <p class="mb-0"><small><?php echo htmlspecialchars(substr($quiz['Description'], 0, 50)); ?></small></p>
+                                <p class="mb-0 text-truncate"><small><?php echo htmlspecialchars($quiz['Description']); ?></small></p>
                             </div>
                         </div>
                     </div>

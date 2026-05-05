@@ -125,11 +125,65 @@ if ($completed_quizzes > 0) {
     </div>
     <div class="col-lg-4">
         <div class="card h-100">
-            <div class="card-body text-center py-5">
-                <img src="https://illustrations.popsy.co/white/student-going-to-school.svg" alt="Learn" class="img-fluid mb-4" style="max-height: 150px;">
-                <h5>Ready to learn more?</h5>
-                <p class="text-muted small">Explore updated courses from our top instructors.</p>
-                <a href="?page=courses" class="btn btn-primary w-100 mt-3">Browse Catalog</a>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="card-title mb-0">Recent Assessments</h5>
+                    <a href="?page=my-results" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                
+                <?php if (!empty($recent_results)): ?>
+                    <div class="list-group list-group-flush">
+                        <?php foreach ($recent_results as $result): ?>
+                            <?php 
+                                $type_class = 'bg-secondary';
+                                switch($result['QuizType']) {
+                                    case 'Midterm': $type_class = 'bg-info'; break;
+                                    case 'Final': $type_class = 'bg-dark'; break;
+                                    case 'Assignment': $type_class = 'bg-primary'; break;
+                                    case 'Quiz': $type_class = 'bg-warning text-dark'; break;
+                                }
+                            ?>
+                            <div class="list-group-item px-0 border-0 mb-3">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <h6 class="fw-bold mb-0 text-truncate" style="max-width: 150px;"><?php echo htmlspecialchars($result['QuizName']); ?></h6>
+                                    <span class="badge <?php echo $type_class; ?> ms-2"><?php echo $result['QuizType']; ?></span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted"><?php echo date('M d', strtotime($result['SubmittedAt'])); ?></small>
+                                    <span class="fw-bold <?php echo ($result['Score'] >= ($result['TotalMarks'] * 0.7)) ? 'text-success' : 'text-danger'; ?>">
+                                        <?php echo $result['Score']; ?>/<?php echo $result['TotalMarks']; ?>
+                                    </span>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="text-center py-4">
+                        <img src="https://illustrations.popsy.co/white/student-going-to-school.svg" alt="Learn" class="img-fluid mb-3" style="max-height: 100px;">
+                        <p class="text-muted small">No assessments taken yet.</p>
+                        <a href="?page=courses" class="btn btn-sm btn-primary">Start Learning</a>
+                    </div>
+                <?php endif; ?>
+
+                <h5 class="card-title mt-4 mb-3">My Performance</h5>
+                <ul class="list-group list-group-flush border-top">
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="bi bi-journal-text text-warning me-2"></i> Quizzes Done</span>
+                        <span class="badge bg-soft-warning text-dark border"><?php echo $assessment_stats['quizzes']; ?></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="bi bi-file-earmark-text text-info me-2"></i> Midterms Done</span>
+                        <span class="badge bg-soft-info text-dark border"><?php echo $assessment_stats['midterms']; ?></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="bi bi-award text-dark me-2"></i> Finals Done</span>
+                        <span class="badge bg-soft-dark text-dark border"><?php echo $assessment_stats['finals']; ?></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="bi bi-clipboard-check text-primary me-2"></i> Assignments Done</span>
+                        <span class="badge bg-soft-primary text-dark border"><?php echo $assessment_stats['assignments']; ?></span>
+                    </li>
+                </ul>
             </div>
         </div>
     </div>

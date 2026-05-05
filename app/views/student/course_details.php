@@ -65,8 +65,20 @@ include __DIR__ . '/../partials/sidebar.php';
                         <?php foreach ($quizzes as $quiz): ?>
                             <div class="col-md-6">
                                 <div class="card course-card h-100 p-3 bg-light border-0">
-                                    <h5 class="fw-bold text-dark"><?php echo htmlspecialchars($quiz['QuizName']); ?></h5>
-                                    <p class="text-muted small mb-3 flex-grow-1"><?php echo htmlspecialchars(substr($quiz['Description'], 0, 100)); ?></p>
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h5 class="fw-bold text-dark mb-0"><?php echo htmlspecialchars($quiz['QuizName']); ?></h5>
+                                        <?php 
+                                        $type_class = 'bg-secondary';
+                                        switch($quiz['QuizType']) {
+                                            case 'Midterm': $type_class = 'bg-info'; break;
+                                            case 'Final': $type_class = 'bg-dark'; break;
+                                            case 'Assignment': $type_class = 'bg-primary'; break;
+                                            case 'Quiz': $type_class = 'bg-warning text-dark'; break;
+                                        }
+                                        ?>
+                                        <span class="badge <?php echo $type_class; ?> ms-2"><?php echo $quiz['QuizType']; ?></span>
+                                    </div>
+                                    <p class="text-muted small mb-3 flex-grow-1"><?php echo htmlspecialchars(substr($quiz['Description'] ?? '', 0, 100)); ?></p>
                                     <div class="d-flex justify-content-between align-items-center mt-auto">
                                         <span class="badge bg-soft-primary">Marks: <?php echo $quiz['TotalMarks']; ?></span>
                                         <?php if ($is_enrolled): ?>

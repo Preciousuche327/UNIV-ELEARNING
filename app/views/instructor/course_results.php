@@ -15,6 +15,50 @@ include __DIR__ . '/../partials/sidebar.php';
         </a>
     </div>
 
+    <?php 
+    $stats = ['Quiz' => 0, 'Midterm' => 0, 'Final' => 0, 'Assignment' => 0];
+    foreach ($results as $r) {
+        if (isset($stats[$r['QuizType']])) {
+            $stats[$r['QuizType']]++;
+        }
+    }
+    ?>
+
+    <div class="row mb-4 g-3">
+        <div class="col-md-3">
+            <div class="card bg-light border-0">
+                <div class="card-body text-center p-3">
+                    <h6 class="text-muted mb-1 small">Quizzes Taken</h6>
+                    <h4 class="mb-0 fw-bold text-warning"><?php echo $stats['Quiz']; ?></h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light border-0">
+                <div class="card-body text-center p-3">
+                    <h6 class="text-muted mb-1 small">Midterms Taken</h6>
+                    <h4 class="mb-0 fw-bold text-info"><?php echo $stats['Midterm']; ?></h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light border-0">
+                <div class="card-body text-center p-3">
+                    <h6 class="text-muted mb-1 small">Finals Taken</h6>
+                    <h4 class="mb-0 fw-bold text-dark"><?php echo $stats['Final']; ?></h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light border-0">
+                <div class="card-body text-center p-3">
+                    <h6 class="text-muted mb-1 small">Assignments Taken</h6>
+                    <h4 class="mb-0 fw-bold text-primary"><?php echo $stats['Assignment']; ?></h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card border-0 shadow-sm">
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -22,6 +66,7 @@ include __DIR__ . '/../partials/sidebar.php';
                     <thead class="bg-light">
                         <tr>
                             <th class="ps-4">Student</th>
+                            <th>Type</th>
                             <th>Course</th>
                             <th>Quiz Name</th>
                             <th>Score</th>
@@ -32,7 +77,7 @@ include __DIR__ . '/../partials/sidebar.php';
                     <tbody>
                         <?php if (empty($results)): ?>
                             <tr>
-                                <td colspan="6" class="text-center py-5">
+                                <td colspan="7" class="text-center py-5">
                                     <div class="text-muted">
                                         <i class="bi bi-info-circle fs-2 d-block mb-2"></i>
                                         No results recorded yet for your courses.
@@ -54,6 +99,18 @@ include __DIR__ . '/../partials/sidebar.php';
                                             </div>
                                             <span class="fw-bold"><?php echo htmlspecialchars($result['Username']); ?></span>
                                         </div>
+                                    </td>
+                                    <td>
+                                        <?php 
+                                        $type_class = 'bg-secondary';
+                                        switch($result['QuizType']) {
+                                            case 'Midterm': $type_class = 'bg-info'; break;
+                                            case 'Final': $type_class = 'bg-dark'; break;
+                                            case 'Assignment': $type_class = 'bg-primary'; break;
+                                            case 'Quiz': $type_class = 'bg-warning text-dark'; break;
+                                        }
+                                        ?>
+                                        <span class="badge <?php echo $type_class; ?>"><?php echo $result['QuizType']; ?></span>
                                     </td>
                                     <td>
                                         <span class="badge bg-soft-primary text-primary border border-primary-subtle">

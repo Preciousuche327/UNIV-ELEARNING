@@ -10,13 +10,49 @@ include __DIR__ . '/../partials/sidebar.php';
         <p class="text-muted">Track your academic performance across all courses.</p>
     </div>
 
+    <div class="row mb-4 g-3">
+        <div class="col-md-3">
+            <div class="card bg-light border-0">
+                <div class="card-body text-center p-3">
+                    <h6 class="text-muted mb-1 small">Quizzes</h6>
+                    <h4 class="mb-0 fw-bold text-warning"><?php echo $stats['Quiz']; ?></h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light border-0">
+                <div class="card-body text-center p-3">
+                    <h6 class="text-muted mb-1 small">Midterms</h6>
+                    <h4 class="mb-0 fw-bold text-info"><?php echo $stats['Midterm']; ?></h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light border-0">
+                <div class="card-body text-center p-3">
+                    <h6 class="text-muted mb-1 small">Finals</h6>
+                    <h4 class="mb-0 fw-bold text-dark"><?php echo $stats['Final']; ?></h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light border-0">
+                <div class="card-body text-center p-3">
+                    <h6 class="text-muted mb-1 small">Assignments</h6>
+                    <h4 class="mb-0 fw-bold text-primary"><?php echo $stats['Assignment']; ?></h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card border-0 shadow-sm">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="bg-light">
                         <tr>
-                            <th class="ps-4">Quiz Name</th>
+                            <th class="ps-4">Assessment</th>
+                            <th>Type</th>
                             <th>Course</th>
                             <th>Score</th>
                             <th>Percentage</th>
@@ -40,6 +76,18 @@ include __DIR__ . '/../partials/sidebar.php';
                                 ?>
                                 <tr>
                                     <td class="ps-4 fw-bold"><?php echo htmlspecialchars($result['QuizName']); ?></td>
+                                    <td>
+                                        <?php 
+                                        $type_class = 'bg-secondary';
+                                        switch($result['QuizType']) {
+                                            case 'Midterm': $type_class = 'bg-info'; break;
+                                            case 'Final': $type_class = 'bg-dark'; break;
+                                            case 'Assignment': $type_class = 'bg-primary'; break;
+                                            case 'Quiz': $type_class = 'bg-warning text-dark'; break;
+                                        }
+                                        ?>
+                                        <span class="badge <?php echo $type_class; ?>"><?php echo $result['QuizType']; ?></span>
+                                    </td>
                                     <td><?php echo htmlspecialchars($result['CourseName']); ?></td>
                                     <td>
                                         <span class="fw-bold <?php echo $is_pass ? 'text-success' : 'text-danger'; ?>">

@@ -130,7 +130,7 @@ class AdminController {
 
         $filter_course = $_GET['course'] ?? '';
 
-        $query = "SELECT r.*, u.Username, c.CourseName, q.QuizName FROM results r 
+        $query = "SELECT r.*, u.Username, c.CourseName, q.QuizName, q.QuizType FROM results r 
                   JOIN users u ON r.UserID = u.UserID 
                   JOIN courses c ON r.CourseID = c.CourseID 
                   JOIN quizzes q ON r.QuizID = q.QuizID WHERE 1=1";

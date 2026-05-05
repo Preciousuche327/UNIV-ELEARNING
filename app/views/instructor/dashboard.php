@@ -104,7 +104,7 @@ $totalQuizzes = $stats['total_quizzes'] ?? 0;
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title mb-3">Quick Actions</h5>
-                <div class="d-grid gap-2">
+                <div class="d-grid gap-2 mb-4">
                     <a href="?page=create-quiz" class="btn btn-outline-dark text-start">
                         <i class="bi bi-plus-square me-2"></i> Create a Quiz
                     </a>
@@ -115,6 +115,26 @@ $totalQuizzes = $stats['total_quizzes'] ?? 0;
                         <i class="bi bi-bar-chart me-2"></i> View Performance
                     </a>
                 </div>
+
+                <h5 class="card-title mb-3">Assessment Breakdown</h5>
+                <ul class="list-group list-group-flush border-top">
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="bi bi-journal-text text-warning me-2"></i> Standard Quizzes</span>
+                        <span class="badge bg-light text-dark border"><?php echo $stats['standard_quizzes']; ?></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="bi bi-file-earmark-text text-info me-2"></i> Midterms</span>
+                        <span class="badge bg-light text-dark border"><?php echo $stats['midterms']; ?></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="bi bi-award text-dark me-2"></i> Finals</span>
+                        <span class="badge bg-light text-dark border"><?php echo $stats['finals']; ?></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="bi bi-clipboard-check text-primary me-2"></i> Assignments</span>
+                        <span class="badge bg-light text-dark border"><?php echo $stats['assignments']; ?></span>
+                    </li>
+                </ul>
             </div>
         </div>
     </div>

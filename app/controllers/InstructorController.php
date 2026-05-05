@@ -33,6 +33,10 @@ class InstructorController {
             'total_courses' => count($courses),
             'total_students' => $this->getTotalStudents($instructor_id),
             'total_quizzes' => $this->getTotalQuizzes($instructor_id),
+            'midterms' => $this->countQuizzesByType($instructor_id, 'Midterm'),
+            'finals' => $this->countQuizzesByType($instructor_id, 'Final'),
+            'assignments' => $this->countQuizzesByType($instructor_id, 'Assignment'),
+            'standard_quizzes' => $this->countQuizzesByType($instructor_id, 'Quiz'),
         ];
 
         require __DIR__ . '/../views/instructor/dashboard.php';
@@ -165,11 +169,12 @@ class InstructorController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $quiz_name = $_POST['quiz_name'] ?? '';
             $course_id = $_POST['course_id'] ?? null;
+            $quiz_type = $_POST['quiz_type'] ?? 'Quiz';
             $description = $_POST['description'] ?? '';
             $total_marks = $_POST['total_marks'] ?? 100;
 
-            $stmt = $this->pdo->prepare("INSERT INTO quizzes (QuizName, CourseID, Description, TotalMarks) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$quiz_name, $course_id, $description, $total_marks]);
+            $stmt = $this->pdo->prepare("INSERT INTO quizzes (QuizName, CourseID, QuizType, Description, TotalMarks) VALUES (?, ?, ?, ?, ?)");
+            $stmt->execute([$quiz_name, $course_id, $quiz_type, $description, $total_marks]);
 
             $quiz_id = $this->pdo->lastInsertId();
 
@@ -275,10 +280,10 @@ class InstructorController {
             }
 
             // Get results for this course
-            $stmt = $this->pdo->prepare("SELECT r.*, u.Username, q.QuizName, q.TotalMarks, c.CourseName FROM results r 
+            $stmt = $this->pdo->prepare("SELECT r.*, u.Username, q.QuizName, q.QuizType, q.TotalMarks, c.CourseName FROM results r 
                                          JOIN users u ON r.UserID = u.UserID 
                                          JOIN quizzes q ON r.QuizID = q.QuizID 
-                                         JOIN courses c ON r.CourseID = c.CourseID
+                                         JOIN courses c ON r.CourseID = c.CourseID 
                                          WHERE r.CourseID = ? 
                                          ORDER BY r.SubmittedAt DESC");
             $stmt->execute([$course_id]);
@@ -286,7 +291,7 @@ class InstructorController {
             $page_title = "Results for " . $course['CourseName'];
         } else {
             // Get results for ALL instructor's courses
-            $stmt = $this->pdo->prepare("SELECT r.*, u.Username, q.QuizName, q.TotalMarks, c.CourseName FROM results r 
+            $stmt = $this->pdo->prepare("SELECT r.*, u.Username, q.QuizName, q.QuizType, q.TotalMarks, c.CourseName FROM results r 
                                          JOIN users u ON r.UserID = u.UserID 
                                          JOIN quizzes q ON r.QuizID = q.QuizID 
                                          JOIN courses c ON r.CourseID = c.CourseID
@@ -352,6 +357,15 @@ class InstructorController {
                                      JOIN instructor_courses ic ON c.CourseID = ic.CourseID 
                                      WHERE ic.InstructorID = ?");
         $stmt->execute([$instructor_id]);
+        return $stmt->fetchColumn();
+    }
+
+    private function countQuizzesByType($instructor_id, $type) {
+        $stmt = $this->pdo->prepare("SELECT COUNT(q.QuizID) FROM quizzes q 
+                                     JOIN courses c ON q.CourseID = c.CourseID 
+                                     JOIN instructor_courses ic ON c.CourseID = ic.CourseID 
+                                     WHERE ic.InstructorID = ? AND q.QuizType = ?");
+        $stmt->execute([$instructor_id, $type]);
         return $stmt->fetchColumn();
     }
 }

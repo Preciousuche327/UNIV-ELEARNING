@@ -40,6 +40,17 @@ include __DIR__ . '/../partials/sidebar.php';
                         </div>
 
                         <div class="mb-3">
+                            <label for="quiz_type" class="form-label fw-bold">Assessment Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="quiz_type" name="quiz_type" required>
+                                <option value="Quiz">Quiz</option>
+                                <option value="Midterm">Midterm</option>
+                                <option value="Final">Final</option>
+                                <option value="Assignment">Assignment</option>
+                            </select>
+                            <small class="text-muted">Select the type of assessment</small>
+                        </div>
+
+                        <div class="mb-3">
                             <label for="description" class="form-label fw-bold">Description</label>
                             <textarea class="form-control" id="description" name="description" rows="4" placeholder="Describe the quiz..."></textarea>
                             <small class="text-muted">Optional: Add instructions or details about the quiz</small>

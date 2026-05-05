@@ -23,7 +23,7 @@ class CourseController {
         $enrolled_count = $stmt->fetchColumn();
 
         // Get enrolled courses
-        $stmt = $this->pdo->prepare("SELECT c.* FROM courses c 
+        $stmt = $this->pdo->prepare("SELECT c.*, e.CompletionStatus FROM courses c 
                                      JOIN enrollments e ON c.CourseID = e.CourseID 
                                      WHERE e.UserID = ? 
                                      ORDER BY e.EnrollmentDate DESC");
@@ -35,8 +35,22 @@ class CourseController {
         $stmt->execute([$user_id]);
         $completed_quizzes = $stmt->fetchColumn();
 
-        // Pass pdo to view for additional queries
-        $pdo = $this->pdo;
+        // Get breakdown of completed assessments
+        $assessment_stats = [
+            'quizzes' => $this->countCompletedByType($user_id, 'Quiz'),
+            'midterms' => $this->countCompletedByType($user_id, 'Midterm'),
+            'finals' => $this->countCompletedByType($user_id, 'Final'),
+            'assignments' => $this->countCompletedByType($user_id, 'Assignment'),
+        ];
+
+        // Get recent results
+        $stmt = $this->pdo->prepare("SELECT r.*, q.QuizName, q.QuizType, q.TotalMarks 
+                                     FROM results r 
+                                     JOIN quizzes q ON r.QuizID = q.QuizID 
+                                     WHERE r.UserID = ? 
+                                     ORDER BY r.SubmittedAt DESC LIMIT 5");
+        $stmt->execute([$user_id]);
+        $recent_results = $stmt->fetchAll();
 
         require __DIR__ . '/../views/student/dashboard.php';
     }
@@ -153,7 +167,7 @@ class CourseController {
 
         $user_id = $_SESSION['user_id'];
 
-        $stmt = $this->pdo->prepare("SELECT r.*, c.CourseName, q.QuizName, q.TotalMarks 
+        $stmt = $this->pdo->prepare("SELECT r.*, c.CourseName, q.QuizName, q.QuizType, q.TotalMarks 
                                      FROM results r 
                                      JOIN courses c ON r.CourseID = c.CourseID 
                                      JOIN quizzes q ON r.QuizID = q.QuizID 
@@ -204,5 +218,13 @@ class CourseController {
         }
 
         header("Location: index.php?page=courses");
+    }
+
+    private function countCompletedByType($user_id, $type) {
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM results r 
+                                     JOIN quizzes q ON r.QuizID = q.QuizID 
+                                     WHERE r.UserID = ? AND q.QuizType = ?");
+        $stmt->execute([$user_id, $type]);
+        return $stmt->fetchColumn();
     }
 }

@@ -121,7 +121,7 @@ class QuizController {
 
         $user_id = $_SESSION['user_id'];
 
-        $stmt = $this->pdo->prepare("SELECT r.*, c.CourseName, q.QuizName, q.TotalMarks 
+        $stmt = $this->pdo->prepare("SELECT r.*, c.CourseName, q.QuizName, q.QuizType, q.TotalMarks 
                                      FROM results r 
                                      JOIN courses c ON r.CourseID = c.CourseID 
                                      JOIN quizzes q ON r.QuizID = q.QuizID 
@@ -129,6 +129,19 @@ class QuizController {
                                      ORDER BY r.SubmittedAt DESC");
         $stmt->execute([$user_id]);
         $results = $stmt->fetchAll();
+
+        // Calculate stats
+        $stats = [
+            'Quiz' => 0,
+            'Midterm' => 0,
+            'Final' => 0,
+            'Assignment' => 0
+        ];
+        foreach ($results as $r) {
+            if (isset($stats[$r['QuizType']])) {
+                $stats[$r['QuizType']]++;
+            }
+        }
 
         require __DIR__ . '/../views/student/results.php';
     }
@@ -142,7 +155,7 @@ class QuizController {
         $user_id = $_SESSION['user_id'];
         $result_id = $_GET['id'] ?? null;
 
-        $stmt = $this->pdo->prepare("SELECT r.*, c.CourseName, q.QuizName, q.TotalMarks 
+        $stmt = $this->pdo->prepare("SELECT r.*, c.CourseName, q.QuizName, q.QuizType, q.TotalMarks 
                                      FROM results r 
                                      JOIN courses c ON r.CourseID = c.CourseID 
                                      JOIN quizzes q ON r.QuizID = q.QuizID 

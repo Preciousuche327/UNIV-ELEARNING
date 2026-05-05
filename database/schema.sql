@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS quizzes (
     QuizID INT AUTO_INCREMENT PRIMARY KEY,
     QuizName VARCHAR(100) NOT NULL,
     CourseID INT NOT NULL,
+    QuizType ENUM('Quiz', 'Midterm', 'Final', 'Assignment') DEFAULT 'Quiz',
     Description TEXT,
     TotalMarks INT DEFAULT 100,
     FOREIGN KEY (CourseID) REFERENCES courses(CourseID) ON DELETE CASCADE
