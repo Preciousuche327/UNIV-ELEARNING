@@ -18,15 +18,13 @@ class InstructorController {
 
         $instructor_id = $_SESSION['user_id'];
 
-        // Get instructor's courses
+        // Get all published courses so instructors can browse courses they added to the system
         $stmt = $this->pdo->prepare("SELECT c.*, COUNT(DISTINCT e.EnrollmentID) as StudentCount, COUNT(DISTINCT q.QuizID) as QuizCount 
                                      FROM courses c 
-                                     LEFT JOIN instructor_courses ic ON c.CourseID = ic.CourseID 
                                      LEFT JOIN enrollments e ON c.CourseID = e.CourseID 
                                      LEFT JOIN quizzes q ON c.CourseID = q.CourseID 
-                                     WHERE ic.InstructorID = ? 
                                      GROUP BY c.CourseID");
-        $stmt->execute([$instructor_id]);
+        $stmt->execute();
         $courses = $stmt->fetchAll();
 
         $stats = [
@@ -81,11 +79,9 @@ class InstructorController {
 
         $stmt = $this->pdo->prepare("SELECT c.*, COUNT(e.EnrollmentID) as StudentCount 
                                      FROM courses c 
-                                     LEFT JOIN instructor_courses ic ON c.CourseID = ic.CourseID 
                                      LEFT JOIN enrollments e ON c.CourseID = e.CourseID 
-                                     WHERE ic.InstructorID = ? 
                                      GROUP BY c.CourseID");
-        $stmt->execute([$instructor_id]);
+        $stmt->execute();
         $courses = $stmt->fetchAll();
 
         require __DIR__ . '/../views/instructor/manage_courses.php';
@@ -361,12 +357,10 @@ class InstructorController {
 
         $instructor_id = $_SESSION['user_id'];
 
-        // Get instructor's courses
+        // Load all available courses for the upload dropdown
         $stmt = $this->pdo->prepare("SELECT c.* FROM courses c 
-                                     JOIN instructor_courses ic ON c.CourseID = ic.CourseID 
-                                     WHERE ic.InstructorID = ? 
                                      ORDER BY c.CourseName");
-        $stmt->execute([$instructor_id]);
+        $stmt->execute();
         $courses = $stmt->fetchAll();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
