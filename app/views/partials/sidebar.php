@@ -8,7 +8,7 @@ $user_type = $_SESSION['user_type'] ?? 'Student';
         Univ<span class="text-white">Learn</span>
     </div>
     <div class="list-group list-group-flush p-3">
-        <a href="?page=dashboard" class="list-group-item list-group-item-action bg-dark text-white border-0 py-3 rounded mb-1 <?php echo ($_GET['page'] == 'dashboard') ? 'active bg-primary' : ''; ?>">
+        <a href="?page=dashboard" class="list-group-item list-group-item-action bg-dark text-white border-0 py-3 rounded mb-1 <?php echo (in_array($_GET['page'] ?? 'dashboard', ['dashboard', 'instructor-dashboard', 'admin-dashboard'])) ? 'active bg-primary' : ''; ?>">
             <i class="bi bi-speedometer2 me-2"></i> Dashboard
         </a>
         
@@ -23,9 +23,6 @@ $user_type = $_SESSION['user_type'] ?? 'Student';
                 <i class="bi bi-book me-2"></i> Manage Courses
             </a>
         <?php elseif ($user_type === 'Instructor'): ?>
-            <a href="?page=instructor-dashboard" class="list-group-item list-group-item-action bg-dark text-white border-0 py-3 rounded mb-1 <?php echo ($_GET['page'] == 'instructor-dashboard') ? 'active bg-primary' : ''; ?>">
-                <i class="bi bi-journal-text me-2"></i> Dashboard
-            </a>
             <a href="?page=manage-courses" class="list-group-item list-group-item-action bg-dark text-white border-0 py-3 rounded mb-1 <?php echo ($_GET['page'] == 'manage-courses') ? 'active bg-primary' : ''; ?>">
                 <i class="bi bi-journal-text me-2"></i> My Courses
             </a>
@@ -33,9 +30,6 @@ $user_type = $_SESSION['user_type'] ?? 'Student';
                 <i class="bi bi-award me-2"></i> Student Results
             </a>
         <?php elseif ($user_type === 'Student'): ?>
-            <a href="?page=dashboard" class="list-group-item list-group-item-action bg-dark text-white border-0 py-3 rounded mb-1 <?php echo ($_GET['page'] == 'dashboard') ? 'active bg-primary' : ''; ?>">
-                <i class="bi bi-speedometer2 me-2"></i> Dashboard
-            </a>
             <a href="?page=courses" class="list-group-item list-group-item-action bg-dark text-white border-0 py-3 rounded mb-1 <?php echo ($_GET['page'] == 'courses') ? 'active bg-primary' : ''; ?>">
                 <i class="bi bi-search me-2"></i> Browse Courses
             </a>
