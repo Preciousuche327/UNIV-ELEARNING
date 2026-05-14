@@ -99,12 +99,118 @@ class AdminController {
     public function courses() {
         requireRole('Admin');
 
-        $stmt = $this->pdo->query("SELECT c.*, COUNT(e.EnrollmentID) as EnrollmentCount FROM courses c 
+        $stmt = $this->pdo->query("SELECT c.*, 
+                                   COUNT(DISTINCT e.EnrollmentID) as EnrollmentCount,
+                                   COUNT(DISTINCT q.QuizID) as QuizCount,
+                                   GROUP_CONCAT(DISTINCT u.Username ORDER BY u.Username SEPARATOR ', ') as InstructorNames
+                                   FROM courses c 
                                    LEFT JOIN enrollments e ON c.CourseID = e.CourseID 
-                                   GROUP BY c.CourseID ORDER BY c.CreatedAt DESC");
+                                   LEFT JOIN quizzes q ON c.CourseID = q.CourseID
+                                   LEFT JOIN instructor_courses ic ON c.CourseID = ic.CourseID
+                                   LEFT JOIN users u ON ic.InstructorID = u.UserID
+                                   GROUP BY c.CourseID 
+                                   ORDER BY c.CreatedAt DESC");
         $courses = $stmt->fetchAll();
 
         require __DIR__ . '/../views/admin/courses.php';
+    }
+
+    // Create a course and optionally assign it to an approved instructor
+    public function createCourse() {
+        requireRole('Admin');
+
+        $instructors = $this->getApprovedInstructors();
+        $errors = [];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $course_name = trim($_POST['course_name'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            $instructor_id = $_POST['instructor_id'] ?? '';
+
+            if ($course_name === '') {
+                $errors[] = "Course name is required.";
+            }
+
+            if (empty($errors)) {
+                $stmt = $this->pdo->prepare("INSERT INTO courses (CourseName, Description) VALUES (?, ?)");
+                $stmt->execute([$course_name, $description]);
+                $course_id = $this->pdo->lastInsertId();
+
+                if ($instructor_id !== '') {
+                    $stmt = $this->pdo->prepare("INSERT IGNORE INTO instructor_courses (InstructorID, CourseID) VALUES (?, ?)");
+                    $stmt->execute([$instructor_id, $course_id]);
+                }
+
+                header("Location: index.php?page=admin-courses");
+                exit;
+            }
+        }
+
+        require __DIR__ . '/../views/admin/create_course.php';
+    }
+
+    // Edit a course and its instructor assignment
+    public function editCourse() {
+        requireRole('Admin');
+
+        $course_id = $_GET['id'] ?? ($_POST['course_id'] ?? null);
+        $instructors = $this->getApprovedInstructors();
+        $errors = [];
+
+        $stmt = $this->pdo->prepare("SELECT c.*, ic.InstructorID FROM courses c
+                                     LEFT JOIN instructor_courses ic ON c.CourseID = ic.CourseID
+                                     WHERE c.CourseID = ?
+                                     LIMIT 1");
+        $stmt->execute([$course_id]);
+        $course = $stmt->fetch();
+
+        if (!$course) {
+            header("Location: index.php?page=admin-courses");
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $course_name = trim($_POST['course_name'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            $instructor_id = $_POST['instructor_id'] ?? '';
+
+            if ($course_name === '') {
+                $errors[] = "Course name is required.";
+            }
+
+            if (empty($errors)) {
+                $stmt = $this->pdo->prepare("UPDATE courses SET CourseName = ?, Description = ? WHERE CourseID = ?");
+                $stmt->execute([$course_name, $description, $course_id]);
+
+                $stmt = $this->pdo->prepare("DELETE FROM instructor_courses WHERE CourseID = ?");
+                $stmt->execute([$course_id]);
+
+                if ($instructor_id !== '') {
+                    $stmt = $this->pdo->prepare("INSERT INTO instructor_courses (InstructorID, CourseID) VALUES (?, ?)");
+                    $stmt->execute([$instructor_id, $course_id]);
+                }
+
+                header("Location: index.php?page=admin-courses");
+                exit;
+            }
+        }
+
+        require __DIR__ . '/../views/admin/edit_course.php';
+    }
+
+    // Delete a course
+    public function deleteCourse() {
+        requireRole('Admin');
+
+        $course_id = $_POST['course_id'] ?? null;
+
+        if ($course_id) {
+            $stmt = $this->pdo->prepare("DELETE FROM courses WHERE CourseID = ?");
+            $stmt->execute([$course_id]);
+        }
+
+        header("Location: index.php?page=admin-courses");
+        exit;
     }
 
     // View all results
@@ -222,5 +328,12 @@ class AdminController {
     private function getTotalQuizzes() {
         $stmt = $this->pdo->query("SELECT COUNT(*) FROM quizzes");
         return $stmt->fetchColumn();
+    }
+
+    private function getApprovedInstructors() {
+        $stmt = $this->pdo->query("SELECT UserID, Username FROM users 
+                                   WHERE UserType = 'Instructor' AND Status = 'Approved' 
+                                   ORDER BY Username");
+        return $stmt->fetchAll();
     }
 }

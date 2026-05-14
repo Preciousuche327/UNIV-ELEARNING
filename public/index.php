@@ -8,7 +8,7 @@ require_once __DIR__ . '/../app/controllers/QuizController.php';
 require_once __DIR__ . '/../app/controllers/AdminController.php';
 require_once __DIR__ . '/../app/controllers/InstructorController.php';
 
-$page = $_GET['page'] ?? 'dashboard';
+$page = $_GET['page'] ?? 'login';
 
 $auth = new AuthController($pdo);
 $course = new CourseController($pdo);
@@ -83,6 +83,18 @@ switch ($page) {
         $admin->courses();
         break;
 
+    case 'admin-create-course':
+        $admin->createCourse();
+        break;
+
+    case 'admin-edit-course':
+        $admin->editCourse();
+        break;
+
+    case 'admin-delete-course':
+        $admin->deleteCourse();
+        break;
+
     case 'admin-results':
         $admin->allResults();
         break;
@@ -105,7 +117,7 @@ switch ($page) {
         break;
 
     case 'create-course':
-        $instructor->createCourse();
+        redirect('?page=dashboard');
         break;
 
     case 'manage-courses':
@@ -113,11 +125,11 @@ switch ($page) {
         break;
 
     case 'edit-course':
-        $instructor->editCourse();
+        redirect('?page=dashboard');
         break;
 
     case 'delete-course':
-        $instructor->deleteCourse();
+        redirect('?page=dashboard');
         break;
 
     case 'create-quiz':
@@ -133,7 +145,7 @@ switch ($page) {
         break;
 
     case 'upload-content':
-        $instructor->uploadContent();
+        redirect('?page=dashboard');
         break;
 
     case 'course-results':
@@ -146,7 +158,7 @@ switch ($page) {
 
     default:
         // Route based on user type
-        if (isset($_SESSION['user_type'])) {
+        if (isLoggedIn() && isset($_SESSION['user_type'])) {
             if ($_SESSION['user_type'] === 'Admin') {
                 $admin->dashboard();
             } elseif ($_SESSION['user_type'] === 'Instructor') {
@@ -155,6 +167,6 @@ switch ($page) {
                 $course->dashboard();
             }
         } else {
-            $course->dashboard();
+            redirect('?page=login');
         }
 }

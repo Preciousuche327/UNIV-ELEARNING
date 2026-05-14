@@ -1,17 +1,17 @@
 <?php
 // app/views/instructor/manage_courses.php
 include __DIR__ . '/../partials/header.php';
-include __DIR__ . '/../partials/sidebar.php';
+include __DIR__ . '/../partials/sidebar_v2.php';
 ?>
 
 <div class="container-fluid p-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold mb-1">My Courses</h2>
-            <p class="text-muted">Manage and monitor your courses</p>
+            <p class="text-muted">Create quizzes, midterms, and finals for assigned courses</p>
         </div>
-        <a href="?page=create-course" class="btn btn-primary">
-            <i class="bi bi-plus-circle me-2"></i> New Course
+        <a href="?page=create-quiz" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i> New Assessment
         </a>
     </div>
 
@@ -33,7 +33,7 @@ include __DIR__ . '/../partials/sidebar.php';
                         <?php if (empty($courses)): ?>
                             <tr>
                                 <td colspan="6" class="text-center py-5">
-                                    <p class="text-muted mb-0">No courses created yet. Create your first course to get started!</p>
+                                    <p class="text-muted mb-0">No courses have been assigned to you yet.</p>
                                 </td>
                             </tr>
                         <?php else: ?>
@@ -52,18 +52,9 @@ include __DIR__ . '/../partials/sidebar.php';
                                     </td>
                                     <td class="pe-4">
                                         <div class="btn-group btn-group-sm">
-                                            <a href="?page=edit-course&id=<?php echo $course['CourseID']; ?>" class="btn btn-outline-primary">
-                                                <i class="bi bi-pencil"></i> Edit
+                                            <a href="?page=create-quiz&course_id=<?php echo $course['CourseID']; ?>" class="btn btn-outline-success">
+                                                <i class="bi bi-plus"></i> Assessment
                                             </a>
-                                            <a href="?page=create-quiz&course=<?php echo $course['CourseID']; ?>" class="btn btn-outline-success">
-                                                <i class="bi bi-plus"></i> Quiz
-                                            </a>
-                                            <form method="POST" action="?page=delete-course" style="display: inline;">
-                                                <input type="hidden" name="course_id" value="<?php echo $course['CourseID']; ?>">
-                                                <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Are you sure?')">
-                                                    <i class="bi bi-trash"></i> Delete
-                                                </button>
-                                            </form>
                                         </div>
                                     </td>
                                 </tr>
