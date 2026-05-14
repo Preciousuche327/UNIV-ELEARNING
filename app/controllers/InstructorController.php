@@ -18,13 +18,15 @@ class InstructorController {
 
         $instructor_id = $_SESSION['user_id'];
 
-        // Get all published courses so instructors can browse courses they added to the system
+        // Get courses assigned by admins to this instructor
         $stmt = $this->pdo->prepare("SELECT c.*, COUNT(DISTINCT e.EnrollmentID) as StudentCount, COUNT(DISTINCT q.QuizID) as QuizCount 
                                      FROM courses c 
+                                     JOIN instructor_courses ic ON c.CourseID = ic.CourseID
                                      LEFT JOIN enrollments e ON c.CourseID = e.CourseID 
                                      LEFT JOIN quizzes q ON c.CourseID = q.CourseID 
+                                     WHERE ic.InstructorID = ?
                                      GROUP BY c.CourseID");
-        $stmt->execute();
+        $stmt->execute([$instructor_id]);
         $courses = $stmt->fetchAll();
 
         $stats = [
@@ -172,6 +174,17 @@ class InstructorController {
             $description = $_POST['description'] ?? '';
             $total_marks = $_POST['total_marks'] ?? 100;
 
+            if (!in_array($quiz_type, ['Quiz', 'Midterm', 'Final'], true)) {
+                $quiz_type = 'Quiz';
+            }
+
+            $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM instructor_courses WHERE InstructorID = ? AND CourseID = ?");
+            $stmt->execute([$instructor_id, $course_id]);
+            if (!$stmt->fetchColumn()) {
+                header("Location: index.php?page=dashboard");
+                exit;
+            }
+
             $stmt = $this->pdo->prepare("INSERT INTO quizzes (QuizName, CourseID, QuizType, Description, TotalMarks) VALUES (?, ?, ?, ?, ?)");
             $stmt->execute([$quiz_name, $course_id, $quiz_type, $description, $total_marks]);
 
@@ -232,10 +245,17 @@ class InstructorController {
         $course_id = $_GET['course_id'] ?? null;
         $instructor_id = $_SESSION['user_id'];
 
-        // Get course details
-        $stmt = $this->pdo->prepare("SELECT * FROM courses WHERE CourseID = ?");
-        $stmt->execute([$course_id]);
+        // Get course details only if assigned to this instructor
+        $stmt = $this->pdo->prepare("SELECT c.* FROM courses c
+                                     JOIN instructor_courses ic ON c.CourseID = ic.CourseID
+                                     WHERE c.CourseID = ? AND ic.InstructorID = ?");
+        $stmt->execute([$course_id, $instructor_id]);
         $course = $stmt->fetch();
+
+        if (!$course) {
+            header("Location: index.php?page=dashboard");
+            exit;
+        }
 
         // Get quizzes
         $stmt = $this->pdo->prepare("SELECT * FROM quizzes WHERE CourseID = ? ORDER BY QuizID");

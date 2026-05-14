@@ -6,8 +6,8 @@ require_once 'app/controllers/QuizController.php';
 require_once 'app/controllers/AdminController.php';
 require_once 'app/controllers/InstructorController.php';
 
-// Route handling
-$page = $_GET['page'] ?? 'dashboard';
+// Route handling. Opening the app should always start at login unless a page is requested.
+$page = $_GET['page'] ?? 'login';
 
 // Controller Initialization
 $auth = new AuthController($pdo);
@@ -72,7 +72,7 @@ switch ($page) {
 
     case 'create-course':
         if (!isLoggedIn()) redirect('?page=login');
-        $instructorCtrl->createCourse();
+        redirect('?page=dashboard');
         break;
 
     case 'take-quiz':
@@ -110,6 +110,21 @@ switch ($page) {
     case 'admin-courses':
         if (!isLoggedIn()) redirect('?page=login');
         $adminCtrl->courses();
+        break;
+
+    case 'admin-create-course':
+        if (!isLoggedIn()) redirect('?page=login');
+        $adminCtrl->createCourse();
+        break;
+
+    case 'admin-edit-course':
+        if (!isLoggedIn()) redirect('?page=login');
+        $adminCtrl->editCourse();
+        break;
+
+    case 'admin-delete-course':
+        if (!isLoggedIn()) redirect('?page=login');
+        $adminCtrl->deleteCourse();
         break;
 
     case 'manage-instructors':
@@ -154,17 +169,17 @@ switch ($page) {
 
     case 'upload-content':
         if (!isLoggedIn()) redirect('?page=login');
-        $instructorCtrl->uploadContent();
+        redirect('?page=dashboard');
         break;
 
     case 'edit-course':
         if (!isLoggedIn()) redirect('?page=login');
-        $instructorCtrl->editCourse();
+        redirect('?page=dashboard');
         break;
 
     case 'delete-course':
         if (!isLoggedIn()) redirect('?page=login');
-        $instructorCtrl->deleteCourse();
+        redirect('?page=dashboard');
         break;
 
     case 'add-question':

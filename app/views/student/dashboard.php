@@ -1,7 +1,7 @@
 <?php
 // app/views/student/dashboard.php
 include __DIR__ . '/../partials/header.php';
-include __DIR__ . '/../partials/sidebar.php';
+include __DIR__ . '/../partials/sidebar_v2.php';
 
 // Calculate completed courses
 $completed_count = 0;

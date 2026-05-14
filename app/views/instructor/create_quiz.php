@@ -1,7 +1,7 @@
 <?php
 // app/views/instructor/create_quiz.php
 include __DIR__ . '/../partials/header.php';
-include __DIR__ . '/../partials/sidebar.php';
+include __DIR__ . '/../partials/sidebar_v2.php';
 ?>
 
 <div class="container-fluid p-4">
@@ -31,7 +31,7 @@ include __DIR__ . '/../partials/sidebar.php';
                             <select class="form-select" id="course_id" name="course_id" required>
                                 <option value="">-- Select a Course --</option>
                                 <?php foreach ($courses as $course): ?>
-                                    <option value="<?php echo $course['CourseID']; ?>">
+                                    <option value="<?php echo $course['CourseID']; ?>" <?php echo (($_GET['course_id'] ?? '') == $course['CourseID']) ? 'selected' : ''; ?>>
                                         <?php echo htmlspecialchars($course['CourseName']); ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -45,7 +45,6 @@ include __DIR__ . '/../partials/sidebar.php';
                                 <option value="Quiz" <?php if (isset($_GET['type']) && $_GET['type'] == 'quiz') echo 'selected'; ?>>Quiz</option>
                                 <option value="Midterm" <?php if (isset($_GET['type']) && $_GET['type'] == 'midterm') echo 'selected'; ?>>Midterm</option>
                                 <option value="Final" <?php if (isset($_GET['type']) && $_GET['type'] == 'final') echo 'selected'; ?>>Final</option>
-                                <option value="Assignment" <?php if (isset($_GET['type']) && $_GET['type'] == 'assignment') echo 'selected'; ?>>Assignment</option>
                             </select>
                             <small class="text-muted">Select the type of assessment</small>
                         </div>

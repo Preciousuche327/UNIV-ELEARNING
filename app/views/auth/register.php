@@ -14,12 +14,23 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="public/css/style.css">
+    <!-- PWA Support -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#c5a059">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js');
+            });
+        }
+    </script>
 </head>
 <body class="bg-light">
     <div class="auth-wrapper">
         <div class="row w-100 m-0">
             <!-- Left Side: Form -->
-            <div class="col-lg-6 d-flex align-items-center justify-content-center p-4 p-md-5 bg-white shadow-lg animate__animated animate__fadeInLeft">
+            <div class="col-lg-6 d-flex flex-column p-4 p-md-5 bg-white shadow-lg animate__animated animate__fadeInLeft">
+                <div class="w-100 flex-grow-1 d-flex align-items-center justify-content-center">
                 <div class="w-100" style="max-width: 480px;">
                     <div class="mb-4">
                         <a href="?page=login" class="text-decoration-none text-muted"><i class="bi bi-arrow-left me-1"></i> Back to login</a>
@@ -85,6 +96,12 @@
 
                     </form>
                 </div>
+                </div>
+
+                <footer class="text-center text-muted small pt-4">
+                    <i class="bi bi-c-circle me-1" aria-hidden="true"></i>
+                    <?php echo date('Y'); ?> <?php echo defined('APP_NAME') ? APP_NAME : 'Univ E-Learning'; ?>. All rights reserved.
+                </footer>
             </div>
 
             <!-- Right Side: Image/Branding -->

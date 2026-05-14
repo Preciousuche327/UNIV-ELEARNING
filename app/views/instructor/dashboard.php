@@ -1,7 +1,7 @@
 <?php
 // app/views/instructor/dashboard.php
 include __DIR__ . '/../partials/header.php';
-include __DIR__ . '/../partials/sidebar.php';
+include __DIR__ . '/../partials/sidebar_v2.php';
 
 // Use stats passed from controller
 $totalCourses = $stats['total_courses'] ?? 0;
@@ -56,8 +56,8 @@ $totalQuizzes = $stats['total_quizzes'] ?? 0;
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title mb-0">My Published Courses</h5>
-                    <a href="?page=create-course" class="btn btn-sm btn-primary">+ Create New Course</a>
+                    <h5 class="card-title mb-0">Assigned Courses</h5>
+                    <a href="?page=create-quiz" class="btn btn-sm btn-primary">+ Create Assessment</a>
                 </div>
                 <div class="table-responsive">
                     <table class="table align-middle">
@@ -82,7 +82,6 @@ $totalQuizzes = $stats['total_quizzes'] ?? 0;
                                         <td><?php echo $course['StudentCount']; ?> Students</td>
                                         <td><?php echo $course['QuizCount']; ?></td>
                                         <td>
-                                            <a href="?page=edit-course&id=<?php echo $course['CourseID']; ?>" class="btn btn-sm btn-light border"><i class="bi bi-pencil"></i></a>
                                             <a href="?page=course-quizzes&course_id=<?php echo $course['CourseID']; ?>" class="btn btn-sm btn-light border text-primary" title="Manage Quizzes"><i class="bi bi-patch-question"></i></a>
                                         </td>
                                     </tr>
@@ -90,7 +89,7 @@ $totalQuizzes = $stats['total_quizzes'] ?? 0;
                             <?php else: ?>
                                 <tr>
                                     <td colspan="4" class="text-center text-muted py-4">
-                                        No courses yet. <a href="?page=create-course">Create one now</a>
+                                        No courses have been assigned to you yet.
                                     </td>
                                 </tr>
                             <?php endif; ?>
@@ -114,12 +113,6 @@ $totalQuizzes = $stats['total_quizzes'] ?? 0;
                     <a href="?page=create-quiz&type=final" class="btn btn-outline-dark text-start">
                         <i class="bi bi-award me-2"></i> Create a Final
                     </a>
-                    <a href="?page=create-quiz&type=assignment" class="btn btn-outline-dark text-start">
-                        <i class="bi bi-clipboard-check me-2"></i> Create an Assignment
-                    </a>
-                    <a href="?page=upload-content" class="btn btn-outline-dark text-start">
-                        <i class="bi bi-cloud-upload me-2"></i> Upload New Content
-                    </a>
                     <a href="?page=course-results" class="btn btn-outline-dark text-start">
                         <i class="bi bi-bar-chart me-2"></i> View Performance
                     </a>
@@ -138,10 +131,6 @@ $totalQuizzes = $stats['total_quizzes'] ?? 0;
                     <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                         <span><i class="bi bi-award text-dark me-2"></i> Finals</span>
                         <span class="badge bg-light text-dark border"><?php echo $stats['finals']; ?></span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                        <span><i class="bi bi-clipboard-check text-primary me-2"></i> Assignments</span>
-                        <span class="badge bg-light text-dark border"><?php echo $stats['assignments']; ?></span>
                     </li>
                 </ul>
             </div>

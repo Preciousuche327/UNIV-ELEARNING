@@ -1,7 +1,7 @@
 <?php
 // app/views/admin/dashboard.php
 include __DIR__ . '/../partials/header.php';
-include __DIR__ . '/../partials/sidebar.php';
+include __DIR__ . '/../partials/sidebar_v2.php';
 
 // Use stats passed from controller
 $totalUsers = $stats['total_users'] ?? 0;

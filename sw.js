@@ -16,31 +16,26 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate Event - Clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
+    caches.keys().then((cacheNames) => {
       return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        cacheNames
+          .filter((cacheName) => cacheName !== CACHE_NAME)
+          .map((cacheName) => caches.delete(cacheName))
       );
     })
   );
+  self.clients.claim();
 });
 
 // Fetch Event - Network First for pages, Cache First for statics
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
-  
-  // For navigation requests (HTML/PHP), try network first
   if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request)
-        .catch(() => caches.match('./index.php')) // Fallback to cached index if offline
-    );
+    event.respondWith(fetch(event.request));
     return;
   }
 
-  // For other requests (CSS, Images), try cache first
   event.respondWith(
     caches.match(event.request).then((response) => {
       return response || fetch(event.request);
