@@ -45,6 +45,7 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                                 <option value="Quiz" <?php if (isset($_GET['type']) && $_GET['type'] == 'quiz') echo 'selected'; ?>>Quiz</option>
                                 <option value="Midterm" <?php if (isset($_GET['type']) && $_GET['type'] == 'midterm') echo 'selected'; ?>>Midterm</option>
                                 <option value="Final" <?php if (isset($_GET['type']) && $_GET['type'] == 'final') echo 'selected'; ?>>Final</option>
+                                <option value="Assignment" <?php if (isset($_GET['type']) && $_GET['type'] == 'assignment') echo 'selected'; ?>>Assignment</option>
                             </select>
                             <small class="text-muted">Select the type of assessment</small>
                         </div>

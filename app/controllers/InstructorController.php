@@ -174,7 +174,7 @@ class InstructorController {
             $description = $_POST['description'] ?? '';
             $total_marks = $_POST['total_marks'] ?? 100;
 
-            if (!in_array($quiz_type, ['Quiz', 'Midterm', 'Final'], true)) {
+            if (!in_array($quiz_type, ['Quiz', 'Midterm', 'Final', 'Assignment'], true)) {
                 $quiz_type = 'Quiz';
             }
 

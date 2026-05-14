@@ -169,7 +169,7 @@ switch ($page) {
 
     case 'upload-content':
         if (!isLoggedIn()) redirect('?page=login');
-        redirect('?page=dashboard');
+        $instructorCtrl->uploadContent();
         break;
 
     case 'edit-course':

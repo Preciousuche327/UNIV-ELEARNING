@@ -145,7 +145,7 @@ switch ($page) {
         break;
 
     case 'upload-content':
-        redirect('?page=dashboard');
+        $instructor->uploadContent();
         break;
 
     case 'course-results':

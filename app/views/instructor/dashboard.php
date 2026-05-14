@@ -113,6 +113,12 @@ $totalQuizzes = $stats['total_quizzes'] ?? 0;
                     <a href="?page=create-quiz&type=final" class="btn btn-outline-dark text-start">
                         <i class="bi bi-award me-2"></i> Create a Final
                     </a>
+                    <a href="?page=create-quiz&type=assignment" class="btn btn-outline-dark text-start">
+                        <i class="bi bi-pencil-square me-2"></i> Create an Assignment
+                    </a>
+                    <a href="?page=upload-content" class="btn btn-outline-dark text-start">
+                        <i class="bi bi-cloud-upload me-2"></i> Add Course Content
+                    </a>
                     <a href="?page=course-results" class="btn btn-outline-dark text-start">
                         <i class="bi bi-bar-chart me-2"></i> View Performance
                     </a>
@@ -131,6 +137,10 @@ $totalQuizzes = $stats['total_quizzes'] ?? 0;
                     <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                         <span><i class="bi bi-award text-dark me-2"></i> Finals</span>
                         <span class="badge bg-light text-dark border"><?php echo $stats['finals']; ?></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="bi bi-folder-plus text-success me-2"></i> Assignments</span>
+                        <span class="badge bg-light text-dark border"><?php echo $stats['assignments']; ?></span>
                     </li>
                 </ul>
             </div>
