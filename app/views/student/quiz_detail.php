@@ -1,7 +1,7 @@
 <?php
 // app/views/student/quiz_detail.php
 include __DIR__ . '/../partials/header.php';
-include __DIR__ . '/../partials/sidebar.php';
+include __DIR__ . '/../partials/sidebar_v2.php';
 
 $percentage = ($result['TotalMarks'] > 0) ? round(($result['Score'] / $result['TotalMarks']) * 100, 1) : 0;
 $is_pass = $percentage >= 70;

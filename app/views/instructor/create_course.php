@@ -1,7 +1,7 @@
 <?php
 // app/views/instructor/create_course.php
 include __DIR__ . '/../partials/header.php';
-include __DIR__ . '/../partials/sidebar.php';
+include __DIR__ . '/../partials/sidebar_v2.php';
 ?>
 
 <div class="mb-4">

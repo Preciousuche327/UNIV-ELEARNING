@@ -1,7 +1,7 @@
 <?php
 // app/views/instructor/course_quizzes.php
 include __DIR__ . '/../partials/header.php';
-include __DIR__ . '/../partials/sidebar.php';
+include __DIR__ . '/../partials/sidebar_v2.php';
 ?>
 
 <div class="container-fluid p-4">

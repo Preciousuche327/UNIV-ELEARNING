@@ -1,7 +1,7 @@
 <?php
 // app/views/student/courses.php
 include __DIR__ . '/../partials/header.php';
-include __DIR__ . '/../partials/sidebar.php';
+include __DIR__ . '/../partials/sidebar_v2.php';
 
 $search = $_GET['search'] ?? '';
 $sort = $_GET['sort'] ?? 'new';
