@@ -39,11 +39,11 @@ include __DIR__ . '/../partials/sidebar.php';
                             <div class="mb-3">
                                 <div class="d-flex justify-content-between small mb-1">
                                     <span>Progress</span>
-                                    <span><?php echo ($enrollment['CompletionStatus'] == 'Completed') ? '100%' : '25%'; ?></span>
+                                    <span><?php echo $enrollment['Progress']; ?>%</span>
                                 </div>
                                 <div class="progress" style="height: 6px;">
                                     <div class="progress-bar <?php echo ($enrollment['CompletionStatus'] == 'Completed') ? 'bg-success' : 'bg-primary'; ?>" 
-                                         style="width: <?php echo ($enrollment['CompletionStatus'] == 'Completed') ? '100%' : '25%'; ?>"></div>
+                                         style="width: <?php echo $enrollment['Progress']; ?>%"></div>
                                 </div>
                             </div>
 

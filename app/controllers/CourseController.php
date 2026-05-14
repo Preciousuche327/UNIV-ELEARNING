@@ -148,13 +148,37 @@ class CourseController {
 
         $user_id = $_SESSION['user_id'];
 
-        $stmt = $this->pdo->prepare("SELECT c.*, e.CompletionStatus, e.EnrollmentDate 
+        $stmt = $this->pdo->prepare("SELECT c.*, e.CompletionStatus, e.EnrollmentDate,
+                                     (SELECT COUNT(*) FROM quizzes WHERE CourseID = c.CourseID) as TotalQuizzes,
+                                     (SELECT COUNT(*) FROM results r JOIN quizzes q ON r.QuizID = q.QuizID 
+                                      WHERE r.UserID = ? AND q.CourseID = c.CourseID) as CompletedQuizzes
                                      FROM courses c 
                                      JOIN enrollments e ON c.CourseID = e.CourseID 
                                      WHERE e.UserID = ? 
                                      ORDER BY e.EnrollmentDate DESC");
-        $stmt->execute([$user_id]);
+        $stmt->execute([$user_id, $user_id]);
         $enrollments = $stmt->fetchAll();
+
+        // Calculate progress for each enrollment
+        foreach ($enrollments as &$enrollment) {
+            $total_quizzes = $enrollment['TotalQuizzes'];
+            $completed_quizzes = $enrollment['CompletedQuizzes'];
+            
+            if ($total_quizzes > 0) {
+                $enrollment['Progress'] = round(($completed_quizzes / $total_quizzes) * 100);
+            } else {
+                $enrollment['Progress'] = 0;
+            }
+            
+            // If all quizzes completed, mark as completed
+            if ($completed_quizzes == $total_quizzes && $total_quizzes > 0) {
+                $enrollment['CompletionStatus'] = 'Completed';
+                // Update database
+                $update_stmt = $this->pdo->prepare("UPDATE enrollments SET CompletionStatus = 'Completed' 
+                                                   WHERE UserID = ? AND CourseID = ?");
+                $update_stmt->execute([$user_id, $enrollment['CourseID']]);
+            }
+        }
 
         require __DIR__ . '/../views/student/my_enrollments.php';
     }
