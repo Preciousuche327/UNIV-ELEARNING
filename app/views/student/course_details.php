@@ -39,7 +39,7 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                     <h4 class="fw-bold mb-3 border-bottom pb-2">Course Curriculum</h4>
                     <div class="list-group list-group-flush">
                         <?php foreach ($contents as $content): ?>
-                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
+                            <a href="<?php echo htmlspecialchars($content['ContentURL'] ?: '#'); ?>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3" <?php echo !empty($content['ContentURL']) ? 'target="_blank" rel="noopener noreferrer"' : ''; ?>>
                                 <div>
                                     <i class="bi bi-<?php 
                                         echo match($content['ContentType']) {
@@ -50,6 +50,9 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                                         };
                                     ?> me-3 fs-5"></i>
                                     <span class="fw-medium"><?php echo htmlspecialchars($content['ContentTitle']); ?></span>
+                                    <?php if (!empty($content['ContentURL'])): ?>
+                                        <div class="small text-muted mt-1"><?php echo htmlspecialchars($content['ContentURL']); ?></div>
+                                    <?php endif; ?>
                                 </div>
                                 <span class="badge bg-light text-dark border"><?php echo $content['ContentType']; ?></span>
                             </a>

@@ -55,7 +55,13 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                                                 ];
                                                 echo $typeIcons[$item['ContentType']] ?? '';
                                                 ?> 
-                                                <?php echo htmlspecialchars($item['ContentURL']); ?>
+                                                <?php if (!empty($item['ContentURL'])): ?>
+                                                    <a href="<?php echo htmlspecialchars($item['ContentURL']); ?>" target="_blank" rel="noopener noreferrer" class="text-decoration-none">
+                                                        <?php echo htmlspecialchars($item['ContentURL']); ?>
+                                                    </a>
+                                                <?php else: ?>
+                                                    <span class="text-muted">No URL provided</span>
+                                                <?php endif; ?>
                                             </small>
                                         </div>
                                     </td>
