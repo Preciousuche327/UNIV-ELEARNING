@@ -60,9 +60,12 @@ if (empty($current_page)) {
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom p-3">
         <div class="container-fluid">
-            <span class="navbar-text fw-medium">
-                Welcome back, <span class="text-primary"><?php echo htmlspecialchars($_SESSION['username'] ?? 'Guest'); ?></span> (<?php echo $_SESSION['user_type'] ?? 'Student'; ?>)
-            </span>
+                <button class="btn btn-outline-secondary btn-sm me-3 d-lg-none" id="menu-toggle" aria-label="Toggle navigation">
+                    <i class="bi bi-list"></i>
+                </button>
+                <span class="navbar-text fw-medium">
+                    Welcome back, <span class="text-primary"><?php echo htmlspecialchars($_SESSION['username'] ?? 'Guest'); ?></span> (<?php echo $_SESSION['user_type'] ?? 'Student'; ?>)
+                </span>
             <div class="ms-auto">
                 <span class="text-muted small"><?php echo date('l, jS F Y'); ?></span>
             </div>

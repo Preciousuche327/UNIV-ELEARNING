@@ -42,6 +42,11 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                                     <td class="ps-4 fw-bold"><?php echo htmlspecialchars($course['CourseName']); ?></td>
                                     <td>
                                         <span class="badge bg-soft-primary"><?php echo $course['StudentCount']; ?></span>
+                                        <?php if (!empty($course['StudentNames'])): ?>
+                                            <div class="small text-muted mt-1 text-truncate" style="max-width:220px;">
+                                                <?php echo htmlspecialchars($course['StudentNames']); ?>
+                                            </div>
+                                        <?php endif; ?>
                                     </td>
                                     <td>
                                         <span class="badge bg-soft-success"><?php echo isset($course['QuizCount']) ? $course['QuizCount'] : 0; ?></span>

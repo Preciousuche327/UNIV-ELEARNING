@@ -19,13 +19,17 @@ class InstructorController {
         $instructor_id = $_SESSION['user_id'];
 
         // Get courses assigned by admins to this instructor
-        $stmt = $this->pdo->prepare("SELECT c.*, COUNT(DISTINCT e.EnrollmentID) as StudentCount, COUNT(DISTINCT q.QuizID) as QuizCount 
-                                     FROM courses c 
-                                     JOIN instructor_courses ic ON c.CourseID = ic.CourseID
-                                     LEFT JOIN enrollments e ON c.CourseID = e.CourseID 
-                                     LEFT JOIN quizzes q ON c.CourseID = q.CourseID 
-                                     WHERE ic.InstructorID = ?
-                                     GROUP BY c.CourseID");
+        $stmt = $this->pdo->prepare("SELECT c.*, 
+                         COUNT(DISTINCT e.UserID) as StudentCount,
+                         GROUP_CONCAT(DISTINCT u.Username ORDER BY u.Username SEPARATOR ', ') as StudentNames,
+                         COUNT(DISTINCT q.QuizID) as QuizCount 
+                         FROM courses c 
+                         JOIN instructor_courses ic ON c.CourseID = ic.CourseID
+                         LEFT JOIN enrollments e ON c.CourseID = e.CourseID 
+                         LEFT JOIN users u ON e.UserID = u.UserID
+                         LEFT JOIN quizzes q ON c.CourseID = q.CourseID 
+                         WHERE ic.InstructorID = ? 
+                         GROUP BY c.CourseID");
         $stmt->execute([$instructor_id]);
         $courses = $stmt->fetchAll();
 

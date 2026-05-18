@@ -209,6 +209,45 @@ body {
     background: #a8a8a8; 
 }
 
+/* Collapsible sidebar behavior */
+#sidebar-wrapper {
+    width: 250px;
+}
+
+#page-content-wrapper {
+    margin-left: 250px;
+    transition: margin 0.3s ease;
+}
+
+#wrapper.toggled #sidebar-wrapper {
+    margin-left: -250px;
+}
+
+#wrapper.toggled #page-content-wrapper {
+    margin-left: 0;
+}
+
+/* Mobile behavior: sidebar hidden by default and slides over content when toggled */
+@media (max-width: 767.98px) {
+    #sidebar-wrapper {
+        position: fixed;
+        top: 0;
+        left: -250px;
+        height: 100vh;
+        z-index: 1050;
+        margin-left: 0;
+        transition: left 0.25s ease;
+    }
+
+    #wrapper.toggled #sidebar-wrapper {
+        left: 0;
+    }
+
+    /* Ensure content isn't pushed on small screens */
+    #page-content-wrapper {
+        margin-left: 0;
+    }
+}
 /* Auth Pages Split Screen */
 .auth-wrapper {
     min-height: 100vh;
