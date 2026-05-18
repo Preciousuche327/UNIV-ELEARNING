@@ -2,16 +2,34 @@
 /* -----------------------------
    DATABASE CONFIGURATION
 ------------------------------*/
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'univ_elearning');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+$databaseUrl = getenv('DATABASE_URL') ?: getenv('MYSQL_URL') ?: '';
+$databaseConfig = [];
+
+if ($databaseUrl) {
+    $parsedDatabaseUrl = parse_url($databaseUrl);
+
+    if ($parsedDatabaseUrl !== false) {
+        $databaseConfig = [
+            'host' => $parsedDatabaseUrl['host'] ?? null,
+            'port' => $parsedDatabaseUrl['port'] ?? null,
+            'name' => isset($parsedDatabaseUrl['path']) ? ltrim($parsedDatabaseUrl['path'], '/') : null,
+            'user' => isset($parsedDatabaseUrl['user']) ? rawurldecode($parsedDatabaseUrl['user']) : null,
+            'pass' => isset($parsedDatabaseUrl['pass']) ? rawurldecode($parsedDatabaseUrl['pass']) : null,
+        ];
+    }
+}
+
+define('DB_HOST', $databaseConfig['host'] ?? getenv('MYSQLHOST') ?: getenv('DB_HOST') ?: 'localhost');
+define('DB_PORT', $databaseConfig['port'] ?? getenv('MYSQLPORT') ?: getenv('DB_PORT') ?: '3306');
+define('DB_NAME', $databaseConfig['name'] ?? getenv('MYSQLDATABASE') ?: getenv('DB_NAME') ?: 'univ_elearning');
+define('DB_USER', $databaseConfig['user'] ?? getenv('MYSQLUSER') ?: getenv('DB_USER') ?: 'root');
+define('DB_PASS', $databaseConfig['pass'] ?? getenv('MYSQLPASSWORD') ?: getenv('DB_PASS') ?: '');
 
 /* -----------------------------
    APP CONFIGURATION
 ------------------------------*/
 define('APP_NAME', 'Univ E-Learning');
-define('BASE_URL', 'http://localhost/univ_elearning/');
+define('BASE_URL', getenv('BASE_URL') ?: 'http://localhost/univ_elearning/');
 
 /* -----------------------------
    START SESSION (SAFE)
@@ -25,7 +43,7 @@ if (session_status() === PHP_SESSION_NONE) {
 ------------------------------*/
 try {
     $pdo = new PDO(
-        "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4",
+        "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=utf8mb4",
         DB_USER,
         DB_PASS
     );
