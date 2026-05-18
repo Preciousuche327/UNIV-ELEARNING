@@ -11,14 +11,8 @@ foreach ($enrolled_courses as $course) {
     }
 }
 
-// Calculate average score from results
-$average_score = 0;
-if ($completed_quizzes > 0) {
-    $stmt = $pdo->prepare("SELECT AVG(Score) as avg_score FROM results WHERE UserID = ?");
-    $stmt->execute([$_SESSION['user_id']]);
-    $score_data = $stmt->fetch();
-    $average_score = ($score_data && isset($score_data['avg_score'])) ? round($score_data['avg_score'], 2) : 0;
-}
+// Average score is provided by the controller
+$average_score = $average_score ?? 0;
 ?>
 
 <div class="row g-4 mb-4">

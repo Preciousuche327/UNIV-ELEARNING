@@ -35,6 +35,15 @@ class CourseController {
         $stmt->execute([$user_id]);
         $completed_quizzes = $stmt->fetchColumn();
 
+        // Calculate average score from results
+        $average_score = 0;
+        if ($completed_quizzes > 0) {
+            $stmt = $this->pdo->prepare("SELECT AVG(Score) as avg_score FROM results WHERE UserID = ?");
+            $stmt->execute([$user_id]);
+            $score_data = $stmt->fetch();
+            $average_score = ($score_data && isset($score_data['avg_score'])) ? round($score_data['avg_score'], 2) : 0;
+        }
+
         // Get breakdown of completed assessments
         $assessment_stats = [
             'quizzes' => $this->countCompletedByType($user_id, 'Quiz'),
