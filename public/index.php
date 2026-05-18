@@ -148,6 +148,18 @@ switch ($page) {
         $instructor->uploadContent();
         break;
 
+    case 'manage-content':
+        $instructor->manageContent();
+        break;
+
+    case 'edit-content':
+        $instructor->editContent();
+        break;
+
+    case 'delete-content':
+        $instructor->deleteContent();
+        break;
+
     case 'course-results':
         $instructor->courseResults();
         break;

@@ -172,6 +172,21 @@ switch ($page) {
         $instructorCtrl->uploadContent();
         break;
 
+    case 'manage-content':
+        if (!isLoggedIn()) redirect('?page=login');
+        $instructorCtrl->manageContent();
+        break;
+
+    case 'edit-content':
+        if (!isLoggedIn()) redirect('?page=login');
+        $instructorCtrl->editContent();
+        break;
+
+    case 'delete-content':
+        if (!isLoggedIn()) redirect('?page=login');
+        $instructorCtrl->deleteContent();
+        break;
+
     case 'edit-course':
         if (!isLoggedIn()) redirect('?page=login');
         redirect('?page=dashboard');

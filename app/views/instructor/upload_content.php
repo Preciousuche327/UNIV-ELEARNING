@@ -5,8 +5,9 @@ include __DIR__ . '/../partials/sidebar_v2.php';
 ?>
 
 <div class="container-fluid p-4">
-    <div class="mb-4">
+    <div class="mb-4 d-flex justify-content-between align-items-center">
         <a href="?page=dashboard" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
+        <a href="?page=manage-content" class="btn btn-outline-primary btn-sm"><i class="bi bi-library"></i> View All Content</a>
     </div>
 
     <div class="row justify-content-center">

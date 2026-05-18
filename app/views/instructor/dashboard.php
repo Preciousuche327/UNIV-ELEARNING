@@ -119,6 +119,9 @@ $totalQuizzes = $stats['total_quizzes'] ?? 0;
                     <a href="?page=upload-content" class="btn btn-outline-dark text-start">
                         <i class="bi bi-cloud-upload me-2"></i> Add Course Content
                     </a>
+                    <a href="?page=manage-content" class="btn btn-outline-dark text-start">
+                        <i class="bi bi-folder-check me-2"></i> Manage Content
+                    </a>
                     <a href="?page=course-results" class="btn btn-outline-dark text-start">
                         <i class="bi bi-bar-chart me-2"></i> View Performance
                     </a>

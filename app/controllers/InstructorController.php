@@ -420,15 +420,105 @@ class InstructorController {
             $url = $_POST['content_url'] ?? '';
 
             if ($course_id && !empty($title)) {
-                $stmt = $this->pdo->prepare("INSERT INTO course_contents (CourseID, ContentType, ContentTitle, ContentURL) VALUES (?, ?, ?, ?)");
-                $stmt->execute([$course_id, $type, $title, $url]);
+                $stmt = $this->pdo->prepare("INSERT INTO course_contents (CourseID, ContentType, ContentTitle, ContentURL, CreatedBy) VALUES (?, ?, ?, ?, ?)");
+                $stmt->execute([$course_id, $type, $title, $url, $instructor_id]);
 
-                header("Location: index.php?page=manage-courses");
+                header("Location: index.php?page=manage-content");
                 exit;
             }
         }
 
         require __DIR__ . '/../views/instructor/upload_content.php';
+    }
+
+    // Manage course content
+    public function manageContent() {
+        if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'Instructor') {
+            header("Location: index.php?page=login");
+            exit;
+        }
+
+        $instructor_id = $_SESSION['user_id'];
+
+        // Get all content for courses belonging to this instructor
+        $stmt = $this->pdo->prepare("SELECT cc.*, c.CourseName 
+                                     FROM course_contents cc
+                                     JOIN courses c ON cc.CourseID = c.CourseID
+                                     JOIN instructor_courses ic ON c.CourseID = ic.CourseID
+                                     WHERE ic.InstructorID = ?
+                                     ORDER BY cc.CreatedAt DESC");
+        $stmt->execute([$instructor_id]);
+        $contents = $stmt->fetchAll();
+
+        require __DIR__ . '/../views/instructor/manage_content.php';
+    }
+
+    // Edit content
+    public function editContent() {
+        if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'Instructor') {
+            header("Location: index.php?page=login");
+            exit;
+        }
+
+        $instructor_id = $_SESSION['user_id'];
+        $content_id = $_GET['id'] ?? ($_POST['content_id'] ?? null);
+
+        // Verify content belongs to instructor's course
+        $stmt = $this->pdo->prepare("SELECT cc.* FROM course_contents cc
+                                     JOIN courses c ON cc.CourseID = c.CourseID
+                                     JOIN instructor_courses ic ON c.CourseID = ic.CourseID
+                                     WHERE cc.ContentID = ? AND ic.InstructorID = ?");
+        $stmt->execute([$content_id, $instructor_id]);
+        $content = $stmt->fetch();
+
+        if (!$content) {
+            header("Location: index.php?page=manage-content");
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $title = $_POST['content_title'] ?? '';
+            $type = $_POST['content_type'] ?? 'Text';
+            $url = $_POST['content_url'] ?? '';
+
+            if (!empty($title)) {
+                $stmt = $this->pdo->prepare("UPDATE course_contents SET ContentTitle = ?, ContentType = ?, ContentURL = ? WHERE ContentID = ?");
+                $stmt->execute([$title, $type, $url, $content_id]);
+
+                header("Location: index.php?page=manage-content");
+                exit;
+            }
+        }
+
+        require __DIR__ . '/../views/instructor/edit_content.php';
+    }
+
+    // Delete content
+    public function deleteContent() {
+        if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'Instructor') {
+            header("Location: index.php?page=login");
+            exit;
+        }
+
+        $instructor_id = $_SESSION['user_id'];
+        $content_id = $_POST['content_id'] ?? null;
+
+        if ($content_id) {
+            // Verify content belongs to instructor's course
+            $stmt = $this->pdo->prepare("SELECT cc.* FROM course_contents cc
+                                         JOIN courses c ON cc.CourseID = c.CourseID
+                                         JOIN instructor_courses ic ON c.CourseID = ic.CourseID
+                                         WHERE cc.ContentID = ? AND ic.InstructorID = ?");
+            $stmt->execute([$content_id, $instructor_id]);
+
+            if ($stmt->fetch()) {
+                $stmt = $this->pdo->prepare("DELETE FROM course_contents WHERE ContentID = ?");
+                $stmt->execute([$content_id]);
+            }
+        }
+
+        header("Location: index.php?page=manage-content");
+        exit;
     }
 
     // Helper methods
