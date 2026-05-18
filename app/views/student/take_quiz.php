@@ -83,6 +83,19 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                                                     </label>
                                                 <?php endforeach; ?>
                                             <?php endif; ?>
+                                        <?php elseif (isset($question['QuestionType']) && $question['QuestionType'] === 'True/False'): ?>
+                                            <label class="quiz-option w-100" for="true_<?php echo $qindex; ?>">
+                                                <input type="radio" name="answer_<?php echo $question['QuestionID']; ?>" id="true_<?php echo $qindex; ?>" value="1" required <?php echo (!empty($question['user_answer']) && isset($question['user_answer']['AnswerText']) && $question['user_answer']['AnswerText'] === '1') ? 'checked' : ''; ?> >
+                                                <span class="fs-6 text-dark fw-medium">True</span>
+                                            </label>
+                                            <label class="quiz-option w-100" for="false_<?php echo $qindex; ?>">
+                                                <input type="radio" name="answer_<?php echo $question['QuestionID']; ?>" id="false_<?php echo $qindex; ?>" value="0" required <?php echo (!empty($question['user_answer']) && isset($question['user_answer']['AnswerText']) && $question['user_answer']['AnswerText'] === '0') ? 'checked' : ''; ?> >
+                                                <span class="fs-6 text-dark fw-medium">False</span>
+                                            </label>
+                                        <?php elseif (isset($question['QuestionType']) && $question['QuestionType'] === 'Short Answer'): ?>
+                                            <div class="mb-3">
+                                                <textarea class="form-control" name="answer_<?php echo $question['QuestionID']; ?>" rows="4" maxlength="500" placeholder="Type your short answer (max 500 characters)"><?php echo (!empty($question['user_answer']) && isset($question['user_answer']['AnswerText'])) ? htmlspecialchars($question['user_answer']['AnswerText']) : ''; ?></textarea>
+                                            </div>
                                         <?php else: ?>
                                             <!-- Fallback Mock Options if Backend is missing -->
                                             <label class="quiz-option w-100" for="mock_true_<?php echo $qindex; ?>">

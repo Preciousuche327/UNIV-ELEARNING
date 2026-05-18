@@ -52,7 +52,7 @@ $sort = $_GET['sort'] ?? 'new';
     <div class="row g-4" id="coursesGrid">
         <?php if (!empty($courses)): ?>
             <?php foreach ($courses as $course): ?>
-                <div class="col-md-6 col-lg-4 col-xl-3 animate__animated animate__fadeInUp">
+                <div class="col-md-6 col-lg-4 col-xl-3 animate__animated animate__fadeInUp course-card-container">
                     <div class="card h-100 border-0 shadow-sm course-card overflow-hidden">
                         <div class="position-relative">
                             <img src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" class="card-img-top" alt="Course" style="height: 160px; object-fit: cover;">

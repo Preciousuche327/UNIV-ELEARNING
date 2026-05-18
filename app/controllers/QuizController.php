@@ -38,26 +38,48 @@ class QuizController {
 
         // Handle quiz submission
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_quiz'])) {
-            // Process all answers
+            // Process all answers (supports multiple choice, true/false and short answer)
+            $MAX_SHORT_ANSWER = 500;
             foreach ($_POST as $key => $value) {
-                if (strpos($key, 'answer_') === 0 && !empty($value)) {
-                    $question_id = substr($key, 7); // Remove 'answer_' prefix
-                    $option_id = $value;
+                if (strpos($key, 'answer_') === 0) {
+                    $question_id = (int)substr($key, 7); // Remove 'answer_' prefix
+                    if ($question_id <= 0) continue;
 
-                    // Get the option to check if correct
-                    $stmt = $this->pdo->prepare("SELECT IsCorrect FROM question_options WHERE OptionID = ?");
-                    $stmt->execute([$option_id]);
-                    $option = $stmt->fetch();
+                    // Fetch question type to determine how to save the answer
+                    $stmt = $this->pdo->prepare("SELECT QuestionType FROM questions WHERE QuestionID = ?");
+                    $stmt->execute([$question_id]);
+                    $qrow = $stmt->fetch();
+                    $qtype = $qrow ? $qrow['QuestionType'] : 'Multiple Choice';
 
-                    if ($option) {
-                        // Save or update answer
-                        $stmt = $this->pdo->prepare("INSERT INTO user_answers (UserID, QuestionID, SelectedOptionID, IsCorrect) 
-                                                     VALUES (?, ?, ?, ?) 
-                                                     ON DUPLICATE KEY UPDATE SelectedOptionID = ?, IsCorrect = ?");
-                        $stmt->execute([
-                            $user_id, $question_id, $option_id, $option['IsCorrect'],
-                            $option_id, $option['IsCorrect']
-                        ]);
+                    if ($qtype === 'Short Answer') {
+                        $answer_text = trim($value);
+                        if (strlen($answer_text) > $MAX_SHORT_ANSWER) {
+                            $answer_text = substr($answer_text, 0, $MAX_SHORT_ANSWER);
+                        }
+
+                        // Save or update short answer (grading may be manual later)
+                        $stmt = $this->pdo->prepare("INSERT INTO user_answers (UserID, QuestionID, AnswerText, IsCorrect) VALUES (?, ?, ?, NULL) 
+                                                     ON DUPLICATE KEY UPDATE AnswerText = ?, IsCorrect = NULL");
+                        $stmt->execute([$user_id, $question_id, $answer_text, $answer_text]);
+
+                    } else {
+                        // treat as option id (multiple choice / true-false)
+                        $option_id = $value;
+                        // Get the option to check if correct
+                        $stmt = $this->pdo->prepare("SELECT IsCorrect FROM question_options WHERE OptionID = ?");
+                        $stmt->execute([$option_id]);
+                        $option = $stmt->fetch();
+
+                        if ($option) {
+                            // Save or update answer
+                            $stmt = $this->pdo->prepare("INSERT INTO user_answers (UserID, QuestionID, SelectedOptionID, IsCorrect) 
+                                                         VALUES (?, ?, ?, ?) 
+                                                         ON DUPLICATE KEY UPDATE SelectedOptionID = ?, IsCorrect = ?");
+                            $stmt->execute([
+                                $user_id, $question_id, $option_id, $option['IsCorrect'],
+                                $option_id, $option['IsCorrect']
+                            ]);
+                        }
                     }
                 }
             }

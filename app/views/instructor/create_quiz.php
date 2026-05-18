@@ -11,6 +11,21 @@ include __DIR__ . '/../partials/sidebar_v2.php';
         </a>
     </div>
 
+    <?php if (isset($_SESSION['success'])): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <?php echo $_SESSION['success']; unset($_SESSION['success']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+    <?php if (isset($_SESSION['error'])): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+
     <div class="row justify-content-center">
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm">
@@ -58,8 +73,8 @@ include __DIR__ . '/../partials/sidebar_v2.php';
 
                         <div class="mb-4">
                             <label for="total_marks" class="form-label fw-bold">Total Marks</label>
-                            <input type="number" class="form-control" id="total_marks" name="total_marks" value="100" min="1">
-                            <small class="text-muted">Maximum score for this assessment</small>
+                            <input type="number" class="form-control" id="total_marks" name="total_marks" value="100" min="1" max="500">
+                            <small class="text-muted">Maximum score for this assessment (capped at 500)</small>
                         </div>
 
                         <div class="d-grid gap-2">

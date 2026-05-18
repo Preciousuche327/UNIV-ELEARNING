@@ -178,14 +178,21 @@ class InstructorController {
             $description = $_POST['description'] ?? '';
             $total_marks = $_POST['total_marks'] ?? 100;
 
+            // Enforce allowed quiz types and clamp total marks to a safe maximum
             if (!in_array($quiz_type, ['Quiz', 'Midterm', 'Final', 'Assignment'], true)) {
                 $quiz_type = 'Quiz';
             }
 
+            $MAX_TOTAL_MARKS = 500; // global cap for an assessment's total marks
+            $total_marks = (int)$total_marks;
+            if ($total_marks < 1) $total_marks = 1;
+            if ($total_marks > $MAX_TOTAL_MARKS) $total_marks = $MAX_TOTAL_MARKS;
+
             $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM instructor_courses WHERE InstructorID = ? AND CourseID = ?");
             $stmt->execute([$instructor_id, $course_id]);
             if (!$stmt->fetchColumn()) {
-                header("Location: index.php?page=dashboard");
+                $_SESSION['error'] = 'Invalid course selection or you are not assigned to that course.';
+                header("Location: index.php?page=create-quiz");
                 exit;
             }
 
@@ -193,6 +200,10 @@ class InstructorController {
             $stmt->execute([$quiz_name, $course_id, $quiz_type, $description, $total_marks]);
 
             $quiz_id = $this->pdo->lastInsertId();
+            $_SESSION['success'] = 'Assessment created successfully.';
+            if ($total_marks >= 500) {
+                $_SESSION['success'] = 'Assessment created successfully. Total marks were capped at the maximum allowed value of 500.';
+            }
 
             header("Location: index.php?page=manage-quiz&id=$quiz_id");
             exit;
@@ -282,8 +293,40 @@ class InstructorController {
         $marks = $_POST['marks'] ?? 1;
 
         if (!empty($question_text)) {
+            // Ensure we don't exceed the quiz total when adding questions
+            $stmt = $this->pdo->prepare("SELECT TotalMarks FROM quizzes WHERE QuizID = ?");
+            $stmt->execute([$quiz_id]);
+            $quizInfo = $stmt->fetch();
+            $quizTotal = $quizInfo ? (int)$quizInfo['TotalMarks'] : 0;
+
+            $stmt = $this->pdo->prepare("SELECT COALESCE(SUM(Marks), 0) as sum_marks FROM questions WHERE QuizID = ?");
+            $stmt->execute([$quiz_id]);
+            $currentSum = (int)$stmt->fetchColumn();
+
+            $available = $quizTotal - $currentSum;
+            if ($available <= 0) {
+                // No space left for more marks
+                $_SESSION['error'] = 'This assessment already has the full total marks assigned. Remove or adjust existing questions before adding more.';
+                header("Location: " . $_SERVER['HTTP_REFERER']);
+                exit;
+            }
+
+            $marks = (int)$marks;
+            if ($marks < 1) $marks = 1;
+            $clamped = false;
+            if ($marks > $available) {
+                $marks = $available; // clamp to remaining available marks
+                $clamped = true;
+            }
+
             $stmt = $this->pdo->prepare("INSERT INTO questions (QuizID, QuestionText, QuestionType, Marks) VALUES (?, ?, ?, ?)");
             $stmt->execute([$quiz_id, $question_text, $question_type, $marks]);
+
+            if ($clamped) {
+                $_SESSION['success'] = "Question added successfully, but marks were reduced to {$marks} so the assessment stays within the total {$quizTotal} points.";
+            } else {
+                $_SESSION['success'] = 'Question added successfully.';
+            }
 
             $question_id = $this->pdo->lastInsertId();
 
