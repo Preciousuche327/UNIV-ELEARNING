@@ -81,10 +81,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Sidebar toggler (if needed in mobile views)
     const toggleBtn = document.getElementById('menu-toggle');
     const wrapper = document.getElementById('wrapper');
+    const sidebarOverlay = document.querySelector('.sidebar-overlay');
+
     if (toggleBtn && wrapper) {
         toggleBtn.addEventListener('click', (e) => {
             e.preventDefault();
             wrapper.classList.toggle('toggled');
+        });
+    }
+
+    if (sidebarOverlay && wrapper) {
+        sidebarOverlay.addEventListener('click', () => {
+            wrapper.classList.remove('toggled');
         });
     }
 });

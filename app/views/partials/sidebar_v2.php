@@ -56,6 +56,8 @@ if (empty($current_page)) {
 </div>
 <!-- /#sidebar-wrapper -->
 
+<div class="sidebar-overlay"></div>
+
 <!-- Page Content -->
 <div id="page-content-wrapper" class="w-100">
     <!-- Navbar -->

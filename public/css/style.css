@@ -215,6 +215,8 @@ body {
 }
 
 #page-content-wrapper {
+    width: 100%;
+    min-height: 100vh;
     margin-left: 250px;
     transition: margin 0.3s ease;
 }
@@ -225,6 +227,24 @@ body {
 
 #wrapper.toggled #page-content-wrapper {
     margin-left: 0;
+}
+
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+    z-index: 1040;
+}
+
+#wrapper.toggled .sidebar-overlay {
+    opacity: 1;
+    visibility: visible;
 }
 
 /* Mobile behavior: sidebar hidden by default and slides over content when toggled */
@@ -246,6 +266,10 @@ body {
     /* Ensure content isn't pushed on small screens */
     #page-content-wrapper {
         margin-left: 0;
+    }
+
+    .sidebar-overlay {
+        display: block;
     }
 }
 /* Auth Pages Split Screen */
