@@ -13,6 +13,13 @@ class AdminController {
     public function dashboard() {
         requireRole('Admin');
 
+        $overviewPeriod = $_GET['period'] ?? 'month';
+        if (!in_array($overviewPeriod, ['day', 'month', 'year'], true)) {
+            $overviewPeriod = 'month';
+        }
+
+        $periodRange = $this->getPeriodRange($overviewPeriod);
+
         // Get statistics
         $stats = [
             'total_users' => $this->getTotalUsers(),
@@ -22,6 +29,16 @@ class AdminController {
             'total_courses' => $this->getTotalCourses(),
             'total_enrollments' => $this->getTotalEnrollments(),
             'total_quizzes' => $this->getTotalQuizzes(),
+        ];
+
+        $periodStats = [
+            'total_users' => $this->getTotalUsers($periodRange),
+            'total_instructors' => $this->countUsersByType('Instructor', $periodRange),
+            'pending_instructors' => $this->countUsersByStatus('Instructor', 'Pending', $periodRange),
+            'total_students' => $this->countUsersByType('Student', $periodRange),
+            'total_courses' => $this->getTotalCourses($periodRange),
+            'total_enrollments' => $this->getTotalEnrollments($periodRange),
+            'total_quizzes' => $this->getTotalQuizzes($periodRange),
         ];
 
         require __DIR__ . '/../views/admin/dashboard.php';
@@ -316,35 +333,111 @@ class AdminController {
     }
 
     // Helper methods
-    private function getTotalUsers() {
-        $stmt = $this->pdo->query("SELECT COUNT(*) FROM users");
+    private function getPeriodRange($period) {
+        switch ($period) {
+            case 'day':
+                return [
+                    'start' => date('Y-m-d 00:00:00'),
+                    'end' => date('Y-m-d 00:00:00', strtotime('+1 day')),
+                ];
+            case 'year':
+                return [
+                    'start' => date('Y-01-01 00:00:00'),
+                    'end' => date('Y-01-01 00:00:00', strtotime('+1 year')),
+                ];
+            case 'month':
+            default:
+                return [
+                    'start' => date('Y-m-01 00:00:00'),
+                    'end' => date('Y-m-01 00:00:00', strtotime('+1 month')),
+                ];
+        }
+    }
+
+    private function applyDateRange(&$query, &$params, $column, $range) {
+        if (!$range) {
+            return;
+        }
+
+        $query .= " AND {$column} >= ? AND {$column} < ?";
+        $params[] = $range['start'];
+        $params[] = $range['end'];
+    }
+
+    private function tableHasColumn($table, $column) {
+        try {
+            $stmt = $this->pdo->prepare("SHOW COLUMNS FROM {$table} LIKE ?");
+            $stmt->execute([$column]);
+            return (bool) $stmt->fetch();
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
+    private function getTotalUsers($range = null) {
+        $query = "SELECT COUNT(*) FROM users WHERE 1=1";
+        $params = [];
+        $this->applyDateRange($query, $params, 'CreatedAt', $range);
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute($params);
         return $stmt->fetchColumn();
     }
 
-    private function countUsersByType($type) {
-        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM users WHERE UserType = ?");
-        $stmt->execute([$type]);
+    private function countUsersByType($type, $range = null) {
+        $query = "SELECT COUNT(*) FROM users WHERE UserType = ?";
+        $params = [$type];
+        $this->applyDateRange($query, $params, 'CreatedAt', $range);
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute($params);
         return $stmt->fetchColumn();
     }
 
-    private function countUsersByStatus($type, $status) {
-        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM users WHERE UserType = ? AND Status = ?");
-        $stmt->execute([$type, $status]);
+    private function countUsersByStatus($type, $status, $range = null) {
+        $query = "SELECT COUNT(*) FROM users WHERE UserType = ? AND Status = ?";
+        $params = [$type, $status];
+        $this->applyDateRange($query, $params, 'CreatedAt', $range);
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute($params);
         return $stmt->fetchColumn();
     }
 
-    private function getTotalCourses() {
-        $stmt = $this->pdo->query("SELECT COUNT(*) FROM courses");
+    private function getTotalCourses($range = null) {
+        $query = "SELECT COUNT(*) FROM courses WHERE 1=1";
+        $params = [];
+        $this->applyDateRange($query, $params, 'CreatedAt', $range);
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute($params);
         return $stmt->fetchColumn();
     }
 
-    private function getTotalEnrollments() {
-        $stmt = $this->pdo->query("SELECT COUNT(*) FROM enrollments");
+    private function getTotalEnrollments($range = null) {
+        $query = "SELECT COUNT(*) FROM enrollments WHERE 1=1";
+        $params = [];
+        $this->applyDateRange($query, $params, 'EnrollmentDate', $range);
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute($params);
         return $stmt->fetchColumn();
     }
 
-    private function getTotalQuizzes() {
-        $stmt = $this->pdo->query("SELECT COUNT(*) FROM quizzes");
+    private function getTotalQuizzes($range = null) {
+        if ($range && !$this->tableHasColumn('quizzes', 'CreatedAt')) {
+            $query = "SELECT COUNT(q.QuizID) FROM quizzes q
+                      JOIN courses c ON q.CourseID = c.CourseID
+                      WHERE 1=1";
+            $params = [];
+            $this->applyDateRange($query, $params, 'c.CreatedAt', $range);
+            $stmt = $this->pdo->prepare($query);
+            $stmt->execute($params);
+            return $stmt->fetchColumn();
+        }
+
+        $query = "SELECT COUNT(*) FROM quizzes WHERE 1=1";
+        $params = [];
+        if ($range && $this->tableHasColumn('quizzes', 'CreatedAt')) {
+            $this->applyDateRange($query, $params, 'CreatedAt', $range);
+        }
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute($params);
         return $stmt->fetchColumn();
     }
 
