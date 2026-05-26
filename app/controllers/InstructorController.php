@@ -349,7 +349,7 @@ class InstructorController {
             if ($available <= 0) {
                 // No space left for more marks
                 $_SESSION['error'] = 'This assessment already has the full total marks assigned. Remove or adjust existing questions before adding more.';
-                header("Location: " . $_SERVER['HTTP_REFERER']);
+                $this->redirectToManageQuiz($quiz_id);
                 exit;
             }
 
@@ -389,7 +389,7 @@ class InstructorController {
             }
         }
 
-        header("Location: " . $_SERVER['HTTP_REFERER']);
+        $this->redirectToManageQuiz($quiz_id);
         exit;
     }
 
@@ -587,13 +587,25 @@ class InstructorController {
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $course_id = $_POST['course_id'] ?? null;
-            $title = $_POST['content_title'] ?? '';
+            $title = trim($_POST['content_title'] ?? '');
             $type = $_POST['content_type'] ?? 'Text';
-            $url = $_POST['content_url'] ?? '';
+            $url = trim($_POST['content_url'] ?? '');
+
+            if (!in_array($type, ['Video', 'PDF', 'Link', 'Text'], true)) {
+                $type = 'Text';
+            }
 
             if ($course_id && !empty($title)) {
+                $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM instructor_courses WHERE InstructorID = ? AND CourseID = ?");
+                $stmt->execute([$instructor_id, $course_id]);
+                if (!$stmt->fetchColumn()) {
+                    $_SESSION['error'] = 'Invalid course selection or you are not assigned to that course.';
+                    header("Location: index.php?page=upload-content");
+                    exit;
+                }
+
                 $stmt = $this->pdo->prepare("INSERT INTO course_contents (CourseID, ContentType, ContentTitle, ContentURL, CreatedBy) VALUES (?, ?, ?, ?, ?)");
-                $stmt->execute([$course_id, $type, $title, $url, $instructor_id]);
+                $stmt->execute([$course_id, $type, $title, $url !== '' ? $url : null, $instructor_id]);
 
                 header("Location: index.php?page=manage-content");
                 exit;
@@ -649,13 +661,17 @@ class InstructorController {
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $title = $_POST['content_title'] ?? '';
+            $title = trim($_POST['content_title'] ?? '');
             $type = $_POST['content_type'] ?? 'Text';
-            $url = $_POST['content_url'] ?? '';
+            $url = trim($_POST['content_url'] ?? '');
+
+            if (!in_array($type, ['Video', 'PDF', 'Link', 'Text'], true)) {
+                $type = 'Text';
+            }
 
             if (!empty($title)) {
                 $stmt = $this->pdo->prepare("UPDATE course_contents SET ContentTitle = ?, ContentType = ?, ContentURL = ? WHERE ContentID = ?");
-                $stmt->execute([$title, $type, $url, $content_id]);
+                $stmt->execute([$title, $type, $url !== '' ? $url : null, $content_id]);
 
                 header("Location: index.php?page=manage-content");
                 exit;
@@ -719,5 +735,14 @@ class InstructorController {
                                      WHERE ic.InstructorID = ? AND q.QuizType = ?");
         $stmt->execute([$instructor_id, $type]);
         return $stmt->fetchColumn();
+    }
+
+    private function redirectToManageQuiz($quiz_id) {
+        $quiz_id = (int)$quiz_id;
+        if ($quiz_id > 0) {
+            header("Location: index.php?page=manage-quiz&id=" . $quiz_id);
+        } else {
+            header("Location: index.php?page=dashboard");
+        }
     }
 }
