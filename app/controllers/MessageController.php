@@ -33,6 +33,15 @@ class MessageController {
             die("Unauthorized user role for chat.");
         }
 
+        // Get unread message counts for each contact
+        $unreadCounts = [];
+        foreach ($contacts as $contact) {
+            $countStmt = $this->pdo->prepare("SELECT COUNT(*) as unread FROM messages WHERE SenderID = ? AND ReceiverID = ? AND IsRead = 0");
+            $countStmt->execute([$contact['UserID'], $myId]);
+            $result = $countStmt->fetch();
+            $unreadCounts[$contact['UserID']] = $result['unread'];
+        }
+
         // Get details of active contact if any
         $activeContact = null;
         $activeContactId = $_GET['contact_id'] ?? null;
