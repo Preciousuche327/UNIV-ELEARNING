@@ -6,8 +6,8 @@ include __DIR__ . '/../partials/sidebar_v2.php';
 
 <div class="container-fluid p-4">
     <div class="mb-4">
-        <a href="?page=dashboard" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left"></i> Back
+        <a href="?page=course-quizzes&course_id=<?php echo $quiz['CourseID']; ?>" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Back to Assessments
         </a>
     </div>
 
@@ -29,8 +29,14 @@ include __DIR__ . '/../partials/sidebar_v2.php';
     <div class="row">
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-primary text-white p-4">
+                <div class="card-header bg-primary text-white p-4 d-flex justify-content-between align-items-center">
                     <h4 class="card-title mb-0">Manage Quiz: <?php echo htmlspecialchars($quiz['QuizName']); ?></h4>
+                    <form method="POST" action="?page=delete-quiz" class="mb-0" onsubmit="return confirm('Are you sure you want to delete this entire assessment? This cannot be undone.');">
+                        <input type="hidden" name="quiz_id" value="<?php echo $quiz['QuizID']; ?>">
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <i class="bi bi-trash me-1"></i> Delete Quiz
+                        </button>
+                    </form>
                 </div>
 
                 <div class="card-body p-4">
