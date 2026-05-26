@@ -24,10 +24,16 @@ class CourseController {
 
         $course_search = trim($_GET['course_search'] ?? '');
 
-        // Get enrolled courses
-        $query = "SELECT c.*, e.CompletionStatus FROM courses c
-                                     JOIN enrollments e ON c.CourseID = e.CourseID 
-                                     WHERE e.UserID = ?";
+        // Get enrolled courses (with subquery to prevent duplicates)
+        $query = "SELECT c.*, e.CompletionStatus, e.EnrollmentDate 
+                  FROM courses c
+                  JOIN (
+                      SELECT CourseID, MAX(EnrollmentID) as EnrollmentID, CompletionStatus, EnrollmentDate
+                      FROM enrollments 
+                      WHERE UserID = ?
+                      GROUP BY CourseID
+                  ) e ON c.CourseID = e.CourseID 
+                  WHERE 1=1";
         $params = [$user_id];
 
         if ($course_search !== '') {
@@ -36,7 +42,7 @@ class CourseController {
             $params[] = "%$course_search%";
         }
 
-        $query .= " GROUP BY c.CourseID ORDER BY e.EnrollmentDate DESC";
+        $query .= " ORDER BY e.EnrollmentDate DESC";
         $stmt = $this->pdo->prepare($query);
         $stmt->execute($params);
         $enrolled_courses = $stmt->fetchAll();
@@ -174,15 +180,19 @@ class CourseController {
 
         $user_id = $_SESSION['user_id'];
 
-        $stmt = $this->pdo->prepare("SELECT c.*, e.CompletionStatus, e.EnrollmentDate,
+        // Get enrollments with subquery to prevent duplicates (only get latest enrollment per course)
+        $stmt = $this->pdo->prepare("SELECT c.*, latest_e.CompletionStatus, latest_e.EnrollmentDate,
                                      (SELECT COUNT(*) FROM quizzes WHERE CourseID = c.CourseID) as TotalQuizzes,
                                      (SELECT COUNT(DISTINCT r.QuizID) FROM results r JOIN quizzes q ON r.QuizID = q.QuizID
                                       WHERE r.UserID = ? AND q.CourseID = c.CourseID) as CompletedQuizzes
                                      FROM courses c 
-                                     JOIN enrollments e ON c.CourseID = e.CourseID 
-                                     WHERE e.UserID = ? 
-                                     GROUP BY c.CourseID
-                                     ORDER BY e.EnrollmentDate DESC");
+                                     JOIN (
+                                         SELECT CourseID, MAX(EnrollmentID) as EnrollmentID, CompletionStatus, EnrollmentDate
+                                         FROM enrollments 
+                                         WHERE UserID = ?
+                                         GROUP BY CourseID
+                                     ) latest_e ON c.CourseID = latest_e.CourseID
+                                     ORDER BY latest_e.EnrollmentDate DESC");
         $stmt->execute([$user_id, $user_id]);
         $enrollments = $stmt->fetchAll();
 

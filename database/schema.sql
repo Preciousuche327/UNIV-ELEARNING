@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS enrollments (
     CourseID INT NOT NULL,
     EnrollmentDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CompletionStatus ENUM('In Progress', 'Completed') DEFAULT 'In Progress',
+    UNIQUE KEY unique_user_course (UserID, CourseID),
     FOREIGN KEY (UserID) REFERENCES users(UserID) ON DELETE CASCADE,
     FOREIGN KEY (CourseID) REFERENCES courses(CourseID) ON DELETE CASCADE
 ) ENGINE=InnoDB;
