@@ -7,6 +7,7 @@ require_once __DIR__ . '/../app/controllers/CourseController.php';
 require_once __DIR__ . '/../app/controllers/QuizController.php';
 require_once __DIR__ . '/../app/controllers/AdminController.php';
 require_once __DIR__ . '/../app/controllers/InstructorController.php';
+require_once __DIR__ . '/../app/controllers/MessageController.php';
 
 $page = $_GET['page'] ?? 'login';
 
@@ -15,6 +16,7 @@ $course = new CourseController($pdo);
 $quiz = new QuizController($pdo);
 $admin = new AdminController($pdo);
 $instructor = new InstructorController($pdo);
+$message = new MessageController($pdo);
 
 switch ($page) {
 
@@ -195,6 +197,29 @@ switch ($page) {
 
     case 'course-quizzes':
         $instructor->quizzesByCourse();
+        break;
+
+    case 'messages':
+        if (!isLoggedIn()) redirect('?page=login');
+        $message->chat();
+        break;
+
+    case 'api-get-messages':
+        if (!isLoggedIn()) {
+            header('Content-Type: application/json');
+            echo json_encode(['status' => 'error', 'message' => 'Unauthorized']);
+            exit;
+        }
+        $message->getMessages();
+        break;
+
+    case 'api-send-message':
+        if (!isLoggedIn()) {
+            header('Content-Type: application/json');
+            echo json_encode(['status' => 'error', 'message' => 'Unauthorized']);
+            exit;
+        }
+        $message->sendMessage();
         break;
 
     default:

@@ -73,6 +73,18 @@ try {
         FOREIGN KEY (CourseID) REFERENCES courses(CourseID) ON DELETE CASCADE
     ) ENGINE=InnoDB;");
 
+    // Ensure messages table exists for realtime chat
+    $pdo->exec("CREATE TABLE IF NOT EXISTS messages (
+        MessageID INT AUTO_INCREMENT PRIMARY KEY,
+        SenderID INT NOT NULL,
+        ReceiverID INT NOT NULL,
+        MessageText TEXT NOT NULL,
+        IsRead TINYINT(1) DEFAULT 0,
+        SentAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (SenderID) REFERENCES users(UserID) ON DELETE CASCADE,
+        FOREIGN KEY (ReceiverID) REFERENCES users(UserID) ON DELETE CASCADE
+    ) ENGINE=InnoDB;");
+
 } catch (PDOException $e) {
     die("Database Connection Failed: " . $e->getMessage());
 }

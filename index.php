@@ -5,6 +5,7 @@ require_once 'app/controllers/CourseController.php';
 require_once 'app/controllers/QuizController.php';
 require_once 'app/controllers/AdminController.php';
 require_once 'app/controllers/InstructorController.php';
+require_once 'app/controllers/MessageController.php';
 
 // Route handling. Opening the app should always start at login unless a page is requested.
 $page = $_GET['page'] ?? 'login';
@@ -15,6 +16,7 @@ $courseCtrl = new CourseController($pdo);
 $quizCtrl = new QuizController($pdo);
 $adminCtrl = new AdminController($pdo);
 $instructorCtrl = new InstructorController($pdo);
+$messageCtrl = new MessageController($pdo);
 
 // Simple Router
 switch ($page) {
@@ -226,6 +228,29 @@ switch ($page) {
     case 'quiz-detail':
         if (!isLoggedIn()) redirect('?page=login');
         $quizCtrl->quizDetail();
+        break;
+
+    case 'messages':
+        if (!isLoggedIn()) redirect('?page=login');
+        $messageCtrl->chat();
+        break;
+
+    case 'api-get-messages':
+        if (!isLoggedIn()) {
+            header('Content-Type: application/json');
+            echo json_encode(['status' => 'error', 'message' => 'Unauthorized']);
+            exit;
+        }
+        $messageCtrl->getMessages();
+        break;
+
+    case 'api-send-message':
+        if (!isLoggedIn()) {
+            header('Content-Type: application/json');
+            echo json_encode(['status' => 'error', 'message' => 'Unauthorized']);
+            exit;
+        }
+        $messageCtrl->sendMessage();
         break;
 
     default:

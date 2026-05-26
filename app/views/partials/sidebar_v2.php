@@ -40,6 +40,9 @@ if (empty($current_page)) {
             <a href="?page=student-results" class="list-group-item list-group-item-action bg-dark text-white border-0 py-3 rounded mb-1 <?php echo ($current_page == 'student-results') ? 'active bg-primary' : ''; ?>">
                 <i class="bi bi-award me-2"></i> Student Results
             </a>
+            <a href="?page=messages" class="list-group-item list-group-item-action bg-dark text-white border-0 py-3 rounded mb-1 <?php echo ($current_page == 'messages') ? 'active bg-primary' : ''; ?>">
+                <i class="bi bi-chat-dots me-2"></i> Messages
+            </a>
         <?php elseif ($user_type === 'Student'): ?>
             <a href="?page=courses" class="list-group-item list-group-item-action bg-dark text-white border-0 py-3 rounded mb-1 <?php echo ($current_page == 'courses') ? 'active bg-primary' : ''; ?>">
                 <i class="bi bi-search me-2"></i> Browse Courses
@@ -49,6 +52,9 @@ if (empty($current_page)) {
             </a>
             <a href="?page=my-results" class="list-group-item list-group-item-action bg-dark text-white border-0 py-3 rounded mb-1 <?php echo ($current_page == 'my-results') ? 'active bg-primary' : ''; ?>">
                 <i class="bi bi-card-checklist me-2"></i> My Results
+            </a>
+            <a href="?page=messages" class="list-group-item list-group-item-action bg-dark text-white border-0 py-3 rounded mb-1 <?php echo ($current_page == 'messages') ? 'active bg-primary' : ''; ?>">
+                <i class="bi bi-chat-dots me-2"></i> Messages
             </a>
         <?php endif; ?>
 
