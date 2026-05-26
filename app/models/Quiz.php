@@ -68,8 +68,10 @@ class Quiz {
     }
 
     public function saveUserAnswer($userId, $quizId, $questionId, $selectedOptionId, $isCorrect, $pointsEarned) {
-        $stmt = $this->pdo->prepare("INSERT INTO user_answers (UserID, QuizID, QuestionID, SelectedOptionID, IsCorrect, PointsEarned) VALUES (?, ?, ?, ?, ?, ?)");
-        return $stmt->execute([$userId, $quizId, $questionId, $selectedOptionId, $isCorrect, $pointsEarned]);
+        $stmt = $this->pdo->prepare("INSERT INTO user_answers (UserID, QuestionID, SelectedOptionID, IsCorrect)
+                                     VALUES (?, ?, ?, ?)
+                                     ON DUPLICATE KEY UPDATE SelectedOptionID = ?, IsCorrect = ?");
+        return $stmt->execute([$userId, $questionId, $selectedOptionId, $isCorrect, $selectedOptionId, $isCorrect]);
     }
 
     public function logQuizAttempt($userId, $quizId, $score, $status = 'Graded') {
