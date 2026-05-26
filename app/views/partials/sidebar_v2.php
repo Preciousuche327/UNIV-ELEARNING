@@ -60,14 +60,12 @@ if (empty($current_page)) {
 </div>
 <!-- /#sidebar-wrapper -->
 
-<div class="sidebar-overlay"></div>
-
 <!-- Page Content -->
 <div id="page-content-wrapper" class="w-100">
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom p-3">
         <div class="container-fluid">
-                <button class="btn btn-outline-secondary btn-sm me-3 d-lg-none" id="menu-toggle" aria-label="Open navigation" aria-controls="sidebar-wrapper" aria-expanded="false">
+                <button class="btn btn-outline-secondary btn-sm me-3" id="menu-toggle" aria-label="Toggle navigation" aria-controls="sidebar-wrapper" aria-expanded="false">
                     <i class="bi bi-list"></i>
                 </button>
                 <span class="navbar-text fw-medium">

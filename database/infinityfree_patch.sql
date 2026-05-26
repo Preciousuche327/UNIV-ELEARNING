@@ -1,5 +1,27 @@
 USE if0_41928194_univ_elearning;
 
+SET @user_status_exists := (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'users'
+      AND COLUMN_NAME = 'Status'
+);
+
+SET @add_user_status_sql := IF(
+    @user_status_exists = 0,
+    'ALTER TABLE users ADD COLUMN Status ENUM(''Pending'', ''Approved'', ''Rejected'') NOT NULL DEFAULT ''Approved'' AFTER UserType',
+    'SELECT ''Status already exists'' AS message'
+);
+
+PREPARE add_user_status_stmt FROM @add_user_status_sql;
+EXECUTE add_user_status_stmt;
+DEALLOCATE PREPARE add_user_status_stmt;
+
+UPDATE users
+SET Status = 'Approved'
+WHERE Status IS NULL OR Status = '';
+
 CREATE TABLE IF NOT EXISTS quiz_attempts (
     AttemptID INT AUTO_INCREMENT PRIMARY KEY,
     UserID INT NOT NULL,

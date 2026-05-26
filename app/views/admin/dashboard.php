@@ -11,6 +11,21 @@ $totalQuizzes = $stats['total_quizzes'] ?? 0;
 $totalInstructors = $stats['total_instructors'] ?? 0;
 $totalStudents = $stats['total_students'] ?? 0;
 $pendingInstructors = $stats['pending_instructors'] ?? 0;
+$overviewPeriod = $overviewPeriod ?? 'month';
+$periodStats = $periodStats ?? $stats;
+$periodLabels = [
+    'day' => 'Today',
+    'month' => 'This Month',
+    'year' => 'This Year',
+];
+$periodTitle = $periodLabels[$overviewPeriod] ?? $periodLabels['month'];
+$periodUsers = $periodStats['total_users'] ?? 0;
+$periodCourses = $periodStats['total_courses'] ?? 0;
+$periodEnrollments = $periodStats['total_enrollments'] ?? 0;
+$periodQuizzes = $periodStats['total_quizzes'] ?? 0;
+$periodInstructors = $periodStats['total_instructors'] ?? 0;
+$periodStudents = $periodStats['total_students'] ?? 0;
+$periodPendingInstructors = $periodStats['pending_instructors'] ?? 0;
 ?>
 
 <div class="row g-4 mb-4">
@@ -27,7 +42,7 @@ $pendingInstructors = $stats['pending_instructors'] ?? 0;
     <?php endif; ?>
 
     <div class="col-md-3">
-        <div class="card p-3 stat-card" style="border-left-color: #6366f1;">
+        <a href="?page=admin-users" class="card p-3 stat-card stat-card-link text-decoration-none text-reset" style="border-left-color: #6366f1;" aria-label="Open user management">
             <div class="d-flex align-items-center">
                 <div class="stat-icon bg-soft-primary me-3">
                     <i class="bi bi-people"></i>
@@ -37,10 +52,10 @@ $pendingInstructors = $stats['pending_instructors'] ?? 0;
                     <h3 class="mb-0 fw-bold"><?php echo $totalUsers; ?></h3>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-md-3">
-        <div class="card p-3 stat-card" style="border-left-color: #10b981;">
+        <a href="?page=admin-courses" class="card p-3 stat-card stat-card-link text-decoration-none text-reset" style="border-left-color: #10b981;" aria-label="Open course management">
             <div class="d-flex align-items-center">
                 <div class="stat-icon bg-soft-success me-3">
                     <i class="bi bi-book"></i>
@@ -50,10 +65,10 @@ $pendingInstructors = $stats['pending_instructors'] ?? 0;
                     <h3 class="mb-0 fw-bold"><?php echo $totalCourses; ?></h3>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-md-3">
-        <div class="card p-3 stat-card" style="border-left-color: #f59e0b;">
+        <a href="?page=admin-courses" class="card p-3 stat-card stat-card-link text-decoration-none text-reset" style="border-left-color: #f59e0b;" aria-label="Open courses with enrollment counts">
             <div class="d-flex align-items-center">
                 <div class="stat-icon bg-soft-warning me-3">
                     <i class="bi bi-person-check"></i>
@@ -63,10 +78,10 @@ $pendingInstructors = $stats['pending_instructors'] ?? 0;
                     <h3 class="mb-0 fw-bold"><?php echo $totalEnrollments; ?></h3>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-md-3">
-        <div class="card p-3 stat-card" style="border-left-color: #ef4444;">
+        <a href="?page=all-results" class="card p-3 stat-card stat-card-link text-decoration-none text-reset" style="border-left-color: #ef4444;" aria-label="Open assessment results">
             <div class="d-flex align-items-center">
                 <div class="stat-icon bg-soft-danger me-3">
                     <i class="bi bi-patch-question"></i>
@@ -76,7 +91,7 @@ $pendingInstructors = $stats['pending_instructors'] ?? 0;
                     <h3 class="mb-0 fw-bold"><?php echo $totalQuizzes; ?></h3>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
 </div>
 
@@ -85,11 +100,14 @@ $pendingInstructors = $stats['pending_instructors'] ?? 0;
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title mb-0">System Overview</h5>
+                    <div>
+                        <h5 class="card-title mb-0">System Overview</h5>
+                        <div class="small text-muted"><?php echo $periodTitle; ?></div>
+                    </div>
                     <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-sm btn-outline-secondary">Day</button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary active">Month</button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary">Year</button>
+                        <a href="?page=dashboard&period=day" class="btn btn-sm btn-outline-secondary <?php echo $overviewPeriod === 'day' ? 'active' : ''; ?>">Day</a>
+                        <a href="?page=dashboard&period=month" class="btn btn-sm btn-outline-secondary <?php echo $overviewPeriod === 'month' ? 'active' : ''; ?>">Month</a>
+                        <a href="?page=dashboard&period=year" class="btn btn-sm btn-outline-secondary <?php echo $overviewPeriod === 'year' ? 'active' : ''; ?>">Year</a>
                     </div>
                 </div>
                 <div class="table-responsive">
@@ -104,43 +122,28 @@ $pendingInstructors = $stats['pending_instructors'] ?? 0;
                         <tbody>
                             <tr>
                                 <td class="fw-bold">Total Instructors</td>
-                                <td><?php echo $totalInstructors; ?></td>
-                                <td><?php echo $totalUsers > 0 ? round(($totalInstructors / $totalUsers) * 100, 1) : 0; ?>%</td>
+                                <td><?php echo $periodInstructors; ?></td>
+                                <td><?php echo $periodUsers > 0 ? round(($periodInstructors / $periodUsers) * 100, 1) : 0; ?>%</td>
                             </tr>
                             <tr>
                                 <td class="fw-bold">Total Students</td>
-                                <td><?php echo $totalStudents; ?></td>
-                                <td><?php echo $totalUsers > 0 ? round(($totalStudents / $totalUsers) * 100, 1) : 0; ?>%</td>
+                                <td><?php echo $periodStudents; ?></td>
+                                <td><?php echo $periodUsers > 0 ? round(($periodStudents / $periodUsers) * 100, 1) : 0; ?>%</td>
                             </tr>
                             <tr>
                                 <td class="fw-bold text-warning">Pending Instructors</td>
-                                <td class="text-warning fw-bold"><?php echo $pendingInstructors; ?></td>
-                                <td><?php echo $totalUsers > 0 ? round(($pendingInstructors / $totalUsers) * 100, 1) : 0; ?>%</td>
+                                <td class="text-warning fw-bold"><?php echo $periodPendingInstructors; ?></td>
+                                <td><?php echo $periodUsers > 0 ? round(($periodPendingInstructors / $periodUsers) * 100, 1) : 0; ?>%</td>
                             </tr>
                             <tr>
                                 <td class="fw-bold">Average Students per Course</td>
-                                <td><?php echo $totalCourses > 0 ? round($totalEnrollments / $totalCourses, 1) : 0; ?></td>
+                                <td><?php echo $periodCourses > 0 ? round($periodEnrollments / $periodCourses, 1) : 0; ?></td>
                                 <td>Per Course</td>
                             </tr>
                             <tr>
                                 <td class="fw-bold">Average Quizzes per Course</td>
-                                <td><?php echo $totalCourses > 0 ? round($totalQuizzes / $totalCourses, 1) : 0; ?></td>
+                                <td><?php echo $periodCourses > 0 ? round($periodQuizzes / $periodCourses, 1) : 0; ?></td>
                                 <td>Per Course</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-                            </tr>
-                            <tr>
-                                <td class="small text-muted">2026-04-16 09:15</td>
-                                <td>Jane Doe (Admin)</td>
-                                <td>Deleted User #102</td>
-                                <td>User Management</td>
-                                <td><span class="badge bg-warning rounded-pill px-3">Warning</span></td>
                             </tr>
                         </tbody>
                     </table>

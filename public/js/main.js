@@ -82,55 +82,58 @@ document.addEventListener('DOMContentLoaded', function() {
     const toggleBtn = document.getElementById('menu-toggle');
     const closeBtn = document.getElementById('sidebar-close');
     const wrapper = document.getElementById('wrapper');
-    const sidebarOverlay = document.querySelector('.sidebar-overlay');
     const sidebarLinks = document.querySelectorAll('#sidebar-wrapper a');
 
-    const setSidebarOpen = (isOpen) => {
-        if (!wrapper) return;
-        wrapper.classList.toggle('toggled', isOpen);
-        if (toggleBtn) {
-            toggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-        }
+    const isMobileSidebar = () => window.matchMedia('(max-width: 991.98px)').matches;
+
+    const syncToggleButton = () => {
+        if (!toggleBtn || !wrapper) return;
+
+        const isToggled = wrapper.classList.contains('toggled');
+        const isExpanded = isMobileSidebar() ? isToggled : !isToggled;
+        toggleBtn.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+        toggleBtn.setAttribute('aria-label', isExpanded ? 'Collapse navigation' : 'Expand navigation');
     };
 
-    const isMobileSidebar = () => window.matchMedia('(max-width: 767.98px)').matches;
+    const setSidebarToggled = (isToggled) => {
+        if (!wrapper) return;
+        wrapper.classList.toggle('toggled', isToggled);
+        syncToggleButton();
+    };
 
     if (toggleBtn && wrapper) {
         toggleBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            setSidebarOpen(!wrapper.classList.contains('toggled'));
+            setSidebarToggled(!wrapper.classList.contains('toggled'));
         });
-    }
-
-    if (sidebarOverlay && wrapper) {
-        sidebarOverlay.addEventListener('click', () => {
-            setSidebarOpen(false);
-        });
+        syncToggleButton();
     }
 
     if (closeBtn && wrapper) {
         closeBtn.addEventListener('click', () => {
-            setSidebarOpen(false);
+            setSidebarToggled(false);
         });
     }
 
     sidebarLinks.forEach((link) => {
         link.addEventListener('click', () => {
             if (isMobileSidebar()) {
-                setSidebarOpen(false);
+                setSidebarToggled(false);
             }
         });
     });
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            setSidebarOpen(false);
+            setSidebarToggled(false);
         }
     });
 
     window.addEventListener('resize', () => {
         if (!isMobileSidebar()) {
-            setSidebarOpen(false);
+            setSidebarToggled(false);
+        } else {
+            syncToggleButton();
         }
     });
 });

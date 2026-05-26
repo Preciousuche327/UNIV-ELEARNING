@@ -1,11 +1,11 @@
 USE univ_elearning;
 
 -- Seed data for users
-INSERT IGNORE INTO users (UserID, Username, Email, Password, UserType, CreatedAt) VALUES (1, 'admin', 'admin@univ.edu', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Admin', '2026-04-28 12:37:48');
-INSERT IGNORE INTO users (UserID, Username, Email, Password, UserType, CreatedAt) VALUES (2, 'eric', 'njugunaeric82@gmail.com', '$2y$10$ffp/oZ6Yee3IfNVHdeY2VuD36kHFw.Qwrptmh1BMTLxIwt3b9Kvou', 'Student', '2026-04-28 12:56:22');
-INSERT IGNORE INTO users (UserID, Username, Email, Password, UserType, CreatedAt) VALUES (3, 'sir', 'sir@gmail.com', '$2y$10$ZxS8OrMycMurZlQRYD7jfuJ5nmKDCMZoqatBuo4evOWFv5JY4VTou', 'Instructor', '2026-04-28 18:49:28');
-INSERT IGNORE INTO users (UserID, Username, Email, Password, UserType, CreatedAt) VALUES (4, 'tech_instructor', 'instructor@tech.edu', '$2y$10$pojNfh98u2a6pGr3r4eaGe0jpUhL4kZAs2MyXu0yUnnVo3kZzd4bC', 'Instructor', '2026-04-28 19:00:08');
-INSERT IGNORE INTO users (UserID, Username, Email, Password, UserType, CreatedAt) VALUES (5, 'student', 'student@univ.edu', '$2y$10$QdN9L/MuOHKgS8buYDvzF.Rcr2REYT/2LErzrjgQxE/4xK7myszMq', 'Student', '2026-04-28 19:01:30');
+INSERT IGNORE INTO users (UserID, Username, Email, Password, UserType, Status, CreatedAt) VALUES (1, 'admin', 'admin@univ.edu', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Admin', 'Approved', '2026-04-28 12:37:48');
+INSERT IGNORE INTO users (UserID, Username, Email, Password, UserType, Status, CreatedAt) VALUES (2, 'eric', 'njugunaeric82@gmail.com', '$2y$10$ffp/oZ6Yee3IfNVHdeY2VuD36kHFw.Qwrptmh1BMTLxIwt3b9Kvou', 'Student', 'Approved', '2026-04-28 12:56:22');
+INSERT IGNORE INTO users (UserID, Username, Email, Password, UserType, Status, CreatedAt) VALUES (3, 'sir', 'sir@gmail.com', '$2y$10$ZxS8OrMycMurZlQRYD7jfuJ5nmKDCMZoqatBuo4evOWFv5JY4VTou', 'Instructor', 'Approved', '2026-04-28 18:49:28');
+INSERT IGNORE INTO users (UserID, Username, Email, Password, UserType, Status, CreatedAt) VALUES (4, 'tech_instructor', 'instructor@tech.edu', '$2y$10$pojNfh98u2a6pGr3r4eaGe0jpUhL4kZAs2MyXu0yUnnVo3kZzd4bC', 'Instructor', 'Approved', '2026-04-28 19:00:08');
+INSERT IGNORE INTO users (UserID, Username, Email, Password, UserType, Status, CreatedAt) VALUES (5, 'student', 'student@univ.edu', '$2y$10$QdN9L/MuOHKgS8buYDvzF.Rcr2REYT/2LErzrjgQxE/4xK7myszMq', 'Student', 'Approved', '2026-04-28 19:01:30');
 
 -- Seed data for courses
 INSERT IGNORE INTO courses (CourseID, CourseName, Description, CreatedAt) VALUES (1, 'Python Mastery', 'Master Python from basics to advanced data science.', '2026-04-28 19:00:08');
