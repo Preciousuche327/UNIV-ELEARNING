@@ -36,21 +36,55 @@ class QuizController {
             exit;
         }
 
-        $stmt = $this->pdo->prepare("SELECT ResultID FROM results WHERE UserID = ? AND QuizID = ? ORDER BY SubmittedAt DESC LIMIT 1");
-        $stmt->execute([$user_id, $quiz_id]);
-        $existing_result = $stmt->fetch();
+        // Prevent browser caching and back-navigation for active quiz sessions
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        header('Expires: 0');
 
-        if ($existing_result && !($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_quiz']))) {
-            $_SESSION['error'] = "You have already submitted this assessment.";
-            header("Location: index.php?page=quiz-detail&id=" . $existing_result['ResultID']);
-            exit;
+        // Track quiz timer in the session so refresh/back does not reset time
+        $duration = 1800; // 30 minutes
+        if (!isset($_SESSION['quiz_timer'][$quiz_id])) {
+            $_SESSION['quiz_timer'][$quiz_id] = [
+                'start' => time(),
+                'duration' => $duration,
+            ];
+        }
+
+        $elapsed = time() - $_SESSION['quiz_timer'][$quiz_id]['start'];
+        if ($elapsed >= $_SESSION['quiz_timer'][$quiz_id]['duration']) {
+            // Quiz time expired. Start a fresh attempt and clear previous answers for this quiz.
+            $_SESSION['quiz_timer'][$quiz_id] = [
+                'start' => time(),
+                'duration' => $duration,
+            ];
+            $elapsed = 0;
+            $stmt = $this->pdo->prepare(
+                "DELETE ua FROM user_answers ua
+                 JOIN questions q ON ua.QuestionID = q.QuestionID
+                 WHERE ua.UserID = ? AND q.QuizID = ?"
+            );
+            $stmt->execute([$user_id, $quiz_id]);
+        }
+
+        $time_left = max(0, $_SESSION['quiz_timer'][$quiz_id]['duration'] - $elapsed);
+
+        // Clear any previous answer records for this quiz when starting a new attempt
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $stmt = $this->pdo->prepare(
+                "DELETE ua FROM user_answers ua
+                 JOIN questions q ON ua.QuestionID = q.QuestionID
+                 WHERE ua.UserID = ? AND q.QuizID = ?"
+            );
+            $stmt->execute([$user_id, $quiz_id]);
         }
 
         // Handle quiz submission
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_quiz'])) {
-            if ($existing_result) {
-                $_SESSION['error'] = "You have already submitted this assessment.";
-                header("Location: index.php?page=quiz-detail&id=" . $existing_result['ResultID']);
+            // Validate timer server-side
+            $elapsed = time() - $_SESSION['quiz_timer'][$quiz_id]['start'];
+            if ($elapsed > $_SESSION['quiz_timer'][$quiz_id]['duration']) {
+                $_SESSION['error'] = 'Your quiz time has expired. Please start a new attempt.';
+                header("Location: index.php?page=take-quiz&id=" . $quiz_id);
                 exit;
             }
 
@@ -118,6 +152,7 @@ class QuizController {
 
             // Calculate score and submit
             $this->submitQuiz($user_id, $quiz_id);
+            unset($_SESSION['quiz_timer'][$quiz_id]);
             header("Location: index.php?page=my-results");
             exit;
         }
@@ -154,7 +189,9 @@ class QuizController {
                                      WHERE ua.UserID = ? AND q.QuizID = ? AND ua.IsCorrect = 1");
         $stmt->execute([$user_id, $quiz_id]);
         $result = $stmt->fetch();
-        $score = ($result && isset($result['score'])) ? $result['score'] : 0;
+        $correct_marks = ($result && isset($result['score'])) ? $result['score'] : 0;
+
+        $score = ($total_marks > 0) ? round(($correct_marks / $total_marks) * 100, 2) : 0;
 
         // Get course ID
         $stmt = $this->pdo->prepare("SELECT CourseID FROM quizzes WHERE QuizID = ?");

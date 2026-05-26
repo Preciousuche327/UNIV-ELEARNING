@@ -163,21 +163,97 @@ function submitQuizConfirm(e) {
 }
 
 // Simple timer simulation
-let timeLeft = 1800; // 30 mins
+let timeLeft = <?php echo isset($time_left) ? (int)$time_left : 1800; ?>;
 const timerEl = document.getElementById('quiz-timer');
-if(timerEl) {
-    setInterval(() => {
-        if(timeLeft <= 0) return;
-        timeLeft--;
-        const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-        const s = (timeLeft % 60).toString().padStart(2, '0');
-        timerEl.textContent = `${m}:${s}`;
-        
-        if(timeLeft < 300) {
-            timerEl.parentElement.classList.remove('bg-danger');
-            timerEl.parentElement.classList.add('bg-warning');
+let quizInProgress = true;
+
+function beforeUnloadHandler(e) {
+    if (!quizInProgress) return;
+    e.preventDefault();
+    e.returnValue = 'Leaving will end the quiz and may forfeit your answers.';
+    return 'Leaving will end the quiz and may forfeit your answers.';
+}
+
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+        window.location.reload();
+    }
+});
+
+if (window.history && window.history.pushState) {
+    history.pushState(null, null, location.href);
+    window.addEventListener('popstate', function() {
+        history.pushState(null, null, location.href);
+        if (typeof showNotification !== 'undefined') {
+            showNotification('Navigation blocked', 'Back navigation is disabled during the quiz.', 'warning');
+        } else {
+            alert('Back navigation is disabled during the quiz.');
         }
+    });
+}
+
+window.addEventListener('beforeunload', beforeUnloadHandler);
+
+const updateTimer = () => {
+    if (!timerEl) return;
+    const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+    const s = (timeLeft % 60).toString().padStart(2, '0');
+    timerEl.textContent = `${m}:${s}`;
+    if (timeLeft < 300) {
+        timerEl.parentElement.classList.remove('bg-danger');
+        timerEl.parentElement.classList.add('bg-warning');
+    }
+};
+
+if(timerEl) {
+    updateTimer();
+    const timerInterval = setInterval(() => {
+        if(timeLeft <= 0) {
+            clearInterval(timerInterval);
+            quizInProgress = false;
+            if (typeof showNotification !== 'undefined') {
+                showNotification('Time expired', 'Your quiz timer has ended. Please restart the attempt.', 'error');
+            } else {
+                alert('Your quiz timer has ended. Please restart the attempt.');
+            }
+            return;
+        }
+        timeLeft--;
+        updateTimer();
     }, 1000);
+}
+
+function submitQuizConfirm(e) {
+    e.preventDefault();
+    const form = document.getElementById('quizForm');
+    if (!form.checkValidity()) {
+        form.classList.add('was-validated');
+        showNotification('Incomplete', 'Please answer all questions before submitting.', 'warning');
+        return;
+    }
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Submit Quiz?',
+            text: "Are you sure you want to lock in your answers?",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#ef4444',
+            confirmButtonText: 'Yes, submit it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                quizInProgress = false;
+                window.removeEventListener('beforeunload', beforeUnloadHandler);
+                document.getElementById('realSubmitBtn').click();
+            }
+        });
+    } else {
+        if (confirm('Are you sure you want to submit?')) {
+            quizInProgress = false;
+            window.removeEventListener('beforeunload', beforeUnloadHandler);
+            document.getElementById('realSubmitBtn').click();
+        }
+    }
 }
 </script>
 
