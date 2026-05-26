@@ -43,6 +43,19 @@ if ($missing) {
     echo "<p style='color: green;'>✅ Tables already exist. No import needed.</p>";
 }
 
+// 2b. Apply small schema updates needed by the current code.
+try {
+    $stmt = $pdo->query("SHOW COLUMNS FROM users LIKE 'Status'");
+    if ($stmt->rowCount() === 0) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN Status ENUM('Pending', 'Approved', 'Rejected') NOT NULL DEFAULT 'Approved' AFTER UserType");
+        echo "<p style='color: green;'>Added users.Status column.</p>";
+    }
+
+    $pdo->exec("UPDATE users SET Status = 'Approved' WHERE Status IS NULL OR Status = ''");
+} catch (Exception $e) {
+    echo "<p style='color: red;'>Error applying schema updates: " . $e->getMessage() . "</p>";
+}
+
 // 3. Check Seed Data
 $stmt = $pdo->query("SELECT COUNT(*) FROM users");
 if ($stmt->fetchColumn() <= 1) { // Only admin or empty

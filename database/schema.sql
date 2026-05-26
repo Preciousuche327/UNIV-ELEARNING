@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
     Email VARCHAR(100) NOT NULL UNIQUE,
     Password VARCHAR(255) NOT NULL,
     UserType ENUM('Admin', 'Instructor', 'Student') NOT NULL DEFAULT 'Student',
+    Status ENUM('Pending', 'Approved', 'Rejected') NOT NULL DEFAULT 'Approved',
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
@@ -142,5 +143,5 @@ CREATE TABLE IF NOT EXISTS course_progress (
 
 -- Seed Admin User (password: admin123)
 -- Hash generated using password_hash('admin123', PASSWORD_DEFAULT)
-INSERT IGNORE INTO users (Username, Email, Password, UserType) 
-VALUES ('admin', 'admin@univ.edu', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Admin');
+INSERT IGNORE INTO users (Username, Email, Password, UserType, Status) 
+VALUES ('admin', 'admin@univ.edu', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Admin', 'Approved');
