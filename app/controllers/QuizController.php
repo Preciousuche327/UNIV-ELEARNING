@@ -36,6 +36,19 @@ class QuizController {
             exit;
         }
 
+        // Detect the latest completed result for this quiz and whether the user is choosing to retry.
+        $stmt = $this->pdo->prepare("SELECT * FROM results WHERE UserID = ? AND QuizID = ? ORDER BY SubmittedAt DESC LIMIT 1");
+        $stmt->execute([$user_id, $quiz_id]);
+        $last_result = $stmt->fetch();
+        $allow_retry = isset($_GET['retry']) && $_GET['retry'] === '1';
+
+        if ($last_result && !$allow_retry && $_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $questions = [];
+            $time_left = 0;
+            require __DIR__ . '/../views/student/take_quiz.php';
+            return;
+        }
+
         // Prevent browser caching and back-navigation for active quiz sessions
         header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
         header('Pragma: no-cache');
@@ -68,8 +81,14 @@ class QuizController {
 
         $time_left = max(0, $_SESSION['quiz_timer'][$quiz_id]['duration'] - $elapsed);
 
-        // Clear any previous answer records for this quiz when starting a new attempt
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        // Clear any previous answer records for this quiz when starting a new attempt or retry.
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $allow_retry) {
+            unset($_SESSION['quiz_timer'][$quiz_id]);
+            $_SESSION['quiz_timer'][$quiz_id] = [
+                'start' => time(),
+                'duration' => $duration,
+            ];
+
             $stmt = $this->pdo->prepare(
                 "DELETE ua FROM user_answers ua
                  JOIN questions q ON ua.QuestionID = q.QuestionID
@@ -216,7 +235,7 @@ class QuizController {
 
         $user_id = $_SESSION['user_id'];
 
-        $stmt = $this->pdo->prepare("SELECT r.*, c.CourseName, q.QuizName, q.QuizType, q.TotalMarks 
+        $stmt = $this->pdo->prepare("SELECT r.*, c.CourseName, q.QuizID, q.QuizName, q.QuizType, q.TotalMarks 
                                      FROM results r 
                                      JOIN courses c ON r.CourseID = c.CourseID 
                                      JOIN quizzes q ON r.QuizID = q.QuizID 

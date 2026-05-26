@@ -38,58 +38,13 @@ $is_pass = $percentage >= 70;
                     </div>
 
                     <hr>
-
-                    <h5 class="fw-bold mb-4">Question Review</h5>
-
-                    <?php if (!empty($questions)): ?>
-                        <?php foreach ($questions as $qindex => $question): ?>
-                            <?php 
-                                $is_correct = $question['IsCorrect'];
-                                $answered = !is_null($question['SelectedOptionID']);
-                            ?>
-                            <div class="mb-4 p-4 border rounded <?php echo $is_correct ? 'border-success bg-light-success' : 'border-danger bg-light-danger'; ?>">
-                                <div class="d-flex align-items-start mb-3">
-                                    <span class="badge <?php echo $is_correct ? 'bg-success' : 'bg-danger'; ?> me-3">
-                                        <?php echo $is_correct ? '✓' : '✗'; ?>
-                                    </span>
-                                    <div class="flex-grow-1">
-                                        <h6 class="fw-bold mb-1"><?php echo htmlspecialchars($question['QuestionText']); ?></h6>
-                                        <small class="text-muted">Marks: <?php echo isset($question['Marks']) ? $question['Marks'] : '1'; ?></small>
-                                    </div>
-                                </div>
-
-                                <div class="ms-5">
-                                    <div class="mb-3">
-                                        <p class="small fw-bold mb-2">
-                                            <?php echo $answered ? 'Your Answer:' : 'Not Answered'; ?>
-                                        </p>
-                                        <?php if ($answered && !is_null($question['SelectedOption'])): ?>
-                                            <p class="mb-2">
-                                                <span class="badge <?php echo $is_correct ? 'bg-success' : 'bg-danger'; ?>">
-                                                    <?php echo htmlspecialchars($question['SelectedOption']); ?>
-                                                </span>
-                                            </p>
-                                        <?php endif; ?>
-                                    </div>
-
-                                    <?php if (!$is_correct && !empty($question['options'])): ?>
-                                        <div class="mt-3 pt-3 border-top">
-                                            <p class="small fw-bold mb-2">Correct Answer:</p>
-                                            <?php foreach ($question['options'] as $option): ?>
-                                                <?php if ($option['IsCorrect']): ?>
-                                                    <p class="mb-0">
-                                                        <span class="badge bg-success">
-                                                            <?php echo htmlspecialchars($option['OptionText']); ?>
-                                                        </span>
-                                                    </p>
-                                                <?php endif; ?>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
+                    <div class="alert alert-info">
+                        <i class="bi bi-shield-lock-fill me-2"></i>
+                        Question details are hidden after submission to protect quiz integrity.
+                    </div>
+                    <a href="?page=take-quiz&id=<?php echo $result['QuizID']; ?>&retry=1" class="btn btn-success w-100 mb-3">
+                        <i class="bi bi-arrow-repeat me-1"></i> Retake Quiz
+                    </a>
                 </div>
             </div>
         </div>

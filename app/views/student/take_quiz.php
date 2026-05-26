@@ -7,15 +7,18 @@ include __DIR__ . '/../partials/sidebar_v2.php';
 <div class="container-fluid p-4">
     <div class="row justify-content-center">
         <div class="col-lg-8 quiz-container">
+            <?php $quiz_completed = isset($last_result) && !$allow_retry; ?>
             <div class="mb-4 d-flex justify-content-between align-items-center">
                 <a href="?page=course-details&id=<?php echo isset($quiz['CourseID']) ? $quiz['CourseID'] : ''; ?>" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
                     <i class="bi bi-arrow-left me-1"></i> Back to Course
                 </a>
-                
-                <!-- Sticky Timer -->
-                <div class="badge bg-danger rounded-pill px-3 py-2 animate__animated animate__pulse animate__infinite">
-                    <i class="bi bi-clock me-1"></i> <span id="quiz-timer">30:00</span>
-                </div>
+
+                <?php if (!$quiz_completed): ?>
+                    <!-- Sticky Timer -->
+                    <div class="badge bg-danger rounded-pill px-3 py-2 animate__animated animate__pulse animate__infinite">
+                        <i class="bi bi-clock me-1"></i> <span id="quiz-timer">30:00</span>
+                    </div>
+                <?php endif; ?>
             </div>
 
             <div class="card border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
@@ -44,7 +47,27 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                 </div>
 
                 <div class="card-body p-5 bg-white">
-                    <?php if (empty($questions)): ?>
+                    <?php if ($quiz_completed): ?>
+                        <div class="text-center py-5">
+                            <h4 class="fw-bold mb-3">Quiz Completed</h4>
+                            <p class="text-muted mb-4">Your previous attempt has been recorded. To take the quiz again, click the button below.</p>
+                            <div class="row justify-content-center">
+                                <div class="col-md-8">
+                                    <div class="card border-0 shadow-sm mb-4">
+                                        <div class="card-body">
+                                            <h5 class="mb-2">Last Attempt</h5>
+                                            <p class="mb-1"><strong>Score:</strong> <?php echo htmlspecialchars($last_result['Score']); ?> / <?php echo htmlspecialchars($last_result['TotalMarks']); ?></p>
+                                            <p class="mb-1"><strong>Percentage:</strong> <?php echo ($last_result['TotalMarks'] > 0) ? round(($last_result['Score'] / $last_result['TotalMarks']) * 100, 1) : 0; ?>%</p>
+                                            <p class="mb-0"><strong>Status:</strong> <?php echo (($last_result['Score'] / max(1, $last_result['TotalMarks'])) * 100) >= 70 ? 'Passed' : 'Needs Improvement'; ?></p>
+                                        </div>
+                                    </div>
+                                    <a href="?page=take-quiz&id=<?php echo $quiz['QuizID']; ?>&retry=1" class="btn btn-success btn-lg px-5">
+                                        <i class="bi bi-arrow-repeat me-2"></i> Retake Quiz
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    <?php elseif (empty($questions)): ?>
                         <div class="text-center py-5">
                             <img src="https://illustrations.popsy.co/white/surreal-hourglass.svg" alt="Empty" height="150" class="mb-4">
                             <h4 class="text-muted fw-bold">No Questions Found</h4>
