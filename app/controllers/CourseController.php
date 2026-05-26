@@ -89,10 +89,13 @@ class CourseController {
 
         $query = "SELECT c.*, 
                   CASE WHEN e.EnrollmentID IS NOT NULL THEN 1 ELSE 0 END as IsEnrolled,
-                  COUNT(DISTINCT e2.EnrollmentID) as StudentCount
+                  COUNT(DISTINCT e2.EnrollmentID) as StudentCount,
+                  GROUP_CONCAT(DISTINCT u.Username ORDER BY u.Username SEPARATOR ', ') as InstructorNames
                   FROM courses c 
                   LEFT JOIN enrollments e ON c.CourseID = e.CourseID AND e.UserID = ?
                   LEFT JOIN enrollments e2 ON c.CourseID = e2.CourseID
+                  LEFT JOIN instructor_courses ic ON c.CourseID = ic.CourseID
+                  LEFT JOIN users u ON ic.InstructorID = u.UserID
                   WHERE 1=1";
         
         $params = [$user_id];

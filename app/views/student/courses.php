@@ -65,6 +65,10 @@ $sort = $_GET['sort'] ?? 'new';
                                 </div>
                             </div>
                             <h5 class="card-title fw-bold mb-2"><?php echo htmlspecialchars($course['CourseName']); ?></h5>
+                            <div class="d-flex align-items-center small text-muted mb-2">
+                                <i class="bi bi-person-video3 me-2 text-primary"></i>
+                                <span>Instructor: <?php echo htmlspecialchars($course['InstructorNames'] ?: 'Not assigned yet'); ?></span>
+                            </div>
                             <p class="card-text text-muted small mb-4 line-clamp-2">
                                 <?php echo htmlspecialchars(substr($course['Description'], 0, 100)); ?>...
                             </p>
