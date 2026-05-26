@@ -21,6 +21,10 @@ switch ($page) {
     case 'login':
         $auth->login();
         break;
+
+    case 'forgot-password':
+        $auth->forgotPassword();
+        break;
     
     case 'register':
         $auth->register();
@@ -59,12 +63,18 @@ switch ($page) {
         $courseCtrl->enroll();
         break;
 
+    case 'drop':
+        if (!isLoggedIn()) redirect('?page=login');
+        $courseCtrl->drop();
+        break;
+
     case 'my-enrollments':
         if (!isLoggedIn()) redirect('?page=login');
         $courseCtrl->myEnrollments();
         break;
 
     case 'manage-courses':
+    case 'manage-course':
     case 'my-courses': // Alias for instructor
         if (!isLoggedIn()) redirect('?page=login');
         $instructorCtrl->manageCourses();
@@ -72,7 +82,7 @@ switch ($page) {
 
     case 'create-course':
         if (!isLoggedIn()) redirect('?page=login');
-        redirect('?page=dashboard');
+        $instructorCtrl->createCourse();
         break;
 
     case 'take-quiz':
@@ -167,6 +177,11 @@ switch ($page) {
         $instructorCtrl->manageQuiz();
         break;
 
+    case 'delete-quiz':
+        if (!isLoggedIn()) redirect('?page=login');
+        $instructorCtrl->deleteQuiz();
+        break;
+
     case 'upload-content':
         if (!isLoggedIn()) redirect('?page=login');
         $instructorCtrl->uploadContent();
@@ -189,17 +204,27 @@ switch ($page) {
 
     case 'edit-course':
         if (!isLoggedIn()) redirect('?page=login');
-        redirect('?page=dashboard');
+        $instructorCtrl->editCourse();
         break;
 
     case 'delete-course':
         if (!isLoggedIn()) redirect('?page=login');
-        redirect('?page=dashboard');
+        $instructorCtrl->deleteCourse();
         break;
 
     case 'add-question':
         if (!isLoggedIn()) redirect('?page=login');
         $instructorCtrl->addQuestion();
+        break;
+
+    case 'delete-question':
+        if (!isLoggedIn()) redirect('?page=login');
+        $instructorCtrl->deleteQuestion();
+        break;
+
+    case 'grade-short-answer':
+        if (!isLoggedIn()) redirect('?page=login');
+        $instructorCtrl->gradeShortAnswer();
         break;
 
     case 'quiz-detail':

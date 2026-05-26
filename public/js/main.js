@@ -78,23 +78,61 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Sidebar toggler (if needed in mobile views)
+    // Sidebar toggler
     const toggleBtn = document.getElementById('menu-toggle');
+    const closeBtn = document.getElementById('sidebar-close');
     const wrapper = document.getElementById('wrapper');
     const sidebarOverlay = document.querySelector('.sidebar-overlay');
+    const sidebarLinks = document.querySelectorAll('#sidebar-wrapper a');
+
+    const setSidebarOpen = (isOpen) => {
+        if (!wrapper) return;
+        wrapper.classList.toggle('toggled', isOpen);
+        if (toggleBtn) {
+            toggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        }
+    };
+
+    const isMobileSidebar = () => window.matchMedia('(max-width: 767.98px)').matches;
 
     if (toggleBtn && wrapper) {
         toggleBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            wrapper.classList.toggle('toggled');
+            setSidebarOpen(!wrapper.classList.contains('toggled'));
         });
     }
 
     if (sidebarOverlay && wrapper) {
         sidebarOverlay.addEventListener('click', () => {
-            wrapper.classList.remove('toggled');
+            setSidebarOpen(false);
         });
     }
+
+    if (closeBtn && wrapper) {
+        closeBtn.addEventListener('click', () => {
+            setSidebarOpen(false);
+        });
+    }
+
+    sidebarLinks.forEach((link) => {
+        link.addEventListener('click', () => {
+            if (isMobileSidebar()) {
+                setSidebarOpen(false);
+            }
+        });
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            setSidebarOpen(false);
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        if (!isMobileSidebar()) {
+            setSidebarOpen(false);
+        }
+    });
 });
 
 // Helper for displaying SweetAlert notifications
@@ -121,7 +159,9 @@ window.showNotification = function(title, text, icon = 'success') {
 // Confirmation modal helper
 window.confirmAction = function(e, title = "Are you sure?", text = "You won't be able to revert this!") {
     e.preventDefault();
-    const href = e.currentTarget.getAttribute('href');
+    const target = e.currentTarget;
+    const href = target.getAttribute('href');
+    const form = target.closest('form');
     if (typeof Swal !== 'undefined') {
         Swal.fire({
             title: title,
@@ -133,12 +173,20 @@ window.confirmAction = function(e, title = "Are you sure?", text = "You won't be
             confirmButtonText: 'Yes, proceed!'
         }).then((result) => {
             if (result.isConfirmed) {
-                window.location.href = href;
+                if (form) {
+                    form.submit();
+                } else if (href) {
+                    window.location.href = href;
+                }
             }
         });
     } else {
         if (confirm(title + '\n' + text)) {
-            window.location.href = href;
+            if (form) {
+                form.submit();
+            } else if (href) {
+                window.location.href = href;
+            }
         }
     }
 };

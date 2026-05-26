@@ -5,6 +5,13 @@ include __DIR__ . '/../partials/sidebar_v2.php';
 ?>
 
 <div class="container-fluid p-4">
+    <?php if (isset($_SESSION['success'])): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+
     <div class="mb-4">
         <a href="?page=manage-courses" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back to Courses</a>
     </div>
@@ -59,9 +66,12 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                                         <a href="?page=manage-quiz&id=<?php echo $quiz['QuizID']; ?>" class="btn btn-sm btn-outline-primary me-1">
                                             <i class="bi bi-gear"></i> Manage Questions
                                         </a>
-                                        <a href="?page=delete-quiz&id=<?php echo $quiz['QuizID']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this assessment?')">
-                                            <i class="bi bi-trash"></i>
-                                        </a>
+                                        <form method="POST" action="?page=delete-quiz" class="d-inline">
+                                            <input type="hidden" name="quiz_id" value="<?php echo $quiz['QuizID']; ?>">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this assessment?')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

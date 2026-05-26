@@ -83,10 +83,14 @@ class InstructorController {
 
         $instructor_id = $_SESSION['user_id'];
 
-        $stmt = $this->pdo->prepare("SELECT c.*, COUNT(DISTINCT e.EnrollmentID) as StudentCount, COUNT(DISTINCT q.QuizID) as QuizCount 
+        $stmt = $this->pdo->prepare("SELECT c.*,
+                                     COUNT(DISTINCT e.EnrollmentID) as StudentCount,
+                                     GROUP_CONCAT(DISTINCT u.Username ORDER BY u.Username SEPARATOR ', ') as StudentNames,
+                                     COUNT(DISTINCT q.QuizID) as QuizCount
                                      FROM courses c 
                                      JOIN instructor_courses ic ON c.CourseID = ic.CourseID
                                      LEFT JOIN enrollments e ON c.CourseID = e.CourseID 
+                                     LEFT JOIN users u ON e.UserID = u.UserID
                                      LEFT JOIN quizzes q ON c.CourseID = q.CourseID 
                                      WHERE ic.InstructorID = ? 
                                      GROUP BY c.CourseID");
@@ -245,6 +249,17 @@ class InstructorController {
             $stmt = $this->pdo->prepare("SELECT * FROM question_options WHERE QuestionID = ?");
             $stmt->execute([$question['QuestionID']]);
             $questions[$key]['options'] = $stmt->fetchAll();
+
+            if ($question['QuestionType'] === 'Short Answer') {
+                $stmt = $this->pdo->prepare("SELECT ua.*, u.Username FROM user_answers ua
+                                             JOIN users u ON ua.UserID = u.UserID
+                                             WHERE ua.QuestionID = ?
+                                             ORDER BY ua.SubmittedAt DESC");
+                $stmt->execute([$question['QuestionID']]);
+                $questions[$key]['short_answers'] = $stmt->fetchAll();
+            } else {
+                $questions[$key]['short_answers'] = [];
+            }
         }
 
         require __DIR__ . '/../views/instructor/manage_quiz.php';
@@ -278,6 +293,33 @@ class InstructorController {
         $quizzes = $stmt->fetchAll();
 
         require __DIR__ . '/../views/instructor/course_quizzes.php';
+    }
+
+    public function deleteQuiz() {
+        if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'Instructor') {
+            header("Location: index.php?page=login");
+            exit;
+        }
+
+        $quiz_id = $_POST['quiz_id'] ?? null;
+        $instructor_id = $_SESSION['user_id'];
+
+        $stmt = $this->pdo->prepare("SELECT q.CourseID FROM quizzes q
+                                     JOIN instructor_courses ic ON q.CourseID = ic.CourseID
+                                     WHERE q.QuizID = ? AND ic.InstructorID = ?");
+        $stmt->execute([$quiz_id, $instructor_id]);
+        $quiz = $stmt->fetch();
+
+        if ($quiz) {
+            $stmt = $this->pdo->prepare("DELETE FROM quizzes WHERE QuizID = ?");
+            $stmt->execute([$quiz_id]);
+            $_SESSION['success'] = 'Assessment deleted successfully.';
+            header("Location: index.php?page=course-quizzes&course_id=" . $quiz['CourseID']);
+            exit;
+        }
+
+        header("Location: index.php?page=manage-courses");
+        exit;
     }
 
     // Add question to quiz
@@ -339,10 +381,93 @@ class InstructorController {
                         $stmt->execute([$question_id, $option_text, $is_correct]);
                     }
                 }
+            } elseif ($question_type === 'True/False') {
+                $correct_answer = $_POST['true_false_answer'] ?? '1';
+                $stmt = $this->pdo->prepare("INSERT INTO question_options (QuestionID, OptionText, IsCorrect) VALUES (?, ?, ?)");
+                $stmt->execute([$question_id, 'True', $correct_answer === '1' ? 1 : 0]);
+                $stmt->execute([$question_id, 'False', $correct_answer === '0' ? 1 : 0]);
             }
         }
 
         header("Location: " . $_SERVER['HTTP_REFERER']);
+        exit;
+    }
+
+    public function deleteQuestion() {
+        if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'Instructor') {
+            header("Location: index.php?page=login");
+            exit;
+        }
+
+        $question_id = $_POST['question_id'] ?? null;
+        $instructor_id = $_SESSION['user_id'];
+
+        $stmt = $this->pdo->prepare("SELECT q.QuizID FROM questions q
+                                     JOIN quizzes z ON q.QuizID = z.QuizID
+                                     JOIN instructor_courses ic ON z.CourseID = ic.CourseID
+                                     WHERE q.QuestionID = ? AND ic.InstructorID = ?");
+        $stmt->execute([$question_id, $instructor_id]);
+        $question = $stmt->fetch();
+
+        if ($question) {
+            $stmt = $this->pdo->prepare("DELETE FROM questions WHERE QuestionID = ?");
+            $stmt->execute([$question_id]);
+            $_SESSION['success'] = 'Question deleted successfully.';
+            header("Location: index.php?page=manage-quiz&id=" . $question['QuizID']);
+            exit;
+        }
+
+        header("Location: index.php?page=dashboard");
+        exit;
+    }
+
+    public function gradeShortAnswer() {
+        if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'Instructor') {
+            header("Location: index.php?page=login");
+            exit;
+        }
+
+        $answer_id = $_POST['answer_id'] ?? null;
+        $is_correct = isset($_POST['is_correct']) ? (int)$_POST['is_correct'] : 0;
+        $instructor_id = $_SESSION['user_id'];
+
+        $stmt = $this->pdo->prepare("SELECT ua.UserID, ua.QuestionID, q.QuizID, q.Marks, z.CourseID
+                                     FROM user_answers ua
+                                     JOIN questions q ON ua.QuestionID = q.QuestionID
+                                     JOIN quizzes z ON q.QuizID = z.QuizID
+                                     JOIN instructor_courses ic ON z.CourseID = ic.CourseID
+                                     WHERE ua.AnswerID = ? AND q.QuestionType = 'Short Answer' AND ic.InstructorID = ?");
+        $stmt->execute([$answer_id, $instructor_id]);
+        $answer = $stmt->fetch();
+
+        if ($answer) {
+            $stmt = $this->pdo->prepare("UPDATE user_answers SET IsCorrect = ? WHERE AnswerID = ?");
+            $stmt->execute([$is_correct, $answer_id]);
+
+            $stmt = $this->pdo->prepare("SELECT COALESCE(SUM(q.Marks), 0) FROM user_answers ua
+                                         JOIN questions q ON ua.QuestionID = q.QuestionID
+                                         WHERE ua.UserID = ? AND q.QuizID = ? AND ua.IsCorrect = 1");
+            $stmt->execute([$answer['UserID'], $answer['QuizID']]);
+            $score = (int)$stmt->fetchColumn();
+
+            $stmt = $this->pdo->prepare("UPDATE results SET Score = ? WHERE UserID = ? AND QuizID = ?");
+            $stmt->execute([$score, $answer['UserID'], $answer['QuizID']]);
+
+            $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM user_answers ua
+                                         JOIN questions q ON ua.QuestionID = q.QuestionID
+                                         WHERE ua.UserID = ? AND q.QuizID = ? AND q.QuestionType = 'Short Answer' AND ua.IsCorrect IS NULL");
+            $stmt->execute([$answer['UserID'], $answer['QuizID']]);
+            $status = ((int)$stmt->fetchColumn()) > 0 ? 'Submitted' : 'Graded';
+
+            $stmt = $this->pdo->prepare("UPDATE quiz_attempts SET Score = ?, Status = ? WHERE UserID = ? AND QuizID = ?");
+            $stmt->execute([$score, $status, $answer['UserID'], $answer['QuizID']]);
+
+            $_SESSION['success'] = 'Short answer marked done.';
+            header("Location: index.php?page=manage-quiz&id=" . $answer['QuizID']);
+            exit;
+        }
+
+        header("Location: index.php?page=dashboard");
         exit;
     }
 

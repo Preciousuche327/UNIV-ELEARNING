@@ -87,8 +87,26 @@ class AdminController {
         $user_id = $_POST['user_id'] ?? null;
 
         if ($user_id && $user_id != $_SESSION['user_id']) {
-            $stmt = $this->pdo->prepare("DELETE FROM users WHERE UserID = ?");
-            $stmt->execute([$user_id]);
+            try {
+                $this->pdo->beginTransaction();
+
+                $stmt = $this->pdo->prepare("DELETE FROM instructor_courses WHERE InstructorID = ?");
+                $stmt->execute([$user_id]);
+
+                $stmt = $this->pdo->prepare("UPDATE course_contents SET CreatedBy = NULL WHERE CreatedBy = ?");
+                $stmt->execute([$user_id]);
+
+                $stmt = $this->pdo->prepare("DELETE FROM users WHERE UserID = ?");
+                $stmt->execute([$user_id]);
+
+                $this->pdo->commit();
+                $_SESSION['success'] = "Account deleted successfully.";
+            } catch (Exception $e) {
+                if ($this->pdo->inTransaction()) {
+                    $this->pdo->rollBack();
+                }
+                $_SESSION['error'] = "Could not delete that account. Please remove related records and try again.";
+            }
         }
 
         header("Location: index.php?page=admin-users");
@@ -219,7 +237,7 @@ class AdminController {
 
         $filter_course = $_GET['course'] ?? '';
 
-        $query = "SELECT r.*, u.Username, c.CourseName, q.QuizName, q.QuizType FROM results r 
+        $query = "SELECT r.*, u.Username, c.CourseName, q.QuizName, q.QuizType, q.TotalMarks FROM results r
                   JOIN users u ON r.UserID = u.UserID 
                   JOIN courses c ON r.CourseID = c.CourseID 
                   JOIN quizzes q ON r.QuizID = q.QuizID WHERE 1=1";

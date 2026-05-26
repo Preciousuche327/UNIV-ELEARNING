@@ -61,9 +61,16 @@ $average_score = $average_score ?? 0;
     <div class="col-lg-8">
         <div class="card">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
                     <h5 class="card-title mb-0">My Recent Courses</h5>
-                    <a href="?page=my-enrollments" class="btn btn-sm btn-outline-primary">View All</a>
+                    <div class="d-flex gap-2">
+                        <form method="GET" class="input-group input-group-sm dashboard-course-search">
+                            <input type="hidden" name="page" value="dashboard">
+                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                            <input type="text" name="course_search" class="form-control" placeholder="Search my courses" value="<?php echo htmlspecialchars($course_search ?? ''); ?>">
+                        </form>
+                        <a href="?page=my-enrollments" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
                 </div>
                 <div class="table-responsive">
                     <table class="table align-middle">

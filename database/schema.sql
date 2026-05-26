@@ -97,6 +97,7 @@ CREATE TABLE IF NOT EXISTS user_answers (
     AnswerText TEXT,
     IsCorrect BOOLEAN,
     SubmittedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_user_question (UserID, QuestionID),
     FOREIGN KEY (UserID) REFERENCES users(UserID) ON DELETE CASCADE,
     FOREIGN KEY (QuestionID) REFERENCES questions(QuestionID) ON DELETE CASCADE,
     FOREIGN KEY (SelectedOptionID) REFERENCES question_options(OptionID) ON DELETE SET NULL

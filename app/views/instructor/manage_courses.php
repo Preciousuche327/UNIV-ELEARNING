@@ -46,6 +46,8 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                                             <div class="small text-muted mt-1 text-truncate" style="max-width:220px;">
                                                 <?php echo htmlspecialchars($course['StudentNames']); ?>
                                             </div>
+                                        <?php else: ?>
+                                            <div class="small text-muted mt-1">No students yet</div>
                                         <?php endif; ?>
                                     </td>
                                     <td>

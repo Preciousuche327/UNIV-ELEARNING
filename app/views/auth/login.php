@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - <?php echo defined('APP_NAME') ? APP_NAME : 'Univ E-Learning'; ?></title>
+    <link rel="icon" type="image/png" href="public/images/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="public/images/icons/icon-192.png">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Google Fonts -->
@@ -55,10 +57,17 @@
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     <?php endif; ?>
+                    <?php if (isset($success_message)): ?>
+                        <div class="alert alert-success alert-dismissible fade show d-flex align-items-center" role="alert">
+                            <i class="bi bi-check-circle-fill flex-shrink-0 me-2"></i>
+                            <div><?php echo htmlspecialchars($success_message); ?></div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    <?php endif; ?>
 
                     <form method="POST" class="needs-validation" novalidate>
                         <div class="form-floating mb-4">
-                            <input type="text" name="email" class="form-control" id="emailInput" placeholder="name@example.com" required>
+                            <input type="text" name="email" class="form-control" id="emailInput" placeholder="name@example.com" value="<?php echo htmlspecialchars($remembered_email ?? ''); ?>" required>
                             <label for="emailInput"><i class="bi bi-envelope me-2 text-muted"></i>Email Address or Username</label>
                             <div class="invalid-feedback">Please provide a valid email or username.</div>
                         </div>
@@ -71,10 +80,10 @@
 
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="rememberMe">
+                                <input class="form-check-input" type="checkbox" id="rememberMe" name="remember_me" value="1" <?php echo !empty($remembered_email) ? 'checked' : ''; ?>>
                                 <label class="form-check-label text-muted small" for="rememberMe">Remember me</label>
                             </div>
-                            <a href="#" class="text-primary text-decoration-none small fw-medium">Forgot password?</a>
+                            <a href="?page=forgot-password" class="text-primary text-decoration-none small fw-medium">Forgot password?</a>
                         </div>
 
                         <button type="submit" class="btn btn-primary w-100 py-3 mb-4 fw-bold shadow-sm rounded-3 fs-5 position-relative overflow-hidden group">

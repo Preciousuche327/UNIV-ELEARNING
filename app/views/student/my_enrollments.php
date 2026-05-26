@@ -51,6 +51,13 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                                 <a href="?page=course-details&id=<?php echo $enrollment['CourseID']; ?>" class="btn btn-outline-primary btn-sm">
                                     <i class="bi bi-arrow-right me-1"></i> Continue Learning
                                 </a>
+                                <form method="POST" action="?page=drop" class="mt-2">
+                                    <input type="hidden" name="course_id" value="<?php echo $enrollment['CourseID']; ?>">
+                                    <input type="hidden" name="redirect" value="my-enrollments">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm w-100" onclick="return confirm('Drop this course?')">
+                                        <i class="bi bi-x-circle me-1"></i> Drop Course
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>

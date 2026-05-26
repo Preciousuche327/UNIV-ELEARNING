@@ -5,6 +5,19 @@ include __DIR__ . '/../partials/sidebar_v2.php';
 ?>
 
 <div class="container-fluid p-4">
+    <?php if (isset($_SESSION['success'])): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+    <?php if (isset($_SESSION['error'])): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold mb-1">User Management</h2>
@@ -75,11 +88,11 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                                     </td>
                                     <td><?php echo date('M d, Y', strtotime($user['CreatedAt'])); ?></td>
                                     <td class="pe-4">
-                                        <a href="?page=edit-user&id=<?php echo $user['UserID']; ?>" class="btn btn-sm btn-outline-primary">
+                                        <a href="?page=admin-edit-user&id=<?php echo $user['UserID']; ?>" class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-pencil"></i> Edit
                                         </a>
                                         <?php if ($user['UserID'] != $_SESSION['user_id']): ?>
-                                            <form method="POST" action="?page=delete-user" style="display: inline;">
+                                            <form method="POST" action="?page=admin-delete-user" style="display: inline;">
                                                 <input type="hidden" name="user_id" value="<?php echo $user['UserID']; ?>">
                                                 <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this user?')">
                                                     <i class="bi bi-trash"></i> Delete

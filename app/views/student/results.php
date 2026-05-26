@@ -64,7 +64,7 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                     <tbody>
                         <?php if (empty($results)): ?>
                             <tr>
-                                <td colspan="7" class="text-center py-5">
+                                <td colspan="8" class="text-center py-5">
                                     <p class="text-muted mb-0">No results found. Start by taking a quiz!</p>
                                 </td>
                             </tr>

@@ -21,6 +21,9 @@ switch ($page) {
     case 'login':
         $auth->login();
         break;
+    case 'forgot-password':
+        $auth->forgotPassword();
+        break;
 
     case 'register':
         $auth->register();
@@ -43,7 +46,8 @@ switch ($page) {
         break;
 
     case 'results':
-        $course->myResults();
+    case 'my-results':
+        $quiz->myResults();
         break;
 
     case 'enroll':
@@ -96,7 +100,19 @@ switch ($page) {
         break;
 
     case 'admin-results':
+    case 'all-results':
         $admin->allResults();
+        break;
+
+    case 'dashboard':
+        if (!isLoggedIn()) redirect('?page=login');
+        if ($_SESSION['user_type'] === 'Admin') {
+            $admin->dashboard();
+        } elseif ($_SESSION['user_type'] === 'Instructor') {
+            $instructor->dashboard();
+        } else {
+            $course->dashboard();
+        }
         break;
 
     case 'manage-instructors':
@@ -117,19 +133,25 @@ switch ($page) {
         break;
 
     case 'create-course':
-        redirect('?page=dashboard');
+        if (!isLoggedIn()) redirect('?page=login');
+        $instructor->createCourse();
         break;
 
     case 'manage-courses':
+    case 'manage-course':
+    case 'my-courses':
+        if (!isLoggedIn()) redirect('?page=login');
         $instructor->manageCourses();
         break;
 
     case 'edit-course':
-        redirect('?page=dashboard');
+        if (!isLoggedIn()) redirect('?page=login');
+        $instructor->editCourse();
         break;
 
     case 'delete-course':
-        redirect('?page=dashboard');
+        if (!isLoggedIn()) redirect('?page=login');
+        $instructor->deleteCourse();
         break;
 
     case 'create-quiz':
@@ -138,6 +160,15 @@ switch ($page) {
 
     case 'manage-quiz':
         $instructor->manageQuiz();
+        break;
+    case 'delete-quiz':
+        $instructor->deleteQuiz();
+        break;
+    case 'delete-question':
+        $instructor->deleteQuestion();
+        break;
+    case 'grade-short-answer':
+        $instructor->gradeShortAnswer();
         break;
 
     case 'add-question':
@@ -161,6 +192,8 @@ switch ($page) {
         break;
 
     case 'course-results':
+    case 'student-results':
+        if (!isLoggedIn()) redirect('?page=login');
         $instructor->courseResults();
         break;
 

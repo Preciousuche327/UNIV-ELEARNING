@@ -36,8 +36,24 @@ class QuizController {
             exit;
         }
 
+        $stmt = $this->pdo->prepare("SELECT ResultID FROM results WHERE UserID = ? AND QuizID = ? ORDER BY SubmittedAt DESC LIMIT 1");
+        $stmt->execute([$user_id, $quiz_id]);
+        $existing_result = $stmt->fetch();
+
+        if ($existing_result && !($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_quiz']))) {
+            $_SESSION['error'] = "You have already submitted this assessment.";
+            header("Location: index.php?page=quiz-detail&id=" . $existing_result['ResultID']);
+            exit;
+        }
+
         // Handle quiz submission
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_quiz'])) {
+            if ($existing_result) {
+                $_SESSION['error'] = "You have already submitted this assessment.";
+                header("Location: index.php?page=quiz-detail&id=" . $existing_result['ResultID']);
+                exit;
+            }
+
             // Process all answers (supports multiple choice, true/false and short answer)
             $MAX_SHORT_ANSWER = 500;
             foreach ($_POST as $key => $value) {
@@ -61,6 +77,22 @@ class QuizController {
                         $stmt = $this->pdo->prepare("INSERT INTO user_answers (UserID, QuestionID, AnswerText, IsCorrect) VALUES (?, ?, ?, NULL) 
                                                      ON DUPLICATE KEY UPDATE AnswerText = ?, IsCorrect = NULL");
                         $stmt->execute([$user_id, $question_id, $answer_text, $answer_text]);
+
+                    } elseif ($qtype === 'True/False') {
+                        $answer_text = ((string)$value === '1') ? 'True' : 'False';
+                        $stmt = $this->pdo->prepare("SELECT OptionID, IsCorrect FROM question_options WHERE QuestionID = ? AND OptionText = ? LIMIT 1");
+                        $stmt->execute([$question_id, $answer_text]);
+                        $option = $stmt->fetch();
+
+                        if ($option) {
+                            $stmt = $this->pdo->prepare("INSERT INTO user_answers (UserID, QuestionID, SelectedOptionID, AnswerText, IsCorrect)
+                                                         VALUES (?, ?, ?, ?, ?)
+                                                         ON DUPLICATE KEY UPDATE SelectedOptionID = ?, AnswerText = ?, IsCorrect = ?");
+                            $stmt->execute([
+                                $user_id, $question_id, $option['OptionID'], (string)$value, $option['IsCorrect'],
+                                $option['OptionID'], (string)$value, $option['IsCorrect']
+                            ]);
+                        }
 
                     } else {
                         // treat as option id (multiple choice / true-false)
@@ -133,6 +165,10 @@ class QuizController {
         // Save result
         $stmt = $this->pdo->prepare("INSERT INTO results (UserID, CourseID, QuizID, Score) VALUES (?, ?, ?, ?)");
         $stmt->execute([$user_id, $course_id, $quiz_id, $score]);
+
+        $status = $this->hasPendingManualAnswers($user_id, $quiz_id) ? 'Submitted' : 'Graded';
+        $stmt = $this->pdo->prepare("INSERT INTO quiz_attempts (UserID, QuizID, Score, Status, SubmittedAt) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)");
+        $stmt->execute([$user_id, $quiz_id, $score, $status]);
     }
 
     public function myResults() {
@@ -209,5 +245,13 @@ class QuizController {
         }
 
         require __DIR__ . '/../views/student/quiz_detail.php';
+    }
+
+    private function hasPendingManualAnswers($user_id, $quiz_id) {
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM user_answers ua
+                                     JOIN questions q ON ua.QuestionID = q.QuestionID
+                                     WHERE ua.UserID = ? AND q.QuizID = ? AND q.QuestionType = 'Short Answer' AND ua.IsCorrect IS NULL");
+        $stmt->execute([$user_id, $quiz_id]);
+        return ((int)$stmt->fetchColumn()) > 0;
     }
 }

@@ -11,8 +11,12 @@ if (empty($current_page)) {
 <!-- Sidebar -->
 <div id="wrapper" class="d-flex">
     <div class="bg-dark text-white border-end" id="sidebar-wrapper" style="min-width: 250px; min-height: 100vh;">
-        <div class="sidebar-heading border-bottom p-4 fs-4 fw-bold text-center text-primary">
-            Univ<span class="text-white">Learn</span>
+        <div class="sidebar-heading border-bottom p-3 fs-5 fw-bold text-center text-primary">
+            <img src="public/images/icons/icon-192.png" alt="UnivLearn" class="sidebar-logo me-2" width="32" height="32" style="width:32px;height:32px;max-width:32px;max-height:32px;object-fit:cover;">
+            <span>Univ<span class="text-white">Learn</span></span>
+            <button type="button" class="btn btn-sm btn-outline-light sidebar-close-btn d-lg-none" id="sidebar-close" aria-label="Close navigation">
+                <i class="bi bi-x-lg"></i>
+            </button>
         </div>
     <div class="list-group list-group-flush p-3">
         <a href="?page=dashboard" class="list-group-item list-group-item-action bg-dark text-white border-0 py-3 rounded mb-1 <?php echo (in_array($current_page, ['dashboard', 'instructor-dashboard', 'admin-dashboard'])) ? 'active bg-primary' : ''; ?>">
@@ -63,14 +67,14 @@ if (empty($current_page)) {
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom p-3">
         <div class="container-fluid">
-                <button class="btn btn-outline-secondary btn-sm me-3 d-lg-none" id="menu-toggle" aria-label="Toggle navigation">
+                <button class="btn btn-outline-secondary btn-sm me-3 d-lg-none" id="menu-toggle" aria-label="Open navigation" aria-controls="sidebar-wrapper" aria-expanded="false">
                     <i class="bi bi-list"></i>
                 </button>
                 <span class="navbar-text fw-medium">
                     Welcome back, <span class="text-primary"><?php echo htmlspecialchars($_SESSION['username'] ?? 'Guest'); ?></span> (<?php echo $_SESSION['user_type'] ?? 'Student'; ?>)
                 </span>
             <div class="ms-auto">
-                <span class="text-muted small"><?php echo date('l, jS F Y'); ?></span>
+                <span class="text-muted small"><?php echo date('D, M j, Y'); ?></span>
             </div>
         </div>
     </nav>

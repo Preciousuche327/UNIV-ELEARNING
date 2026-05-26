@@ -95,7 +95,10 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                             </tr>
                         <?php else: ?>
                             <?php foreach ($results as $result): ?>
-                                <?php $percentage = round(($result['Score'] / 100) * 100, 1); ?>
+                                <?php
+                                    $total_marks = max((int)($result['TotalMarks'] ?? 100), 1);
+                                    $percentage = round(($result['Score'] / $total_marks) * 100, 1);
+                                ?>
                                 <tr>
                                     <td class="ps-4">
                                         <div class="fw-bold"><?php echo htmlspecialchars($result['Username']); ?></div>
@@ -116,7 +119,7 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                                     <td><?php echo htmlspecialchars($result['CourseName']); ?></td>
                                     <td>
                                         <span class="fw-bold">
-                                            <?php echo $result['Score']; ?>/100
+                                            <?php echo $result['Score']; ?>/<?php echo $total_marks; ?>
                                         </span>
                                     </td>
                                     <td><?php echo $percentage; ?>%</td>

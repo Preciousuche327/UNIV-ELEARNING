@@ -2,6 +2,17 @@
 /* -----------------------------
    DATABASE CONFIGURATION
 ------------------------------*/
+$localConfigPath = __DIR__ . '/hosting.local.php';
+$localConfig = [];
+
+if (is_file($localConfigPath)) {
+    $loadedLocalConfig = require $localConfigPath;
+
+    if (is_array($loadedLocalConfig)) {
+        $localConfig = $loadedLocalConfig;
+    }
+}
+
 $databaseUrl = getenv('DATABASE_URL') ?: getenv('MYSQL_URL') ?: '';
 $databaseConfig = [];
 
@@ -19,17 +30,17 @@ if ($databaseUrl) {
     }
 }
 
-define('DB_HOST', $databaseConfig['host'] ?? getenv('MYSQLHOST') ?: getenv('DB_HOST') ?: 'localhost');
-define('DB_PORT', $databaseConfig['port'] ?? getenv('MYSQLPORT') ?: getenv('DB_PORT') ?: '3306');
-define('DB_NAME', $databaseConfig['name'] ?? getenv('MYSQLDATABASE') ?: getenv('DB_NAME') ?: 'univ_elearning');
-define('DB_USER', $databaseConfig['user'] ?? getenv('MYSQLUSER') ?: getenv('DB_USER') ?: 'root');
-define('DB_PASS', $databaseConfig['pass'] ?? getenv('MYSQLPASSWORD') ?: getenv('DB_PASS') ?: '');
+define('DB_HOST', $localConfig['db_host'] ?? $databaseConfig['host'] ?? getenv('MYSQLHOST') ?: getenv('DB_HOST') ?: 'localhost');
+define('DB_PORT', $localConfig['db_port'] ?? $databaseConfig['port'] ?? getenv('MYSQLPORT') ?: getenv('DB_PORT') ?: '3306');
+define('DB_NAME', $localConfig['db_name'] ?? $databaseConfig['name'] ?? getenv('MYSQLDATABASE') ?: getenv('DB_NAME') ?: 'univ_elearning');
+define('DB_USER', $localConfig['db_user'] ?? $databaseConfig['user'] ?? getenv('MYSQLUSER') ?: getenv('DB_USER') ?: 'root');
+define('DB_PASS', $localConfig['db_pass'] ?? $databaseConfig['pass'] ?? getenv('MYSQLPASSWORD') ?: getenv('DB_PASS') ?: '');
 
 /* -----------------------------
    APP CONFIGURATION
 ------------------------------*/
 define('APP_NAME', 'Univ E-Learning');
-define('BASE_URL', getenv('BASE_URL') ?: 'http://localhost/univ_elearning/');
+define('BASE_URL', $localConfig['base_url'] ?? getenv('BASE_URL') ?: 'http://localhost/univ_elearning/');
 
 /* -----------------------------
    START SESSION (SAFE)

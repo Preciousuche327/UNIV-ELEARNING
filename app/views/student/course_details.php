@@ -18,6 +18,9 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                 <p class="lead mb-0 text-white-50">
                     <i class="bi bi-people me-2"></i> <?php echo $course['StudentCount']; ?> Students Enrolled
                 </p>
+                <p class="mb-0 mt-2 text-white-50">
+                    <i class="bi bi-person-video3 me-2"></i> Instructor: <?php echo htmlspecialchars($course['InstructorNames'] ?: 'Not assigned yet'); ?>
+                </p>
             </div>
             <div class="text-end d-none d-md-block">
                 <img src="https://illustrations.popsy.co/white/surreal-hourglass.svg" alt="Course" style="height: 180px;">

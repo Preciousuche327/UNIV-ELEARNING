@@ -79,7 +79,16 @@ $totalQuizzes = $stats['total_quizzes'] ?? 0;
                                                 <small class="text-muted"><?php echo htmlspecialchars(substr($course['Description'], 0, 50)); ?>...</small>
                                             </div>
                                         </td>
-                                        <td><?php echo $course['StudentCount']; ?> Students</td>
+                                        <td>
+                                            <?php echo $course['StudentCount']; ?> Students
+                                            <?php if (!empty($course['StudentNames'])): ?>
+                                                <div class="small text-muted mt-1 text-truncate" style="max-width:220px;">
+                                                    <?php echo htmlspecialchars($course['StudentNames']); ?>
+                                                </div>
+                                            <?php else: ?>
+                                                <div class="small text-muted mt-1">No students yet</div>
+                                            <?php endif; ?>
+                                        </td>
                                         <td><?php echo $course['QuizCount']; ?></td>
                                         <td>
                                             <a href="?page=course-quizzes&course_id=<?php echo $course['CourseID']; ?>" class="btn btn-sm btn-light border text-primary" title="Manage Quizzes"><i class="bi bi-patch-question"></i></a>

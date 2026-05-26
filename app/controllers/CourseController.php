@@ -22,12 +22,23 @@ class CourseController {
         $stmt->execute([$user_id]);
         $enrolled_count = $stmt->fetchColumn();
 
+        $course_search = trim($_GET['course_search'] ?? '');
+
         // Get enrolled courses
-        $stmt = $this->pdo->prepare("SELECT c.*, e.CompletionStatus FROM courses c 
+        $query = "SELECT c.*, e.CompletionStatus FROM courses c
                                      JOIN enrollments e ON c.CourseID = e.CourseID 
-                                     WHERE e.UserID = ? 
-                                     ORDER BY e.EnrollmentDate DESC");
-        $stmt->execute([$user_id]);
+                                     WHERE e.UserID = ?";
+        $params = [$user_id];
+
+        if ($course_search !== '') {
+            $query .= " AND (c.CourseName LIKE ? OR c.Description LIKE ?)";
+            $params[] = "%$course_search%";
+            $params[] = "%$course_search%";
+        }
+
+        $query .= " GROUP BY c.CourseID ORDER BY e.EnrollmentDate DESC";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute($params);
         $enrolled_courses = $stmt->fetchAll();
 
         // Get completed quizzes count from results table
@@ -118,9 +129,12 @@ class CourseController {
         $course_id = $_GET['id'] ?? null;
 
         // Get course
-        $stmt = $this->pdo->prepare("SELECT c.*, COUNT(DISTINCT e.EnrollmentID) as StudentCount 
+        $stmt = $this->pdo->prepare("SELECT c.*, COUNT(DISTINCT e.EnrollmentID) as StudentCount,
+                                     GROUP_CONCAT(DISTINCT u.Username ORDER BY u.Username SEPARATOR ', ') as InstructorNames
                                      FROM courses c 
                                      LEFT JOIN enrollments e ON c.CourseID = e.CourseID 
+                                     LEFT JOIN instructor_courses ic ON c.CourseID = ic.CourseID
+                                     LEFT JOIN users u ON ic.InstructorID = u.UserID
                                      WHERE c.CourseID = ? 
                                      GROUP BY c.CourseID");
         $stmt->execute([$course_id]);
@@ -159,11 +173,12 @@ class CourseController {
 
         $stmt = $this->pdo->prepare("SELECT c.*, e.CompletionStatus, e.EnrollmentDate,
                                      (SELECT COUNT(*) FROM quizzes WHERE CourseID = c.CourseID) as TotalQuizzes,
-                                     (SELECT COUNT(*) FROM results r JOIN quizzes q ON r.QuizID = q.QuizID 
+                                     (SELECT COUNT(DISTINCT r.QuizID) FROM results r JOIN quizzes q ON r.QuizID = q.QuizID
                                       WHERE r.UserID = ? AND q.CourseID = c.CourseID) as CompletedQuizzes
                                      FROM courses c 
                                      JOIN enrollments e ON c.CourseID = e.CourseID 
                                      WHERE e.UserID = ? 
+                                     GROUP BY c.CourseID
                                      ORDER BY e.EnrollmentDate DESC");
         $stmt->execute([$user_id, $user_id]);
         $enrollments = $stmt->fetchAll();
@@ -250,7 +265,8 @@ class CourseController {
             $stmt->execute([$user_id, $course_id]);
         }
 
-        header("Location: index.php?page=courses");
+        $redirect = $_POST['redirect'] ?? 'courses';
+        header("Location: index.php?page=$redirect");
     }
 
     private function countCompletedByType($user_id, $type) {
