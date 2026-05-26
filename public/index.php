@@ -21,10 +21,6 @@ switch ($page) {
     case 'login':
         $auth->login();
         break;
-    case 'forgot-password':
-        $auth->forgotPassword();
-        break;
-
     case 'register':
         $auth->register();
         break;

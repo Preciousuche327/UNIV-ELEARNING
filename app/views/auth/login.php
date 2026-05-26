@@ -78,12 +78,11 @@
                             <div class="invalid-feedback">Password is required.</div>
                         </div>
 
-                        <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="d-flex justify-content-start align-items-center mb-4">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="rememberMe" name="remember_me" value="1" <?php echo !empty($remembered_email) ? 'checked' : ''; ?>>
                                 <label class="form-check-label text-muted small" for="rememberMe">Remember me</label>
                             </div>
-                            <a href="?page=forgot-password" class="text-primary text-decoration-none small fw-medium">Forgot password?</a>
                         </div>
 
                         <button type="submit" class="btn btn-primary w-100 py-3 mb-4 fw-bold shadow-sm rounded-3 fs-5 position-relative overflow-hidden group">

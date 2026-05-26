@@ -53,44 +53,6 @@ class AuthController {
         require __DIR__ . '/../views/auth/login.php';
     }
 
-    public function forgotPassword() {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $email = trim($_POST['email'] ?? '');
-            $password = $_POST['password'] ?? '';
-            $confirm_password = $_POST['confirm_password'] ?? '';
-            $errors = [];
-
-            if ($email === '') {
-                $errors[] = "Email or username is required.";
-            }
-            if (strlen($password) < 6) {
-                $errors[] = "Password must be at least 6 characters.";
-            }
-            if ($password !== $confirm_password) {
-                $errors[] = "Passwords do not match.";
-            }
-
-            if (empty($errors)) {
-                $stmt = $this->pdo->prepare("SELECT UserID FROM users WHERE Email = ? OR Username = ?");
-                $stmt->execute([$email, $email]);
-                $user = $stmt->fetch();
-
-                if ($user) {
-                    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-                    $stmt = $this->pdo->prepare("UPDATE users SET Password = ? WHERE UserID = ?");
-                    $stmt->execute([$hashed_password, $user['UserID']]);
-                }
-
-                $success_message = "If that account exists, the password has been updated. You can sign in now.";
-                $remembered_email = $_COOKIE['remembered_login'] ?? '';
-                require __DIR__ . '/../views/auth/login.php';
-                exit;
-            }
-        }
-
-        require __DIR__ . '/../views/auth/forgot_password.php';
-    }
-
     public function register() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' && isLoggedIn()) {
             header("Location: index.php?page=dashboard");
