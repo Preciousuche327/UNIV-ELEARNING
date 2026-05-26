@@ -30,7 +30,7 @@ if ($databaseUrl) {
     }
 }
 
-define('DB_HOST', $localConfig['db_host'] ?? $databaseConfig['host'] ?? getenv('MYSQLHOST') ?: getenv('DB_HOST') ?: 'localhost');
+define('DB_HOST', $localConfig['db_host'] ?? $databaseConfig['host'] ?? getenv('MYSQLHOST') ?: getenv('DB_HOST') ?: '127.0.0.1');
 define('DB_PORT', $localConfig['db_port'] ?? $databaseConfig['port'] ?? getenv('MYSQLPORT') ?: getenv('DB_PORT') ?: '3306');
 define('DB_NAME', $localConfig['db_name'] ?? $databaseConfig['name'] ?? getenv('MYSQLDATABASE') ?: getenv('DB_NAME') ?: 'univ_elearning');
 define('DB_USER', $localConfig['db_user'] ?? $databaseConfig['user'] ?? getenv('MYSQLUSER') ?: getenv('DB_USER') ?: 'root');
