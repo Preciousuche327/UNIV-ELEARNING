@@ -26,6 +26,18 @@ switch ($page) {
         $auth->register();
         break;
 
+    case 'verify-email':
+        $auth->verifyEmail();
+        break;
+
+    case 'forgot-password':
+        $auth->forgotPassword();
+        break;
+
+    case 'reset-password':
+        $auth->resetPassword();
+        break;
+
     case 'logout':
         $auth->logout();
         break;

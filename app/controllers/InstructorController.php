@@ -592,8 +592,13 @@ class InstructorController {
             $url = $_POST['content_url'] ?? '';
 
             if ($course_id && !empty($title)) {
-                $stmt = $this->pdo->prepare("INSERT INTO course_contents (CourseID, ContentType, ContentTitle, ContentURL, CreatedBy) VALUES (?, ?, ?, ?, ?)");
-                $stmt->execute([$course_id, $type, $title, $url, $instructor_id]);
+                if ($this->tableHasColumn('course_contents', 'CreatedBy')) {
+                    $stmt = $this->pdo->prepare("INSERT INTO course_contents (CourseID, ContentType, ContentTitle, ContentURL, CreatedBy) VALUES (?, ?, ?, ?, ?)");
+                    $stmt->execute([$course_id, $type, $title, $url, $instructor_id]);
+                } else {
+                    $stmt = $this->pdo->prepare("INSERT INTO course_contents (CourseID, ContentType, ContentTitle, ContentURL) VALUES (?, ?, ?, ?)");
+                    $stmt->execute([$course_id, $type, $title, $url]);
+                }
 
                 header("Location: index.php?page=manage-content");
                 exit;
@@ -611,14 +616,16 @@ class InstructorController {
         }
 
         $instructor_id = $_SESSION['user_id'];
+        $createdAtSelect = $this->tableHasColumn('course_contents', 'CreatedAt') ? 'cc.CreatedAt' : 'NULL';
+        $createdAtOrder = $this->tableHasColumn('course_contents', 'CreatedAt') ? 'cc.CreatedAt DESC,' : '';
 
         // Get all content for courses belonging to this instructor
-        $stmt = $this->pdo->prepare("SELECT cc.*, c.CourseName 
+        $stmt = $this->pdo->prepare("SELECT cc.*, c.CourseName, {$createdAtSelect} AS ContentCreatedAt
                                      FROM course_contents cc
                                      JOIN courses c ON cc.CourseID = c.CourseID
                                      JOIN instructor_courses ic ON c.CourseID = ic.CourseID
                                      WHERE ic.InstructorID = ?
-                                     ORDER BY cc.CreatedAt DESC");
+                                     ORDER BY {$createdAtOrder} cc.ContentID DESC");
         $stmt->execute([$instructor_id]);
         $contents = $stmt->fetchAll();
 
@@ -694,6 +701,16 @@ class InstructorController {
     }
 
     // Helper methods
+    private function tableHasColumn($table, $column) {
+        try {
+            $stmt = $this->pdo->prepare("SHOW COLUMNS FROM {$table} LIKE ?");
+            $stmt->execute([$column]);
+            return (bool) $stmt->fetch();
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
     private function getTotalStudents($instructor_id) {
         $stmt = $this->pdo->prepare("SELECT COUNT(DISTINCT e.UserID) FROM enrollments e 
                                      JOIN courses c ON e.CourseID = c.CourseID 

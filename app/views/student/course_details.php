@@ -42,8 +42,38 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                     <h4 class="fw-bold mb-3 border-bottom pb-2">Course Curriculum</h4>
                     <div class="list-group list-group-flush">
                         <?php foreach ($contents as $content): ?>
-                            <a href="<?php echo htmlspecialchars($content['ContentURL'] ?: '#'); ?>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3" <?php echo !empty($content['ContentURL']) ? 'target="_blank" rel="noopener noreferrer"' : ''; ?>>
-                                <div>
+                            <?php if ($content['ContentType'] === 'Text'): ?>
+                                <?php
+                                    $returnUrl = 'index.php?page=course-details&id=' . urlencode($course['CourseID']);
+                                    $materialUrl = $content['MaterialURL'] ?? ('public/course_material.php?title=' . urlencode($course['CourseName'] . ': ' . $content['ContentTitle']));
+                                    $materialUrl .= (strpos($materialUrl, '?') === false ? '?' : '&') . 'return=' . urlencode('../' . $returnUrl);
+                                    $pdfUrl = $content['PdfURL'] ?? ('public/course_pdf.php?title=' . urlencode($course['CourseName'] . ': ' . $content['ContentTitle']) . '&body=' . urlencode($content['ContentURL'] ?? 'Course handout'));
+                                ?>
+                                <div class="list-group-item py-3">
+                                    <div class="d-flex justify-content-between align-items-start gap-3">
+                                        <div>
+                                            <i class="bi bi-file-text text-secondary me-3 fs-5"></i>
+                                            <span class="fw-medium"><?php echo htmlspecialchars($content['ContentTitle']); ?></span>
+                                        </div>
+                                        <span class="badge bg-light text-dark border"><?php echo $content['ContentType']; ?></span>
+                                    </div>
+                                    <?php if (!empty($content['ContentURL'])): ?>
+                                        <div class="lesson-body mt-3">
+                                            <?php echo nl2br(htmlspecialchars($content['ContentURL'])); ?>
+                                            <div class="mt-3">
+                                                <a href="<?php echo htmlspecialchars($materialUrl); ?>" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener noreferrer">
+                                                    Open full lesson
+                                                </a>
+                                                <a href="<?php echo htmlspecialchars($pdfUrl); ?>" class="btn btn-sm btn-outline-danger ms-2" target="_blank" rel="noopener noreferrer">
+                                                    Open PDF
+                                                </a>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            <?php else: ?>
+                                <a href="<?php echo htmlspecialchars($content['ContentURL'] ?: '#'); ?>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3" <?php echo !empty($content['ContentURL']) ? 'target="_blank" rel="noopener noreferrer"' : ''; ?>>
+                                    <div>
                                     <i class="bi bi-<?php 
                                         echo match($content['ContentType']) {
                                             'Video' => 'play-circle text-primary',
@@ -56,9 +86,10 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                                     <?php if (!empty($content['ContentURL'])): ?>
                                         <div class="small text-muted mt-1"><?php echo htmlspecialchars($content['ContentURL']); ?></div>
                                     <?php endif; ?>
-                                </div>
-                                <span class="badge bg-light text-dark border"><?php echo $content['ContentType']; ?></span>
-                            </a>
+                                    </div>
+                                    <span class="badge bg-light text-dark border"><?php echo $content['ContentType']; ?></span>
+                                </a>
+                            <?php endif; ?>
                         <?php endforeach; ?>
                     </div>
                 </div>

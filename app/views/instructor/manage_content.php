@@ -72,7 +72,11 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                                         <span class="badge bg-info"><?php echo htmlspecialchars($item['ContentType']); ?></span>
                                     </td>
                                     <td>
-                                        <small class="text-muted"><?php echo date('M d, Y', strtotime($item['CreatedAt'])); ?></small>
+                                        <?php if (!empty($item['ContentCreatedAt'])): ?>
+                                            <small class="text-muted"><?php echo date('M d, Y', strtotime($item['ContentCreatedAt'])); ?></small>
+                                        <?php else: ?>
+                                            <small class="text-muted">Not recorded</small>
+                                        <?php endif; ?>
                                     </td>
                                     <td class="pe-4">
                                         <div class="d-flex align-items-center gap-2">

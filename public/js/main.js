@@ -82,6 +82,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const toggleBtn = document.getElementById('menu-toggle');
     const closeBtn = document.getElementById('sidebar-close');
     const wrapper = document.getElementById('wrapper');
+    const sidebar = document.getElementById('sidebar-wrapper');
     const sidebarLinks = document.querySelectorAll('#sidebar-wrapper a');
 
     const isMobileSidebar = () => window.matchMedia('(max-width: 991.98px)').matches;
@@ -129,12 +130,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    document.addEventListener('click', (e) => {
+        if (!wrapper || !sidebar || !isMobileSidebar() || !wrapper.classList.contains('toggled')) {
+            return;
+        }
+
+        if (sidebar.contains(e.target) || (toggleBtn && toggleBtn.contains(e.target))) {
+            return;
+        }
+
+        setSidebarToggled(false);
+    });
+
     window.addEventListener('resize', () => {
         if (!isMobileSidebar()) {
             setSidebarToggled(false);
         } else {
             syncToggleButton();
         }
+    });
+
+    window.addEventListener('orientationchange', () => {
+        setSidebarToggled(false);
     });
 });
 

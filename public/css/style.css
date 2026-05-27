@@ -63,7 +63,7 @@ body {
     width: min(280px, 100%);
 }
 
-.list-group-item {
+#sidebar-wrapper .list-group-item {
     border: none;
     transition: all 0.3s ease;
     font-weight: 500;
@@ -73,13 +73,13 @@ body {
     border-radius: 8px;
 }
 
-.list-group-item:hover:not(.active) {
+#sidebar-wrapper .list-group-item:hover:not(.active) {
     background-color: rgba(255, 255, 255, 0.1) !important;
     color: #ffffff;
     transform: translateX(5px);
 }
 
-.list-group-item.active {
+#sidebar-wrapper .list-group-item.active {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
     color: #ffffff !important;
     box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
@@ -278,11 +278,19 @@ body {
 
 /* Mobile behavior: sidebar hidden by default and slides over content when toggled */
 @media (max-width: 991.98px) {
+    #wrapper {
+        display: block !important;
+    }
+
     #sidebar-wrapper {
         position: fixed;
         top: 0;
         left: -250px;
+        width: min(250px, 86vw);
+        min-width: 0 !important;
+        max-width: 86vw;
         height: 100vh;
+        overflow-y: auto;
         z-index: 1050;
         margin-left: 0;
         transition: left 0.25s ease;
@@ -296,6 +304,7 @@ body {
     /* Ensure content isn't pushed on small screens */
     #page-content-wrapper {
         margin-left: 0;
+        width: 100%;
         max-width: 100vw;
     }
 
@@ -407,4 +416,14 @@ body {
     margin-right: 15px;
     transform: scale(1.2);
     accent-color: var(--primary-color);
+}
+
+.lesson-body {
+    color: #334155;
+    background: #f8fafc;
+    border-left: 4px solid var(--primary-color);
+    border-radius: 8px;
+    line-height: 1.75;
+    padding: 1rem 1.25rem;
+    white-space: normal;
 }

@@ -52,6 +52,39 @@ try {
     }
 
     $pdo->exec("UPDATE users SET Status = 'Approved' WHERE Status IS NULL OR Status = ''");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS password_reset_tokens (
+        TokenID INT AUTO_INCREMENT PRIMARY KEY,
+        UserID INT NOT NULL,
+        TokenHash CHAR(64) NOT NULL UNIQUE,
+        ExpiresAt DATETIME NOT NULL,
+        UsedAt DATETIME NULL DEFAULT NULL,
+        CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_password_reset_user (UserID),
+        INDEX idx_password_reset_expires (ExpiresAt),
+        FOREIGN KEY (UserID) REFERENCES users(UserID) ON DELETE CASCADE
+    ) ENGINE=InnoDB;");
+    echo "<p style='color: green;'>Password reset token table is ready.</p>";
+
+    $stmt = $pdo->query("SHOW COLUMNS FROM users LIKE 'EmailVerifiedAt'");
+    if ($stmt->rowCount() === 0) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN EmailVerifiedAt DATETIME NULL DEFAULT NULL AFTER Status");
+        $pdo->exec("UPDATE users SET EmailVerifiedAt = NOW() WHERE EmailVerifiedAt IS NULL");
+        echo "<p style='color: green;'>Added users.EmailVerifiedAt column.</p>";
+    }
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS email_verification_tokens (
+        TokenID INT AUTO_INCREMENT PRIMARY KEY,
+        UserID INT NOT NULL,
+        TokenHash CHAR(64) NOT NULL UNIQUE,
+        ExpiresAt DATETIME NOT NULL,
+        UsedAt DATETIME NULL DEFAULT NULL,
+        CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_email_verification_user (UserID),
+        INDEX idx_email_verification_expires (ExpiresAt),
+        FOREIGN KEY (UserID) REFERENCES users(UserID) ON DELETE CASCADE
+    ) ENGINE=InnoDB;");
+    echo "<p style='color: green;'>Email verification token table is ready.</p>";
 } catch (Exception $e) {
     echo "<p style='color: red;'>Error applying schema updates: " . $e->getMessage() . "</p>";
 }

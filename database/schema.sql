@@ -9,7 +9,34 @@ CREATE TABLE IF NOT EXISTS users (
     Password VARCHAR(255) NOT NULL,
     UserType ENUM('Admin', 'Instructor', 'Student') NOT NULL DEFAULT 'Student',
     Status ENUM('Pending', 'Approved', 'Rejected') NOT NULL DEFAULT 'Approved',
+    EmailVerifiedAt DATETIME NULL DEFAULT NULL,
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- Password reset tokens
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    TokenID INT AUTO_INCREMENT PRIMARY KEY,
+    UserID INT NOT NULL,
+    TokenHash CHAR(64) NOT NULL UNIQUE,
+    ExpiresAt DATETIME NOT NULL,
+    UsedAt DATETIME NULL DEFAULT NULL,
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_password_reset_user (UserID),
+    INDEX idx_password_reset_expires (ExpiresAt),
+    FOREIGN KEY (UserID) REFERENCES users(UserID) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Email verification tokens
+CREATE TABLE IF NOT EXISTS email_verification_tokens (
+    TokenID INT AUTO_INCREMENT PRIMARY KEY,
+    UserID INT NOT NULL,
+    TokenHash CHAR(64) NOT NULL UNIQUE,
+    ExpiresAt DATETIME NOT NULL,
+    UsedAt DATETIME NULL DEFAULT NULL,
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_email_verification_user (UserID),
+    INDEX idx_email_verification_expires (ExpiresAt),
+    FOREIGN KEY (UserID) REFERENCES users(UserID) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- Table 2: Course
@@ -143,5 +170,5 @@ CREATE TABLE IF NOT EXISTS course_progress (
 
 -- Seed Admin User (password: admin123)
 -- Hash generated using password_hash('admin123', PASSWORD_DEFAULT)
-INSERT IGNORE INTO users (Username, Email, Password, UserType, Status) 
-VALUES ('admin', 'admin@univ.edu', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Admin', 'Approved');
+INSERT IGNORE INTO users (Username, Email, Password, UserType, Status, EmailVerifiedAt) 
+VALUES ('admin', 'admin@univ.edu', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Admin', 'Approved', NOW());

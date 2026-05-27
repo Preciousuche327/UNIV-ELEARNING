@@ -25,7 +25,7 @@ $instructors = [
 ];
 $instructorIDs = [];
 foreach ($instructors as $i) {
-    $stmt = $pdo->prepare("INSERT IGNORE INTO users (Username, Email, Password, UserType) VALUES (?,?,?,'Instructor')");
+    $stmt = $pdo->prepare("INSERT IGNORE INTO users (Username, Email, Password, UserType, EmailVerifiedAt) VALUES (?,?,?,'Instructor',NOW())");
     $stmt->execute([$i[0], $i[1], $hash]);
     $id = $pdo->query("SELECT UserID FROM users WHERE Username='{$i[0]}'")->fetchColumn();
     $instructorIDs[] = $id;
@@ -44,7 +44,7 @@ $students = [
 ];
 $studentIDs = [];
 foreach ($students as $s) {
-    $stmt = $pdo->prepare("INSERT IGNORE INTO users (Username, Email, Password, UserType) VALUES (?,?,?,'Student')");
+    $stmt = $pdo->prepare("INSERT IGNORE INTO users (Username, Email, Password, UserType, EmailVerifiedAt) VALUES (?,?,?,'Student',NOW())");
     $stmt->execute([$s[0], $s[1], $hash]);
     $id = $pdo->query("SELECT UserID FROM users WHERE Username='{$s[0]}'")->fetchColumn();
     $studentIDs[] = $id;
