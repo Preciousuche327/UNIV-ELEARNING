@@ -46,7 +46,8 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">URL / Source</label>
-                                <input type="text" name="content_url" class="form-control form-control-lg shadow-none border-2" placeholder="https://youtube.com/..." required>
+                                <input type="text" name="content_url" class="form-control form-control-lg shadow-none border-2" placeholder="Optional for text content">
+                                <div class="form-text">Use a URL for videos, PDFs, and external links. Text articles can be saved without one.</div>
                             </div>
                         </div>
 

@@ -104,8 +104,11 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                                     </td>
                                     <td class="pe-4 text-muted small"><?php echo date('M d, Y, h:i A', strtotime($result['SubmittedAt'])); ?></td>
                                     <td>
-                                        <a href="?page=quiz-detail&id=<?php echo $result['ResultID']; ?>" class="btn btn-sm btn-outline-primary">
+                                        <a href="?page=quiz-detail&id=<?php echo $result['ResultID']; ?>" class="btn btn-sm btn-outline-primary me-2">
                                             <i class="bi bi-eye"></i> View
+                                        </a>
+                                        <a href="?page=take-quiz&id=<?php echo $result['QuizID']; ?>&retry=1" class="btn btn-sm btn-outline-success">
+                                            <i class="bi bi-arrow-repeat"></i> Retake
                                         </a>
                                     </td>
                                 </tr>
