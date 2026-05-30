@@ -68,8 +68,12 @@
                             <div class="invalid-feedback">Enter the 6-digit OTP.</div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100 py-3 mb-4 fw-bold shadow-sm rounded-3 fs-5">
+                        <button type="submit" name="action" value="verify" class="btn btn-primary w-100 py-3 mb-3 fw-bold shadow-sm rounded-3 fs-5">
                             Verify Email
+                        </button>
+
+                        <button type="submit" name="action" value="resend" class="btn btn-link text-primary fw-semibold text-decoration-none p-0 w-100" formnovalidate>
+                            Resend verification OTP
                         </button>
                     </form>
                 </div>

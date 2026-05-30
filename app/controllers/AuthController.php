@@ -29,6 +29,7 @@ class AuthController {
             if ($user && password_verify($password, $user['Password'])) {
                 if (array_key_exists('EmailVerifiedAt', $user) && empty($user['EmailVerifiedAt'])) {
                     $error = "Please verify your email address before signing in. Check your inbox for the OTP code.";
+                    $verification_email = $user['Email'];
                 } elseif ($user['Status'] === 'Pending') {
                     $error = "Your account is currently waiting for admin approval. Please check back later.";
                 } elseif ($user['Status'] === 'Rejected') {
@@ -62,8 +63,8 @@ class AuthController {
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $username = $_POST['username'] ?? '';
-            $email = $_POST['email'] ?? '';
+            $username = trim($_POST['username'] ?? '');
+            $email = trim($_POST['email'] ?? '');
             $password = $_POST['password'] ?? '';
             $confirm_password = $_POST['confirm_password'] ?? '';
             $user_type = $_POST['user_type'] ?? 'Student';
@@ -145,11 +146,19 @@ class AuthController {
 
     public function verifyEmail() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $email = trim($_GET['email'] ?? '');
             require __DIR__ . '/../views/auth/verify_email.php';
             return;
         }
 
         $email = trim($_POST['email'] ?? '');
+        $action = $_POST['action'] ?? 'verify';
+
+        if ($action === 'resend') {
+            $this->resendEmailVerificationOtp($email);
+            return;
+        }
+
         $otp = trim($_POST['otp'] ?? '');
         $tokenRecord = $this->getValidEmailVerificationOtp($email, $otp);
 
@@ -179,6 +188,43 @@ class AuthController {
         }
 
         require __DIR__ . '/../views/auth/login.php';
+    }
+
+    private function resendEmailVerificationOtp($email) {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $error = "Enter your Gmail address so we can resend the OTP.";
+            require __DIR__ . '/../views/auth/verify_email.php';
+            return;
+        }
+
+        $stmt = $this->pdo->prepare("
+            SELECT UserID, Username, Email, EmailVerifiedAt
+            FROM users
+            WHERE Email = ?
+            LIMIT 1
+        ");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch();
+
+        if (!$user) {
+            $error = "No account was found for that email address.";
+            require __DIR__ . '/../views/auth/verify_email.php';
+            return;
+        }
+
+        if (!empty($user['EmailVerifiedAt'])) {
+            $success_message = "This email is already verified. You can sign in.";
+            require __DIR__ . '/../views/auth/login.php';
+            return;
+        }
+
+        if ($this->createAndSendEmailVerificationOtp((int) $user['UserID'], $user['Email'], $user['Username'])) {
+            $success_message = "A new verification OTP has been sent to your Gmail address.";
+        } else {
+            $error = "We could not send a new OTP right now. Please try again in a moment.";
+        }
+
+        require __DIR__ . '/../views/auth/verify_email.php';
     }
 
     public function forgotPassword() {

@@ -6,6 +6,7 @@ require_once 'app/controllers/QuizController.php';
 require_once 'app/controllers/AdminController.php';
 require_once 'app/controllers/InstructorController.php';
 require_once 'app/controllers/MessageController.php';
+require_once 'app/controllers/FeedbackController.php';
 
 // Route handling. Opening the app should always start at login unless a page is requested.
 $page = $_GET['page'] ?? 'login';
@@ -17,6 +18,7 @@ $quizCtrl = new QuizController($pdo);
 $adminCtrl = new AdminController($pdo);
 $instructorCtrl = new InstructorController($pdo);
 $messageCtrl = new MessageController($pdo);
+$feedbackCtrl = new FeedbackController($pdo);
 
 // Simple Router
 switch ($page) {
@@ -263,6 +265,10 @@ switch ($page) {
             exit;
         }
         $messageCtrl->sendMessage();
+        break;
+
+    case 'send-feedback':
+        $feedbackCtrl->sendStudentFeedback();
         break;
 
     default:

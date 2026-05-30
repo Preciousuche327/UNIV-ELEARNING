@@ -153,6 +153,105 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('orientationchange', () => {
         setSidebarToggled(false);
     });
+
+    // Student feedback modal
+    const feedbackWidget = document.getElementById('studentFeedbackWidget');
+    if (feedbackWidget) {
+        const hiddenKey = feedbackWidget.getAttribute('data-hidden-key') || 'studentFeedbackHidden';
+        const hideBtn = document.getElementById('studentFeedbackHide');
+        const restoreBtn = document.getElementById('studentFeedbackRestore');
+
+        try {
+            if (localStorage.getItem(hiddenKey) === '1') {
+                feedbackWidget.classList.add('is-hidden');
+            }
+        } catch (e) {}
+
+        if (hideBtn) {
+            hideBtn.addEventListener('click', () => {
+                feedbackWidget.classList.add('is-hidden');
+                try {
+                    localStorage.setItem(hiddenKey, '1');
+                } catch (e) {}
+            });
+        }
+
+        if (restoreBtn) {
+            restoreBtn.addEventListener('click', () => {
+                feedbackWidget.classList.remove('is-hidden');
+                try {
+                    localStorage.setItem(hiddenKey, '0');
+                } catch (e) {}
+            });
+        }
+    }
+
+    const feedbackForm = document.getElementById('studentFeedbackForm');
+    if (feedbackForm) {
+        const modalEl = document.getElementById('studentFeedbackModal');
+        const status = document.getElementById('studentFeedbackStatus');
+        const submitBtn = document.getElementById('studentFeedbackSubmit');
+        const modal = modalEl && typeof bootstrap !== 'undefined' ? bootstrap.Modal.getOrCreateInstance(modalEl) : null;
+
+        feedbackForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (!feedbackForm.checkValidity()) {
+                feedbackForm.classList.add('was-validated');
+                return;
+            }
+
+            if (status) {
+                status.className = 'student-feedback-status small text-muted';
+                status.textContent = 'Sending feedback...';
+            }
+            if (submitBtn) {
+                submitBtn.disabled = true;
+            }
+
+            try {
+                const response = await fetch(feedbackForm.getAttribute('action'), {
+                    method: 'POST',
+                    body: new FormData(feedbackForm),
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Feedback could not be sent.');
+                }
+
+                if (status) {
+                    status.className = 'student-feedback-status small text-success';
+                    status.textContent = data.message || 'Feedback sent successfully.';
+                }
+
+                feedbackForm.reset();
+                feedbackForm.classList.remove('was-validated');
+                window.setTimeout(() => {
+                    if (modal) {
+                        modal.hide();
+                    }
+                    if (status) {
+                        status.textContent = '';
+                    }
+                }, 1200);
+            } catch (error) {
+                if (status) {
+                    status.className = 'student-feedback-status small text-danger';
+                    status.textContent = error.message || 'Feedback could not be sent right now.';
+                }
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                }
+            }
+        });
+    }
 });
 
 // Helper for displaying SweetAlert notifications

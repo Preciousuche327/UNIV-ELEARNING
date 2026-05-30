@@ -8,6 +8,7 @@ require_once __DIR__ . '/../app/controllers/QuizController.php';
 require_once __DIR__ . '/../app/controllers/AdminController.php';
 require_once __DIR__ . '/../app/controllers/InstructorController.php';
 require_once __DIR__ . '/../app/controllers/MessageController.php';
+require_once __DIR__ . '/../app/controllers/FeedbackController.php';
 
 $page = $_GET['page'] ?? 'login';
 
@@ -17,6 +18,7 @@ $quiz = new QuizController($pdo);
 $admin = new AdminController($pdo);
 $instructor = new InstructorController($pdo);
 $message = new MessageController($pdo);
+$feedback = new FeedbackController($pdo);
 
 switch ($page) {
 
@@ -232,6 +234,10 @@ switch ($page) {
             exit;
         }
         $message->sendMessage();
+        break;
+
+    case 'send-feedback':
+        $feedback->sendStudentFeedback();
         break;
 
     default:

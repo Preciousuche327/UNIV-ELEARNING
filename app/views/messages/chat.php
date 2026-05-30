@@ -9,6 +9,10 @@ $userType = $_SESSION['user_type'];
 
 <style>
 /* Chat Interface Premium Custom Styles */
+.messages-page {
+    min-width: 0;
+}
+
 .chat-container-card {
     height: calc(100vh - 170px);
     min-height: 500px;
@@ -24,6 +28,7 @@ $userType = $_SESSION['user_type'];
     display: flex;
     flex-direction: column;
     height: 100%;
+    min-height: 0;
 }
 
 .contacts-header {
@@ -35,6 +40,7 @@ $userType = $_SESSION['user_type'];
 .contacts-list {
     overflow-y: auto;
     flex: 1;
+    min-height: 0;
 }
 
 .contact-item {
@@ -61,6 +67,7 @@ $userType = $_SESSION['user_type'];
     display: flex;
     flex-direction: column;
     height: 100%;
+    min-height: 0;
     background-color: #f8fafc;
 }
 
@@ -80,6 +87,7 @@ $userType = $_SESSION['user_type'];
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    min-height: 0;
 }
 
 .message-bubble {
@@ -90,6 +98,7 @@ $userType = $_SESSION['user_type'];
     line-height: 1.5;
     position: relative;
     box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    overflow-wrap: anywhere;
 }
 
 .message-sent {
@@ -166,19 +175,109 @@ $userType = $_SESSION['user_type'];
 }
 
 @media (max-width: 767.98px) {
+    .messages-page {
+        margin: -1rem;
+        height: calc(100dvh - 88px);
+        min-height: 420px;
+    }
+
+    .messages-page > .row {
+        --bs-gutter-x: 0;
+    }
+
     .contacts-pane {
         display: <?php echo $activeContactId ? 'none' : 'flex'; ?>;
+        width: 100%;
+        max-width: 100%;
+        flex: 0 0 100%;
+        border-right: 0;
     }
+
     .chat-pane {
         display: <?php echo $activeContactId ? 'flex' : 'none'; ?>;
+        width: 100%;
+        max-width: 100%;
+        flex: 0 0 100%;
     }
+
     .chat-container-card {
-        height: calc(100vh - 120px);
+        height: 100%;
+        min-height: 0;
+        border-radius: 0;
+        border-left: 0 !important;
+        border-right: 0 !important;
+        box-shadow: none;
+    }
+
+    .contacts-header {
+        padding: 1rem;
+    }
+
+    .contact-item {
+        padding: 0.9rem 1rem;
+    }
+
+    .chat-header {
+        padding: 0.85rem 1rem;
+        min-height: 72px;
+    }
+
+    .chat-header .btn {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border-radius: 10px;
+    }
+
+    .chat-header .btn .back-label {
+        display: none;
+    }
+
+    .messages-area {
+        padding: 1rem;
+        gap: 0.75rem;
+    }
+
+    .message-bubble {
+        max-width: 86%;
+        padding: 0.75rem 0.9rem;
+        font-size: 0.92rem;
+        border-radius: 14px;
+    }
+
+    .chat-footer {
+        padding: 0.75rem;
+    }
+
+    #chatForm {
+        align-items: center;
+    }
+
+    #messageInput {
+        min-width: 0;
+        padding: 0.85rem 1rem !important;
+    }
+
+    #chatForm .btn {
+        width: 46px;
+        height: 46px;
+        padding: 0 !important;
+        flex: 0 0 46px;
+        border-radius: 12px;
+    }
+
+    .empty-chat-state {
+        padding: 1.5rem;
+        min-height: 360px;
+    }
+
+    .empty-chat-icon {
+        font-size: 3rem;
     }
 }
 </style>
 
-<div class="container-fluid p-2 p-md-4">
+<div class="messages-page container-fluid p-0 p-md-2">
     <div class="row m-0 chat-container-card border">
         
         <!-- Contacts Sidebar List -->
@@ -241,7 +340,7 @@ $userType = $_SESSION['user_type'];
                 <!-- Chat Header -->
                 <div class="chat-header">
                     <a href="?page=messages" class="btn btn-sm btn-outline-secondary d-md-none me-3">
-                        <i class="bi bi-chevron-left"></i> Back
+                        <i class="bi bi-chevron-left"></i><span class="back-label ms-1">Back</span>
                     </a>
                     <div class="avatar-circle me-3" style="background-color: <?= $activeBg ?>; color: <?= $activeFg ?>;">
                         <?= $activeInitial ?>
@@ -249,7 +348,7 @@ $userType = $_SESSION['user_type'];
                     <div>
                         <h6 class="mb-0 fw-bold text-dark"><?= htmlspecialchars($activeContact['Username']) ?></h6>
                         <small class="text-muted">
-                            <span class="badge bg-soft-primary text-primary"><?= $activeContact['UserType'] ?></span> • Active
+                            <span class="badge bg-soft-primary text-primary"><?= $activeContact['UserType'] ?></span> &middot; Active
                         </small>
                     </div>
                 </div>
@@ -288,7 +387,7 @@ $userType = $_SESSION['user_type'];
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // 🔍 Client-side Contact Search Filter
+    // Client-side contact search filter
     const contactSearch = document.getElementById('contactSearch');
     if (contactSearch) {
         contactSearch.addEventListener('input', function(e) {
@@ -306,7 +405,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 💬 Realtime Polling & Message Sending (If a chat is active)
+    // Realtime polling and message sending when a chat is active
     const messagesArea = document.getElementById('messagesArea');
     const chatForm = document.getElementById('chatForm');
     const messageInput = document.getElementById('messageInput');

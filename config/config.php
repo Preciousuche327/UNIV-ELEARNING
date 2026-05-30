@@ -70,6 +70,7 @@ define('SMTP_PORT', (int) $smtpPort);
 define('SMTP_USERNAME', $smtpUsername);
 define('SMTP_PASSWORD', $smtpPassword);
 define('SMTP_SECURE', strtolower($smtpSecure));
+define('PLATFORM_FEEDBACK_EMAIL', $localConfig['platform_feedback_email'] ?? getenv('PLATFORM_FEEDBACK_EMAIL') ?: 'univelearning01@gmail.com');
 
 /* -----------------------------
    START SESSION (SAFE)
@@ -182,4 +183,115 @@ function requireRole($role) {
         http_response_code(403);
         die("403 Unauthorized Access");
     }
+}
+
+function sendStudentFeedbackEmail($student, $feedbackMessage) {
+    if (SMTP_HOST === '') {
+        return false;
+    }
+
+    $to = defined('PLATFORM_FEEDBACK_EMAIL') ? PLATFORM_FEEDBACK_EMAIL : 'univelearning01@gmail.com';
+    $fromEmail = str_replace(["\r", "\n"], '', MAIL_FROM);
+    $fromName = str_replace(["\r", "\n"], '', MAIL_FROM_NAME);
+    $replyTo = str_replace(["\r", "\n"], '', $student['Email']);
+    $subject = APP_NAME . ' student feedback';
+    $body = "A student sent feedback for " . APP_NAME . ".\n\n"
+        . "Student: " . $student['Username'] . "\n"
+        . "Email: " . $student['Email'] . "\n"
+        . "Submitted: " . date('Y-m-d H:i:s') . "\n\n"
+        . "Feedback:\n" . $feedbackMessage . "\n";
+
+    $remote = (SMTP_SECURE === 'ssl' ? 'ssl://' : '') . SMTP_HOST . ':' . SMTP_PORT;
+    $socket = @stream_socket_client($remote, $errno, $errstr, 20, STREAM_CLIENT_CONNECT);
+
+    if (!$socket) {
+        error_log("Feedback SMTP connection failed: " . $errstr . " (" . $errno . ")");
+        return false;
+    }
+
+    stream_set_timeout($socket, 20);
+
+    try {
+        smtpFeedbackExpect($socket, [220]);
+        $serverName = parse_url(BASE_URL, PHP_URL_HOST) ?: 'localhost';
+
+        smtpFeedbackCommand($socket, 'EHLO ' . $serverName, [250]);
+
+        if (SMTP_SECURE === 'tls') {
+            smtpFeedbackCommand($socket, 'STARTTLS', [220]);
+            if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+                throw new Exception('Could not enable SMTP TLS encryption.');
+            }
+            smtpFeedbackCommand($socket, 'EHLO ' . $serverName, [250]);
+        }
+
+        if (SMTP_USERNAME !== '') {
+            smtpFeedbackCommand($socket, 'AUTH LOGIN', [334]);
+            smtpFeedbackCommand($socket, base64_encode(SMTP_USERNAME), [334]);
+            smtpFeedbackCommand($socket, base64_encode(SMTP_PASSWORD), [235]);
+        }
+
+        smtpFeedbackCommand($socket, 'MAIL FROM:<' . $fromEmail . '>', [250]);
+        smtpFeedbackCommand($socket, 'RCPT TO:<' . $to . '>', [250, 251]);
+        smtpFeedbackCommand($socket, 'DATA', [354]);
+
+        $headers = [
+            'Date: ' . date('r'),
+            'From: ' . formatFeedbackEmailAddress($fromEmail, $fromName),
+            'To: <' . $to . '>',
+            'Reply-To: <' . $replyTo . '>',
+            'Subject: ' . encodeFeedbackHeader($subject),
+            'MIME-Version: 1.0',
+            'Content-Type: text/plain; charset=UTF-8',
+            'Content-Transfer-Encoding: 8bit',
+        ];
+        $message = implode("\r\n", $headers) . "\r\n\r\n" . $body;
+        $message = str_replace(["\r\n.", "\n."], ["\r\n..", "\n.."], $message);
+        fwrite($socket, str_replace("\n", "\r\n", str_replace("\r\n", "\n", $message)) . "\r\n.\r\n");
+
+        smtpFeedbackExpect($socket, [250]);
+        smtpFeedbackCommand($socket, 'QUIT', [221]);
+        fclose($socket);
+        return true;
+    } catch (Exception $e) {
+        error_log("Feedback SMTP send failed: " . $e->getMessage());
+        fclose($socket);
+        return false;
+    }
+}
+
+function smtpFeedbackCommand($socket, $command, array $expectedCodes) {
+    fwrite($socket, $command . "\r\n");
+    return smtpFeedbackExpect($socket, $expectedCodes);
+}
+
+function smtpFeedbackExpect($socket, array $expectedCodes) {
+    $response = '';
+
+    while (($line = fgets($socket, 515)) !== false) {
+        $response .= $line;
+        if (strlen($line) >= 4 && $line[3] === ' ') {
+            break;
+        }
+    }
+
+    $code = (int) substr($response, 0, 3);
+    if (!in_array($code, $expectedCodes, true)) {
+        throw new Exception(trim($response));
+    }
+
+    return $response;
+}
+
+function formatFeedbackEmailAddress($email, $name) {
+    $cleanName = addcslashes(str_replace(["\r", "\n", '"'], '', $name), '\\');
+    return '"' . $cleanName . '" <' . $email . '>';
+}
+
+function encodeFeedbackHeader($text) {
+    if (preg_match('/[^\x20-\x7E]/', $text)) {
+        return '=?UTF-8?B?' . base64_encode($text) . '?=';
+    }
+
+    return str_replace(["\r", "\n"], '', $text);
 }

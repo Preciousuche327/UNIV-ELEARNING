@@ -53,7 +53,14 @@
                     <?php if (isset($error)): ?>
                         <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center animate__animated animate__headShake" role="alert">
                             <i class="bi bi-exclamation-triangle-fill flex-shrink-0 me-2"></i>
-                            <div><?php echo $error; ?></div>
+                            <div>
+                                <?php echo htmlspecialchars($error); ?>
+                                <?php if (!empty($verification_email)): ?>
+                                    <div class="mt-2">
+                                        <a class="alert-link" href="?page=verify-email&email=<?php echo urlencode($verification_email); ?>">Enter or resend verification OTP</a>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     <?php endif; ?>

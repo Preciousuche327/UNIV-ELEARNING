@@ -1,7 +1,7 @@
-const CACHE_NAME = 'univ-elearning-v4';
+const CACHE_NAME = 'univ-elearning-v7';
 const STATIC_ASSETS = [
-  './public/css/style.css',
-  './public/js/main.js',
+  './public/css/style.css?v=7',
+  './public/js/main.js?v=7',
   './manifest.json',
   './public/images/icons/icon-192.png',
   './public/images/icons/icon-512.png'
