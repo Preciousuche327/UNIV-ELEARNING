@@ -587,17 +587,43 @@ class InstructorController {
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $course_id = $_POST['course_id'] ?? null;
-            $title = $_POST['content_title'] ?? '';
+            $title = trim($_POST['content_title'] ?? '');
             $type = $_POST['content_type'] ?? 'Text';
-            $url = $_POST['content_url'] ?? '';
+            $url = trim($_POST['content_url'] ?? '');
+            $article_text = trim($_POST['content_text'] ?? '');
+            $content_url = $url;
+
+            if (isset($_FILES['content_file']) && is_uploaded_file($_FILES['content_file']['tmp_name']) && $_FILES['content_file']['error'] === UPLOAD_ERR_OK) {
+                $upload_dir = __DIR__ . '/../../public/uploads/course_contents';
+                if (!is_dir($upload_dir)) {
+                    mkdir($upload_dir, 0777, true);
+                }
+
+                $original_name = basename($_FILES['content_file']['name']);
+                $extension = strtolower(pathinfo($original_name, PATHINFO_EXTENSION));
+                $safe_name = preg_replace('/[^A-Za-z0-9._-]/', '_', pathinfo($original_name, PATHINFO_FILENAME));
+                $file_name = $safe_name . '-' . time() . '-' . bin2hex(random_bytes(4)) . ($extension ? '.' . $extension : '');
+                $target_path = $upload_dir . '/' . $file_name;
+
+                if (move_uploaded_file($_FILES['content_file']['tmp_name'], $target_path)) {
+                    $content_url = 'uploads/course_contents/' . $file_name;
+                    if (empty($url) && $type === 'PDF') {
+                        $content_url = 'uploads/course_contents/' . $file_name;
+                    }
+                }
+            }
+
+            if (empty($content_url) && !empty($article_text)) {
+                $content_url = $article_text;
+            }
 
             if ($course_id && !empty($title)) {
                 if ($this->tableHasColumn('course_contents', 'CreatedBy')) {
                     $stmt = $this->pdo->prepare("INSERT INTO course_contents (CourseID, ContentType, ContentTitle, ContentURL, CreatedBy) VALUES (?, ?, ?, ?, ?)");
-                    $stmt->execute([$course_id, $type, $title, $url, $instructor_id]);
+                    $stmt->execute([$course_id, $type, $title, $content_url, $instructor_id]);
                 } else {
                     $stmt = $this->pdo->prepare("INSERT INTO course_contents (CourseID, ContentType, ContentTitle, ContentURL) VALUES (?, ?, ?, ?)");
-                    $stmt->execute([$course_id, $type, $title, $url]);
+                    $stmt->execute([$course_id, $type, $title, $content_url]);
                 }
 
                 header("Location: index.php?page=manage-content");

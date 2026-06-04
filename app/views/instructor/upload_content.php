@@ -18,7 +18,7 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                     <p class="mb-0 text-white-50">Add videos, PDFs, or links to your courses.</p>
                 </div>
                 <div class="card-body p-4 p-md-5">
-                    <form action="index.php?page=upload-content" method="POST">
+                    <form action="index.php?page=upload-content" method="POST" enctype="multipart/form-data">
                         <div class="mb-4">
                             <label class="form-label fw-bold">Select Course</label>
                             <select name="course_id" class="form-select form-select-lg shadow-none border-2" required>
@@ -46,9 +46,21 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">URL / Source</label>
-                                <input type="text" name="content_url" class="form-control form-control-lg shadow-none border-2" placeholder="Optional for text content">
-                                <div class="form-text">Use a URL for videos, PDFs, and external links. Text articles can be saved without one.</div>
+                                <input type="text" name="content_url" class="form-control form-control-lg shadow-none border-2" placeholder="Optional link or reference">
+                                <div class="form-text">Use a URL for videos, PDFs, and external links. You can also upload a file below.</div>
                             </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Upload File</label>
+                            <input type="file" name="content_file" class="form-control form-control-lg shadow-none border-2" accept=".pdf,.doc,.docx,.txt,.md,image/*">
+                            <div class="form-text">Upload a PDF, article, image, or other material directly to the selected course.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Article / Notes</label>
+                            <textarea name="content_text" rows="4" class="form-control form-control-lg shadow-none border-2" placeholder="Paste lecture notes, an article summary, or any text content here."></textarea>
+                            <div class="form-text">This is useful for text-based content when you do not want to rely on a URL.</div>
                         </div>
 
                         <div class="d-grid mt-5">
