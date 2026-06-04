@@ -10,6 +10,29 @@ include __DIR__ . '/../partials/sidebar_v2.php';
         <p class="text-muted">Track your academic performance across all courses.</p>
     </div>
 
+    <form method="GET" class="row g-3 mb-4 align-items-end">
+        <input type="hidden" name="page" value="my-results">
+        <div class="col-md-4">
+            <label class="form-label small text-uppercase text-muted">Course</label>
+            <select name="course_id" class="form-select">
+                <option value="">All courses</option>
+                <?php foreach ($courses as $courseOption): ?>
+                    <option value="<?php echo (int)$courseOption['CourseID']; ?>" <?php echo (($selected_course_id ?? '') == $courseOption['CourseID']) ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars($courseOption['CourseName']); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="col-md-5">
+            <label class="form-label small text-uppercase text-muted">Search</label>
+            <input type="text" name="search" class="form-control" value="<?php echo htmlspecialchars($search ?? ''); ?>" placeholder="Search by course or assessment name">
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-grow-1">Apply</button>
+            <a href="?page=my-results" class="btn btn-outline-secondary">Reset</a>
+        </div>
+    </form>
+
     <div class="row mb-4 g-3">
         <div class="col-md-3">
             <div class="card bg-light border-0">

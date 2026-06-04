@@ -341,22 +341,49 @@ class CourseController {
         }
 
         $user_id = $_SESSION['user_id'];
+        $search = trim($_GET['search'] ?? '');
+        $course_id = $_GET['course_id'] ?? null;
+        $selected_course_id = $course_id;
+
+        $stmt = $this->pdo->prepare("SELECT DISTINCT c.CourseID, c.CourseName
+                                     FROM enrollments e
+                                     JOIN courses c ON e.CourseID = c.CourseID
+                                     WHERE e.UserID = ?
+                                     ORDER BY c.CourseName");
+        $stmt->execute([$user_id]);
+        $courses = $stmt->fetchAll();
 
         // Get enrollments with deterministic latest enrollment per course
-        $stmt = $this->pdo->prepare("SELECT c.*, latest_e.CompletionStatus, latest_e.EnrollmentDate,
-                                     (SELECT COUNT(*) FROM quizzes WHERE CourseID = c.CourseID) as TotalQuizzes,
-                                     (SELECT COUNT(DISTINCT r.QuizID) FROM results r JOIN quizzes q ON r.QuizID = q.QuizID
-                                      WHERE r.UserID = ? AND q.CourseID = c.CourseID) as CompletedQuizzes
-                                     FROM courses c 
-                                     JOIN enrollments latest_e ON c.CourseID = latest_e.CourseID
-                                     JOIN (
-                                         SELECT CourseID, MAX(EnrollmentID) as EnrollmentID
-                                         FROM enrollments 
-                                         WHERE UserID = ?
-                                         GROUP BY CourseID
-                                     ) latest_ids ON latest_e.EnrollmentID = latest_ids.EnrollmentID
-                                     ORDER BY latest_e.EnrollmentDate DESC");
-        $stmt->execute([$user_id, $user_id]);
+        $sql = "SELECT c.*, latest_e.CompletionStatus, latest_e.EnrollmentDate,
+                (SELECT COUNT(*) FROM quizzes WHERE CourseID = c.CourseID) as TotalQuizzes,
+                (SELECT COUNT(DISTINCT r.QuizID) FROM results r JOIN quizzes q ON r.QuizID = q.QuizID
+                 WHERE r.UserID = ? AND q.CourseID = c.CourseID) as CompletedQuizzes
+                FROM courses c
+                JOIN enrollments latest_e ON c.CourseID = latest_e.CourseID
+                JOIN (
+                    SELECT CourseID, MAX(EnrollmentID) as EnrollmentID
+                    FROM enrollments
+                    WHERE UserID = ?
+                    GROUP BY CourseID
+                ) latest_ids ON latest_e.EnrollmentID = latest_ids.EnrollmentID
+                WHERE 1=1";
+        $params = [$user_id, $user_id];
+
+        if ($course_id) {
+            $sql .= " AND c.CourseID = ?";
+            $params[] = $course_id;
+        }
+
+        if ($search !== '') {
+            $sql .= " AND (c.CourseName LIKE ? OR c.Description LIKE ?)";
+            $params[] = '%' . $search . '%';
+            $params[] = '%' . $search . '%';
+        }
+
+        $sql .= " ORDER BY latest_e.EnrollmentDate DESC";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
         $enrollments = $stmt->fetchAll();
 
         // Calculate progress for each enrollment

@@ -234,23 +234,44 @@ class QuizController {
         }
 
         $user_id = $_SESSION['user_id'];
+        $course_id = $_GET['course_id'] ?? null;
+        $selected_course_id = $course_id;
+        $search = trim($_GET['search'] ?? '');
 
-        $stmt = $this->pdo->prepare("SELECT r.*, c.CourseName, q.QuizID, q.QuizName, q.QuizType, q.TotalMarks 
-                                     FROM results r 
-                                     JOIN courses c ON r.CourseID = c.CourseID 
-                                     JOIN quizzes q ON r.QuizID = q.QuizID 
-                                     WHERE r.UserID = ? 
-                                     ORDER BY r.SubmittedAt DESC");
+        $stmt = $this->pdo->prepare("SELECT DISTINCT c.CourseID, c.CourseName
+                                     FROM results r
+                                     JOIN courses c ON r.CourseID = c.CourseID
+                                     WHERE r.UserID = ?
+                                     ORDER BY c.CourseName");
         $stmt->execute([$user_id]);
+        $courses = $stmt->fetchAll();
+
+        $sql = "SELECT r.*, c.CourseName, q.QuizID, q.QuizName, q.QuizType, q.TotalMarks
+                FROM results r
+                JOIN courses c ON r.CourseID = c.CourseID
+                JOIN quizzes q ON r.QuizID = q.QuizID
+                WHERE r.UserID = ?";
+        $params = [$user_id];
+
+        if ($course_id) {
+            $sql .= " AND r.CourseID = ?";
+            $params[] = $course_id;
+        }
+
+        if ($search !== '') {
+            $sql .= " AND (c.CourseName LIKE ? OR q.QuizName LIKE ?)
+                     ";
+            $params[] = '%' . $search . '%';
+            $params[] = '%' . $search . '%';
+        }
+
+        $sql .= " ORDER BY r.SubmittedAt DESC";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
         $results = $stmt->fetchAll();
 
-        // Calculate stats
-        $stats = [
-            'Quiz' => 0,
-            'Midterm' => 0,
-            'Final' => 0,
-            'Assignment' => 0
-        ];
+        $stats = ['Quiz' => 0, 'Midterm' => 0, 'Final' => 0, 'Assignment' => 0];
         foreach ($results as $r) {
             if (isset($stats[$r['QuizType']])) {
                 $stats[$r['QuizType']]++;

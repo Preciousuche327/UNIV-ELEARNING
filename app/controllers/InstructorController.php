@@ -477,93 +477,93 @@ class InstructorController {
             exit;
         }
 
-        $course_id = $_GET['id'] ?? null;
+        $course_id = $_GET['id'] ?? $_GET['course_id'] ?? null;
+        $search = trim($_GET['search'] ?? '');
         $instructor_id = $_SESSION['user_id'];
 
-        if ($course_id) {
-            // Verify course belongs to instructor
-            $stmt = $this->pdo->prepare("SELECT c.* FROM courses c 
-                                         JOIN instructor_courses ic ON c.CourseID = ic.CourseID 
+        $stmt = $this->pdo->prepare("SELECT c.CourseID, c.CourseName FROM courses c
+                                     JOIN instructor_courses ic ON c.CourseID = ic.CourseID
+                                     WHERE ic.InstructorID = ?
+                                     ORDER BY c.CourseName");
+        $stmt->execute([$instructor_id]);
+        $courses = $stmt->fetchAll();
+
+        $selected_course_id = $course_id;
+        $course = null;
+
+        if ($selected_course_id) {
+            $stmt = $this->pdo->prepare("SELECT c.* FROM courses c
+                                         JOIN instructor_courses ic ON c.CourseID = ic.CourseID
                                          WHERE c.CourseID = ? AND ic.InstructorID = ?");
-            $stmt->execute([$course_id, $instructor_id]);
+            $stmt->execute([$selected_course_id, $instructor_id]);
             $course = $stmt->fetch();
 
             if (!$course) {
                 header("Location: index.php?page=dashboard");
                 exit;
             }
-
-            // Get stats for this course
-            $stmt = $this->pdo->prepare("SELECT q.QuizType, COUNT(*) as count FROM results r 
-                                         JOIN quizzes q ON r.QuizID = q.QuizID 
-                                         WHERE r.CourseID = ? 
-                                         GROUP BY q.QuizType");
-            $stmt->execute([$course_id]);
-            $stats = ['Quiz' => 0, 'Midterm' => 0, 'Final' => 0, 'Assignment' => 0];
-            foreach ($stmt->fetchAll() as $row) {
-                if (isset($stats[$row['QuizType']])) {
-                    $stats[$row['QuizType']] = $row['count'];
-                }
-            }
-
-            // Aggregate results by student for this course
-            $stmt = $this->pdo->prepare("SELECT u.UserID, u.Username, c.CourseID, c.CourseName,
-                                         SUM(CASE WHEN q.QuizType = 'Quiz' THEN r.Score ELSE 0 END) AS QuizScore,
-                                         SUM(CASE WHEN q.QuizType = 'Quiz' THEN q.TotalMarks ELSE 0 END) AS QuizTotal,
-                                         SUM(CASE WHEN q.QuizType = 'Midterm' THEN r.Score ELSE 0 END) AS MidtermScore,
-                                         SUM(CASE WHEN q.QuizType = 'Midterm' THEN q.TotalMarks ELSE 0 END) AS MidtermTotal,
-                                         SUM(CASE WHEN q.QuizType = 'Final' THEN r.Score ELSE 0 END) AS FinalScore,
-                                         SUM(CASE WHEN q.QuizType = 'Final' THEN q.TotalMarks ELSE 0 END) AS FinalTotal,
-                                         SUM(CASE WHEN q.QuizType = 'Assignment' THEN r.Score ELSE 0 END) AS AssignmentScore,
-                                         SUM(CASE WHEN q.QuizType = 'Assignment' THEN q.TotalMarks ELSE 0 END) AS AssignmentTotal
-                                         FROM results r
-                                         JOIN users u ON r.UserID = u.UserID
-                                         JOIN quizzes q ON r.QuizID = q.QuizID
-                                         JOIN courses c ON r.CourseID = c.CourseID
-                                         WHERE r.CourseID = ?
-                                         GROUP BY u.UserID, u.Username, c.CourseID, c.CourseName
-                                         ORDER BY u.Username");
-            $stmt->execute([$course_id]);
-            $results = $stmt->fetchAll();
-            $page_title = "Results for " . $course['CourseName'];
-        } else {
-            // Get stats for all instructor courses
-            $stmt = $this->pdo->prepare("SELECT q.QuizType, COUNT(*) as count FROM results r 
-                                         JOIN quizzes q ON r.QuizID = q.QuizID 
-                                         JOIN courses c ON r.CourseID = c.CourseID
-                                         JOIN instructor_courses ic ON c.CourseID = ic.CourseID
-                                         WHERE ic.InstructorID = ? 
-                                         GROUP BY q.QuizType");
-            $stmt->execute([$instructor_id]);
-            $stats = ['Quiz' => 0, 'Midterm' => 0, 'Final' => 0, 'Assignment' => 0];
-            foreach ($stmt->fetchAll() as $row) {
-                if (isset($stats[$row['QuizType']])) {
-                    $stats[$row['QuizType']] = $row['count'];
-                }
-            }
-
-            // Aggregate results by student across all instructor courses
-            $stmt = $this->pdo->prepare("SELECT u.UserID, u.Username, c.CourseID, c.CourseName,
-                                         SUM(CASE WHEN q.QuizType = 'Quiz' THEN r.Score ELSE 0 END) AS QuizScore,
-                                         SUM(CASE WHEN q.QuizType = 'Quiz' THEN q.TotalMarks ELSE 0 END) AS QuizTotal,
-                                         SUM(CASE WHEN q.QuizType = 'Midterm' THEN r.Score ELSE 0 END) AS MidtermScore,
-                                         SUM(CASE WHEN q.QuizType = 'Midterm' THEN q.TotalMarks ELSE 0 END) AS MidtermTotal,
-                                         SUM(CASE WHEN q.QuizType = 'Final' THEN r.Score ELSE 0 END) AS FinalScore,
-                                         SUM(CASE WHEN q.QuizType = 'Final' THEN q.TotalMarks ELSE 0 END) AS FinalTotal,
-                                         SUM(CASE WHEN q.QuizType = 'Assignment' THEN r.Score ELSE 0 END) AS AssignmentScore,
-                                         SUM(CASE WHEN q.QuizType = 'Assignment' THEN q.TotalMarks ELSE 0 END) AS AssignmentTotal
-                                         FROM results r
-                                         JOIN users u ON r.UserID = u.UserID
-                                         JOIN quizzes q ON r.QuizID = q.QuizID
-                                         JOIN courses c ON r.CourseID = c.CourseID
-                                         JOIN instructor_courses ic ON c.CourseID = ic.CourseID
-                                         WHERE ic.InstructorID = ?
-                                         GROUP BY u.UserID, u.Username, c.CourseID, c.CourseName
-                                         ORDER BY u.Username, c.CourseName");
-            $stmt->execute([$instructor_id]);
-            $results = $stmt->fetchAll();
-            $page_title = "All Course Performance";
         }
+
+        $stats = ['Quiz' => 0, 'Midterm' => 0, 'Final' => 0, 'Assignment' => 0];
+
+        $stats_sql = "SELECT q.QuizType, COUNT(*) as count
+                      FROM results r
+                      JOIN quizzes q ON r.QuizID = q.QuizID
+                      JOIN courses c ON r.CourseID = c.CourseID
+                      JOIN users u ON r.UserID = u.UserID
+                      JOIN instructor_courses ic ON c.CourseID = ic.CourseID
+                      WHERE ic.InstructorID = ?";
+        $stats_params = [$instructor_id];
+        if ($selected_course_id) {
+            $stats_sql .= " AND r.CourseID = ?";
+            $stats_params[] = $selected_course_id;
+        }
+        if ($search !== '') {
+            $stats_sql .= " AND (u.Username LIKE ? OR c.CourseName LIKE ?)";
+            $stats_params[] = '%' . $search . '%';
+            $stats_params[] = '%' . $search . '%';
+        }
+        $stats_sql .= " GROUP BY q.QuizType";
+
+        $stmt = $this->pdo->prepare($stats_sql);
+        $stmt->execute($stats_params);
+        foreach ($stmt->fetchAll() as $row) {
+            if (isset($stats[$row['QuizType']])) {
+                $stats[$row['QuizType']] = (int)$row['count'];
+            }
+        }
+
+        $results_sql = "SELECT u.UserID, u.Username, c.CourseID, c.CourseName,
+                        SUM(CASE WHEN q.QuizType = 'Quiz' THEN r.Score ELSE 0 END) AS QuizScore,
+                        SUM(CASE WHEN q.QuizType = 'Quiz' THEN q.TotalMarks ELSE 0 END) AS QuizTotal,
+                        SUM(CASE WHEN q.QuizType = 'Midterm' THEN r.Score ELSE 0 END) AS MidtermScore,
+                        SUM(CASE WHEN q.QuizType = 'Midterm' THEN q.TotalMarks ELSE 0 END) AS MidtermTotal,
+                        SUM(CASE WHEN q.QuizType = 'Final' THEN r.Score ELSE 0 END) AS FinalScore,
+                        SUM(CASE WHEN q.QuizType = 'Final' THEN q.TotalMarks ELSE 0 END) AS FinalTotal,
+                        SUM(CASE WHEN q.QuizType = 'Assignment' THEN r.Score ELSE 0 END) AS AssignmentScore,
+                        SUM(CASE WHEN q.QuizType = 'Assignment' THEN q.TotalMarks ELSE 0 END) AS AssignmentTotal
+                        FROM results r
+                        JOIN users u ON r.UserID = u.UserID
+                        JOIN quizzes q ON r.QuizID = q.QuizID
+                        JOIN courses c ON r.CourseID = c.CourseID
+                        JOIN instructor_courses ic ON c.CourseID = ic.CourseID
+                        WHERE ic.InstructorID = ?";
+        $results_params = [$instructor_id];
+        if ($selected_course_id) {
+            $results_sql .= " AND r.CourseID = ?";
+            $results_params[] = $selected_course_id;
+        }
+        if ($search !== '') {
+            $results_sql .= " AND (u.Username LIKE ? OR c.CourseName LIKE ?)";
+            $results_params[] = '%' . $search . '%';
+            $results_params[] = '%' . $search . '%';
+        }
+        $results_sql .= " GROUP BY u.UserID, u.Username, c.CourseID, c.CourseName ORDER BY u.Username, c.CourseName";
+
+        $stmt = $this->pdo->prepare($results_sql);
+        $stmt->execute($results_params);
+        $results = $stmt->fetchAll();
+        $page_title = $selected_course_id && $course ? 'Results for ' . $course['CourseName'] : 'Student Results';
 
         require __DIR__ . '/../views/instructor/course_results.php';
     }
