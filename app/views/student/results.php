@@ -27,9 +27,8 @@ include __DIR__ . '/../partials/sidebar_v2.php';
             <label class="form-label small text-uppercase text-muted">Search</label>
             <input type="text" name="search" class="form-control" value="<?php echo htmlspecialchars($search ?? ''); ?>" placeholder="Search by course or assessment name">
         </div>
-        <div class="col-md-3 d-flex gap-2">
-            <button type="submit" class="btn btn-primary flex-grow-1">Apply</button>
-            <a href="?page=my-results" class="btn btn-outline-secondary">Reset</a>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-primary w-100">Search</button>
         </div>
     </form>
 
@@ -80,6 +79,7 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                             <th>Score</th>
                             <th>Percentage</th>
                             <th>Status</th>
+                            <th>Attempts</th>
                             <th class="pe-4">Submitted Date</th>
                             <th>Action</th>
                         </tr>
@@ -95,7 +95,8 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                             <?php foreach ($results as $result): ?>
                                 <?php 
                                     $percentage = ($result['TotalMarks'] > 0) ? round(($result['Score'] / $result['TotalMarks']) * 100, 1) : 0;
-                                    $is_pass = $percentage >= 70;
+                                    $pass_threshold = 50;
+                                    $is_pass = $percentage >= $pass_threshold;
                                 ?>
                                 <tr>
                                     <td class="ps-4 fw-bold"><?php echo htmlspecialchars($result['QuizName']); ?></td>
@@ -125,14 +126,21 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                                             <span class="badge bg-danger">Fail</span>
                                         <?php endif; ?>
                                     </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">
+                                            <?php echo (int)($result['AttemptCount'] ?? 1); ?> attempt(s)
+                                        </span>
+                                    </td>
                                     <td class="pe-4 text-muted small"><?php echo date('M d, Y, h:i A', strtotime($result['SubmittedAt'])); ?></td>
                                     <td>
                                         <a href="?page=quiz-detail&id=<?php echo $result['ResultID']; ?>" class="btn btn-sm btn-outline-primary me-2">
                                             <i class="bi bi-eye"></i> View
                                         </a>
-                                        <a href="?page=take-quiz&id=<?php echo $result['QuizID']; ?>&retry=1" class="btn btn-sm btn-outline-success">
-                                            <i class="bi bi-arrow-repeat"></i> Retake
-                                        </a>
+                                        <?php if (!$is_pass): ?>
+                                            <a href="?page=take-quiz&id=<?php echo $result['QuizID']; ?>&retry=1" class="btn btn-sm btn-outline-success">
+                                                <i class="bi bi-arrow-repeat"></i> Retake
+                                            </a>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

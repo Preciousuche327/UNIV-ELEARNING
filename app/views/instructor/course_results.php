@@ -67,9 +67,8 @@ include __DIR__ . '/../partials/sidebar_v2.php';
             <label class="form-label small text-uppercase text-muted">Search student</label>
             <input type="text" name="search" class="form-control" value="<?php echo htmlspecialchars($search ?? ''); ?>" placeholder="Search by student or course name">
         </div>
-        <div class="col-md-3 d-flex gap-2">
-            <button type="submit" class="btn btn-primary flex-grow-1">Apply</button>
-            <a href="?page=course-results" class="btn btn-outline-secondary">Reset</a>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-primary w-100">Search</button>
         </div>
     </form>
 
@@ -85,12 +84,13 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                             <th>Midterm</th>
                             <th>Final</th>
                             <th>Assignment</th>
+                            <th>Failed Attempts</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($results)): ?>
                             <tr>
-                                <td colspan="6" class="text-center py-5">
+                                <td colspan="7" class="text-center py-5">
                                     <div class="text-muted">
                                         <i class="bi bi-info-circle fs-2 d-block mb-2"></i>
                                         No results recorded yet for your courses.
@@ -140,6 +140,11 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                                         <?php else: ?>
                                             <span class="text-muted">-</span>
                                         <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <span class="badge <?php echo ((int)$result['FailedAttempts'] > 0) ? 'bg-warning text-dark' : 'bg-success'; ?>">
+                                            <?php echo (int)$result['FailedAttempts']; ?> attempt(s)
+                                        </span>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

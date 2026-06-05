@@ -4,7 +4,8 @@ include __DIR__ . '/../partials/header.php';
 include __DIR__ . '/../partials/sidebar_v2.php';
 
 $percentage = ($result['TotalMarks'] > 0) ? round(($result['Score'] / $result['TotalMarks']) * 100, 1) : 0;
-$is_pass = $percentage >= 70;
+$pass_threshold = 50;
+$is_pass = $percentage >= $pass_threshold;
 ?>
 
 <div class="container-fluid p-4">
@@ -34,7 +35,7 @@ $is_pass = $percentage >= 70;
                     <div class="alert <?php echo $is_pass ? 'alert-success' : 'alert-danger'; ?>">
                         <i class="bi bi-<?php echo $is_pass ? 'check-circle' : 'x-circle'; ?> me-2"></i>
                         <strong><?php echo $is_pass ? 'Passed!' : 'Did not pass'; ?></strong>
-                        <?php echo $is_pass ? 'Great job! You scored above 70%.' : 'Try retaking the quiz to improve your score.'; ?>
+                        <?php echo $is_pass ? 'Great job! You scored 50% or higher.' : 'You scored below 50%, so you can retake this assessment.'; ?>
                     </div>
 
                     <hr>
@@ -42,9 +43,13 @@ $is_pass = $percentage >= 70;
                         <i class="bi bi-shield-lock-fill me-2"></i>
                         Question details are hidden after submission to protect quiz integrity.
                     </div>
-                    <a href="?page=take-quiz&id=<?php echo $result['QuizID']; ?>&retry=1" class="btn btn-success w-100 mb-3">
-                        <i class="bi bi-arrow-repeat me-1"></i> Retake Quiz
-                    </a>
+                    <?php if (!$is_pass): ?>
+                        <a href="?page=take-quiz&id=<?php echo $result['QuizID']; ?>&retry=1" class="btn btn-success w-100 mb-3">
+                            <i class="bi bi-arrow-repeat me-1"></i> Retake Quiz
+                        </a>
+                    <?php else: ?>
+                        <div class="alert alert-light border">You have already scored 50% or higher, so retaking this assessment is not available.</div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

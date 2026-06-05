@@ -58,12 +58,17 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                                             <h5 class="mb-2">Last Attempt</h5>
                                             <p class="mb-1"><strong>Score:</strong> <?php echo htmlspecialchars($last_result['Score']); ?> / <?php echo htmlspecialchars($last_result['TotalMarks']); ?></p>
                                             <p class="mb-1"><strong>Percentage:</strong> <?php echo ($last_result['TotalMarks'] > 0) ? round(($last_result['Score'] / $last_result['TotalMarks']) * 100, 1) : 0; ?>%</p>
-                                            <p class="mb-0"><strong>Status:</strong> <?php echo (($last_result['Score'] / max(1, $last_result['TotalMarks'])) * 100) >= 70 ? 'Passed' : 'Needs Improvement'; ?></p>
+                                            <?php $last_percentage = ($last_result['TotalMarks'] > 0) ? round(($last_result['Score'] / $last_result['TotalMarks']) * 100, 1) : 0; ?>
+                                            <p class="mb-0"><strong>Status:</strong> <?php echo $last_percentage >= 50 ? 'Passed' : 'Needs Improvement'; ?></p>
                                         </div>
                                     </div>
-                                    <a href="?page=take-quiz&id=<?php echo $quiz['QuizID']; ?>&retry=1" class="btn btn-success btn-lg px-5">
-                                        <i class="bi bi-arrow-repeat me-2"></i> Retake Quiz
-                                    </a>
+                                    <?php if ($last_percentage < 50): ?>
+                                        <a href="?page=take-quiz&id=<?php echo $quiz['QuizID']; ?>&retry=1" class="btn btn-success btn-lg px-5">
+                                            <i class="bi bi-arrow-repeat me-2"></i> Retake Quiz
+                                        </a>
+                                    <?php else: ?>
+                                        <div class="alert alert-light border mt-2">You already scored 50% or higher, so this assessment cannot be retaken.</div>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>

@@ -541,7 +541,9 @@ class InstructorController {
                         SUM(CASE WHEN q.QuizType = 'Final' THEN r.Score ELSE 0 END) AS FinalScore,
                         SUM(CASE WHEN q.QuizType = 'Final' THEN q.TotalMarks ELSE 0 END) AS FinalTotal,
                         SUM(CASE WHEN q.QuizType = 'Assignment' THEN r.Score ELSE 0 END) AS AssignmentScore,
-                        SUM(CASE WHEN q.QuizType = 'Assignment' THEN q.TotalMarks ELSE 0 END) AS AssignmentTotal
+                        SUM(CASE WHEN q.QuizType = 'Assignment' THEN q.TotalMarks ELSE 0 END) AS AssignmentTotal,
+                        COUNT(*) AS TotalAttempts,
+                        SUM(CASE WHEN r.Score < 50 THEN 1 ELSE 0 END) AS FailedAttempts
                         FROM results r
                         JOIN users u ON r.UserID = u.UserID
                         JOIN quizzes q ON r.QuizID = q.QuizID

@@ -27,9 +27,8 @@ include __DIR__ . '/../partials/sidebar_v2.php';
             <label class="form-label small text-uppercase text-muted">Search</label>
             <input type="text" name="search" class="form-control" value="<?php echo htmlspecialchars($search ?? ''); ?>" placeholder="Search by course or description">
         </div>
-        <div class="col-md-3 d-flex gap-2">
-            <button type="submit" class="btn btn-primary flex-grow-1">Apply</button>
-            <a href="?page=my-enrollments" class="btn btn-outline-secondary">Reset</a>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-primary w-100">Search</button>
         </div>
     </form>
 

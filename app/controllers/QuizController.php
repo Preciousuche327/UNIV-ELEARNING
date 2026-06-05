@@ -246,7 +246,9 @@ class QuizController {
         $stmt->execute([$user_id]);
         $courses = $stmt->fetchAll();
 
-        $sql = "SELECT r.*, c.CourseName, q.QuizID, q.QuizName, q.QuizType, q.TotalMarks
+        $sql = "SELECT r.*, c.CourseName, q.QuizID, q.QuizName, q.QuizType, q.TotalMarks,
+                (SELECT COUNT(*) FROM results r2 WHERE r2.UserID = r.UserID AND r2.QuizID = r.QuizID) AS AttemptCount,
+                (SELECT COUNT(*) FROM results r2 WHERE r2.UserID = r.UserID AND r2.QuizID = r.QuizID AND r2.Score < 50) AS FailedAttempts
                 FROM results r
                 JOIN courses c ON r.CourseID = c.CourseID
                 JOIN quizzes q ON r.QuizID = q.QuizID
