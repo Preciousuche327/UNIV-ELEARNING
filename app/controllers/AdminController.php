@@ -310,7 +310,7 @@ class AdminController {
         if ($user_id) {
             $userModel = new User($this->pdo);
             $userModel->updateStatus($user_id, 'Approved');
-            $_SESSION['success'] = "Instructor approved successfully!";
+            $_SESSION['success'] = "Instructor is now active.";
         }
 
         header("Location: index.php?page=manage-instructors");
@@ -325,7 +325,7 @@ class AdminController {
         if ($user_id) {
             $userModel = new User($this->pdo);
             $userModel->updateStatus($user_id, 'Rejected');
-            $_SESSION['error'] = "Instructor registration rejected.";
+            $_SESSION['error'] = "Instructor is now inactive.";
         }
 
         header("Location: index.php?page=manage-instructors");

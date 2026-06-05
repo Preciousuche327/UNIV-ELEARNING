@@ -21,7 +21,7 @@ class InstructorController {
         // Get courses assigned by admins to this instructor
         $stmt = $this->pdo->prepare("SELECT c.*, 
                          COUNT(DISTINCT e.UserID) as StudentCount,
-                         GROUP_CONCAT(DISTINCT u.Username ORDER BY u.Username SEPARATOR ', ') as StudentNames,
+                         GROUP_CONCAT(DISTINCT u.Username ORDER BY u.Username SEPARATOR '||') as StudentNames,
                          COUNT(DISTINCT q.QuizID) as QuizCount 
                          FROM courses c 
                          JOIN instructor_courses ic ON c.CourseID = ic.CourseID
@@ -82,20 +82,49 @@ class InstructorController {
         }
 
         $instructor_id = $_SESSION['user_id'];
+        $course_id = $_GET['course_id'] ?? null;
+        $search = trim($_GET['search'] ?? '');
+        $selected_course_id = $course_id;
 
-        $stmt = $this->pdo->prepare("SELECT c.*,
+        $stmt = $this->pdo->prepare("SELECT c.CourseID, c.CourseName
+                                     FROM courses c
+                                     JOIN instructor_courses ic ON c.CourseID = ic.CourseID
+                                     WHERE ic.InstructorID = ?
+                                     ORDER BY c.CourseName");
+        $stmt->execute([$instructor_id]);
+        $courseOptions = $stmt->fetchAll();
+
+        $sql = "SELECT c.*,
                                      COUNT(DISTINCT e.EnrollmentID) as StudentCount,
-                                     GROUP_CONCAT(DISTINCT u.Username ORDER BY u.Username SEPARATOR ', ') as StudentNames,
+                                     GROUP_CONCAT(DISTINCT u.Username ORDER BY u.Username SEPARATOR '||') as StudentNames,
                                      COUNT(DISTINCT q.QuizID) as QuizCount
                                      FROM courses c 
                                      JOIN instructor_courses ic ON c.CourseID = ic.CourseID
                                      LEFT JOIN enrollments e ON c.CourseID = e.CourseID 
                                      LEFT JOIN users u ON e.UserID = u.UserID
                                      LEFT JOIN quizzes q ON c.CourseID = q.CourseID 
-                                     WHERE ic.InstructorID = ? 
-                                     GROUP BY c.CourseID");
-        $stmt->execute([$instructor_id]);
+                                     WHERE ic.InstructorID = ?";
+        $params = [$instructor_id];
+
+        if ($course_id) {
+            $sql .= " AND c.CourseID = ?";
+            $params[] = $course_id;
+        }
+
+        if ($search !== '') {
+            $sql .= " AND (c.CourseName LIKE ? OR u.Username LIKE ?)";
+            $params[] = '%' . $search . '%';
+            $params[] = '%' . $search . '%';
+        }
+
+        $sql .= " GROUP BY c.CourseID ORDER BY c.CourseName";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
         $courses = $stmt->fetchAll();
+        $filtered_student_total = array_sum(array_map(function ($course) {
+            return (int)($course['StudentCount'] ?? 0);
+        }, $courses));
 
         require __DIR__ . '/../views/instructor/manage_courses.php';
     }
@@ -431,7 +460,7 @@ class InstructorController {
         $is_correct = isset($_POST['is_correct']) ? (int)$_POST['is_correct'] : 0;
         $instructor_id = $_SESSION['user_id'];
 
-        $stmt = $this->pdo->prepare("SELECT ua.UserID, ua.QuestionID, q.QuizID, q.Marks, z.CourseID
+        $stmt = $this->pdo->prepare("SELECT ua.UserID, ua.QuestionID, q.QuizID, q.Marks, z.CourseID, z.TotalMarks
                                      FROM user_answers ua
                                      JOIN questions q ON ua.QuestionID = q.QuestionID
                                      JOIN quizzes z ON q.QuizID = z.QuizID
@@ -448,7 +477,14 @@ class InstructorController {
                                          JOIN questions q ON ua.QuestionID = q.QuestionID
                                          WHERE ua.UserID = ? AND q.QuizID = ? AND ua.IsCorrect = 1");
             $stmt->execute([$answer['UserID'], $answer['QuizID']]);
-            $score = (int)$stmt->fetchColumn();
+            $correctMarks = (float)$stmt->fetchColumn();
+
+            $stmt = $this->pdo->prepare("SELECT COALESCE(SUM(Marks), 0) FROM questions WHERE QuizID = ?");
+            $stmt->execute([$answer['QuizID']]);
+            $questionTotal = (float)$stmt->fetchColumn();
+            $quizTotal = (float)$answer['TotalMarks'];
+            $score = ($questionTotal > 0 && $quizTotal > 0) ? round(($correctMarks / $questionTotal) * $quizTotal, 2) : 0;
+            $score = min($score, $quizTotal);
 
             $stmt = $this->pdo->prepare("UPDATE results SET Score = ? WHERE UserID = ? AND QuizID = ?");
             $stmt->execute([$score, $answer['UserID'], $answer['QuizID']]);
@@ -534,25 +570,35 @@ class InstructorController {
         }
 
         $results_sql = "SELECT u.UserID, u.Username, c.CourseID, c.CourseName,
-                        SUM(CASE WHEN q.QuizType = 'Quiz' THEN r.Score ELSE 0 END) AS QuizScore,
+                        SUM(CASE WHEN q.QuizType = 'Quiz' THEN best.Score ELSE 0 END) AS QuizScore,
                         SUM(CASE WHEN q.QuizType = 'Quiz' THEN q.TotalMarks ELSE 0 END) AS QuizTotal,
-                        SUM(CASE WHEN q.QuizType = 'Midterm' THEN r.Score ELSE 0 END) AS MidtermScore,
+                        SUM(CASE WHEN q.QuizType = 'Midterm' THEN best.Score ELSE 0 END) AS MidtermScore,
                         SUM(CASE WHEN q.QuizType = 'Midterm' THEN q.TotalMarks ELSE 0 END) AS MidtermTotal,
-                        SUM(CASE WHEN q.QuizType = 'Final' THEN r.Score ELSE 0 END) AS FinalScore,
+                        SUM(CASE WHEN q.QuizType = 'Final' THEN best.Score ELSE 0 END) AS FinalScore,
                         SUM(CASE WHEN q.QuizType = 'Final' THEN q.TotalMarks ELSE 0 END) AS FinalTotal,
-                        SUM(CASE WHEN q.QuizType = 'Assignment' THEN r.Score ELSE 0 END) AS AssignmentScore,
+                        SUM(CASE WHEN q.QuizType = 'Assignment' THEN best.Score ELSE 0 END) AS AssignmentScore,
                         SUM(CASE WHEN q.QuizType = 'Assignment' THEN q.TotalMarks ELSE 0 END) AS AssignmentTotal,
                         COUNT(*) AS TotalAttempts,
-                        SUM(CASE WHEN r.Score < 50 THEN 1 ELSE 0 END) AS FailedAttempts
-                        FROM results r
-                        JOIN users u ON r.UserID = u.UserID
-                        JOIN quizzes q ON r.QuizID = q.QuizID
-                        JOIN courses c ON r.CourseID = c.CourseID
+                        (SELECT COUNT(*)
+                         FROM results fr
+                         JOIN quizzes fq ON fr.QuizID = fq.QuizID
+                         WHERE fr.UserID = best.UserID
+                           AND fr.CourseID = best.CourseID
+                           AND fq.TotalMarks > 0
+                           AND ((fr.Score / fq.TotalMarks) * 100) < 50) AS FailedAttempts
+                        FROM (
+                            SELECT UserID, QuizID, CourseID, MAX(Score) AS Score
+                            FROM results
+                            GROUP BY UserID, QuizID, CourseID
+                        ) best
+                        JOIN users u ON best.UserID = u.UserID
+                        JOIN quizzes q ON best.QuizID = q.QuizID
+                        JOIN courses c ON best.CourseID = c.CourseID
                         JOIN instructor_courses ic ON c.CourseID = ic.CourseID
                         WHERE ic.InstructorID = ?";
         $results_params = [$instructor_id];
         if ($selected_course_id) {
-            $results_sql .= " AND r.CourseID = ?";
+            $results_sql .= " AND best.CourseID = ?";
             $results_params[] = $selected_course_id;
         }
         if ($search !== '') {

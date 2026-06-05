@@ -25,7 +25,15 @@ class CourseController {
         $course_search = trim($_GET['course_search'] ?? '');
 
         // Get enrolled courses (with deterministic latest enrollment per course)
-        $query = "SELECT c.*, e.CompletionStatus, e.EnrollmentDate 
+        $query = "SELECT c.*, e.CompletionStatus, e.EnrollmentDate,
+                  (SELECT COUNT(*) FROM quizzes WHERE CourseID = c.CourseID) as TotalQuizzes,
+                  (SELECT COUNT(DISTINCT q.QuizID)
+                   FROM quizzes q
+                   JOIN results r ON r.QuizID = q.QuizID
+                   WHERE r.UserID = ?
+                     AND q.CourseID = c.CourseID
+                     AND q.TotalMarks > 0
+                     AND ((r.Score / q.TotalMarks) * 100) >= 50) as CompletedQuizzes
                   FROM courses c
                   JOIN enrollments e ON c.CourseID = e.CourseID
                   JOIN (
@@ -35,7 +43,7 @@ class CourseController {
                       GROUP BY CourseID
                   ) latest_e ON e.EnrollmentID = latest_e.EnrollmentID
                   WHERE 1=1";
-        $params = [$user_id];
+        $params = [$user_id, $user_id];
 
         if ($course_search !== '') {
             $query .= " AND (c.CourseName LIKE ? OR c.Description LIKE ?)";
@@ -48,6 +56,23 @@ class CourseController {
         $stmt->execute($params);
         $enrolled_courses = $stmt->fetchAll();
 
+        foreach ($enrolled_courses as &$course) {
+            $total_quizzes = (int)$course['TotalQuizzes'];
+            $completed_quizzes = (int)$course['CompletedQuizzes'];
+            $course['Progress'] = ($total_quizzes > 0) ? round(($completed_quizzes / $total_quizzes) * 100) : 0;
+
+            $old_status = $course['CompletionStatus'] ?? '';
+            $new_status = ($completed_quizzes === $total_quizzes && $total_quizzes > 0) ? 'Completed' : 'In Progress';
+            $course['CompletionStatus'] = $new_status;
+
+            if ($old_status !== $new_status) {
+                $update_stmt = $this->pdo->prepare("UPDATE enrollments SET CompletionStatus = ?
+                                                   WHERE UserID = ? AND CourseID = ?");
+                $update_stmt->execute([$new_status, $user_id, $course['CourseID']]);
+            }
+        }
+        unset($course);
+
         // Get completed quizzes count from results table
         $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM results WHERE UserID = ?");
         $stmt->execute([$user_id]);
@@ -56,7 +81,10 @@ class CourseController {
         // Calculate average score from results
         $average_score = 0;
         if ($completed_quizzes > 0) {
-            $stmt = $this->pdo->prepare("SELECT AVG(Score) as avg_score FROM results WHERE UserID = ?");
+            $stmt = $this->pdo->prepare("SELECT AVG((r.Score / q.TotalMarks) * 100) as avg_score
+                                         FROM results r
+                                         JOIN quizzes q ON r.QuizID = q.QuizID
+                                         WHERE r.UserID = ? AND q.TotalMarks > 0");
             $stmt->execute([$user_id]);
             $score_data = $stmt->fetch();
             $average_score = ($score_data && isset($score_data['avg_score'])) ? round($score_data['avg_score'], 2) : 0;
@@ -356,8 +384,13 @@ class CourseController {
         // Get enrollments with deterministic latest enrollment per course
         $sql = "SELECT c.*, latest_e.CompletionStatus, latest_e.EnrollmentDate,
                 (SELECT COUNT(*) FROM quizzes WHERE CourseID = c.CourseID) as TotalQuizzes,
-                (SELECT COUNT(DISTINCT r.QuizID) FROM results r JOIN quizzes q ON r.QuizID = q.QuizID
-                 WHERE r.UserID = ? AND q.CourseID = c.CourseID) as CompletedQuizzes
+                (SELECT COUNT(DISTINCT q.QuizID)
+                 FROM quizzes q
+                 JOIN results r ON r.QuizID = q.QuizID
+                 WHERE r.UserID = ?
+                   AND q.CourseID = c.CourseID
+                   AND q.TotalMarks > 0
+                   AND ((r.Score / q.TotalMarks) * 100) >= 50) as CompletedQuizzes
                 FROM courses c
                 JOIN enrollments latest_e ON c.CourseID = latest_e.CourseID
                 JOIN (
@@ -397,15 +430,17 @@ class CourseController {
                 $enrollment['Progress'] = 0;
             }
             
-            // If all quizzes completed, mark as completed
-            if ($completed_quizzes == $total_quizzes && $total_quizzes > 0) {
-                $enrollment['CompletionStatus'] = 'Completed';
-                // Update database
-                $update_stmt = $this->pdo->prepare("UPDATE enrollments SET CompletionStatus = 'Completed' 
+            $old_status = $enrollment['CompletionStatus'] ?? '';
+            $new_status = ($completed_quizzes == $total_quizzes && $total_quizzes > 0) ? 'Completed' : 'In Progress';
+            $enrollment['CompletionStatus'] = $new_status;
+
+            if ($old_status !== $new_status) {
+                $update_stmt = $this->pdo->prepare("UPDATE enrollments SET CompletionStatus = ?
                                                    WHERE UserID = ? AND CourseID = ?");
-                $update_stmt->execute([$user_id, $enrollment['CourseID']]);
+                $update_stmt->execute([$new_status, $user_id, $enrollment['CourseID']]);
             }
         }
+        unset($enrollment);
 
         require __DIR__ . '/../views/student/my_enrollments.php';
     }

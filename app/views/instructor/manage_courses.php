@@ -15,6 +15,47 @@ include __DIR__ . '/../partials/sidebar_v2.php';
         </a>
     </div>
 
+    <form method="GET" class="row g-3 mb-4 align-items-end">
+        <input type="hidden" name="page" value="manage-courses">
+        <div class="col-md-4">
+            <label class="form-label small text-uppercase text-muted">Course</label>
+            <select name="course_id" class="form-select">
+                <option value="">All courses</option>
+                <?php foreach ($courseOptions as $courseOption): ?>
+                    <option value="<?php echo (int)$courseOption['CourseID']; ?>" <?php echo (($selected_course_id ?? '') == $courseOption['CourseID']) ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars($courseOption['CourseName']); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="col-md-5">
+            <label class="form-label small text-uppercase text-muted">Search</label>
+            <input type="text" name="search" class="form-control" value="<?php echo htmlspecialchars($search ?? ''); ?>" placeholder="Search course or student">
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-primary w-100">Filter</button>
+        </div>
+    </form>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <span class="text-muted">Filtered Courses</span>
+                    <span class="h4 mb-0 fw-bold"><?php echo count($courses); ?></span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <span class="text-muted">Students in View</span>
+                    <span class="h4 mb-0 fw-bold"><?php echo (int)($filtered_student_total ?? 0); ?></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card border-0 shadow-sm">
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -43,9 +84,11 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                                     <td>
                                         <span class="badge bg-soft-primary"><?php echo $course['StudentCount']; ?></span>
                                         <?php if (!empty($course['StudentNames'])): ?>
-                                            <div class="small text-muted mt-1 text-truncate" style="max-width:220px;">
-                                                <?php echo htmlspecialchars($course['StudentNames']); ?>
-                                            </div>
+                                            <ul class="small text-muted mt-1 mb-0 ps-3">
+                                                <?php foreach (explode('||', $course['StudentNames']) as $studentName): ?>
+                                                    <li><?php echo htmlspecialchars($studentName); ?></li>
+                                                <?php endforeach; ?>
+                                            </ul>
                                         <?php else: ?>
                                             <div class="small text-muted mt-1">No students yet</div>
                                         <?php endif; ?>

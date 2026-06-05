@@ -82,9 +82,11 @@ $totalQuizzes = $stats['total_quizzes'] ?? 0;
                                         <td>
                                             <?php echo $course['StudentCount']; ?> Students
                                             <?php if (!empty($course['StudentNames'])): ?>
-                                                <div class="small text-muted mt-1 text-truncate" style="max-width:220px;">
-                                                    <?php echo htmlspecialchars($course['StudentNames']); ?>
-                                                </div>
+                                                <ul class="small text-muted mt-1 mb-0 ps-3">
+                                                    <?php foreach (explode('||', $course['StudentNames']) as $studentName): ?>
+                                                        <li><?php echo htmlspecialchars($studentName); ?></li>
+                                                    <?php endforeach; ?>
+                                                </ul>
                                             <?php else: ?>
                                                 <div class="small text-muted mt-1">No students yet</div>
                                             <?php endif; ?>

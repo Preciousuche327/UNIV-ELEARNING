@@ -7,8 +7,8 @@ include __DIR__ . '/../partials/sidebar_v2.php';
 <div class="container-fluid p-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold mb-1">Instructor Approval</h2>
-            <p class="text-muted">Review and manage instructor registrations</p>
+            <h2 class="fw-bold mb-1">Instructor Status</h2>
+            <p class="text-muted">Review instructor registrations and manage active or inactive access</p>
         </div>
     </div>
 
@@ -34,14 +34,17 @@ include __DIR__ . '/../partials/sidebar_v2.php';
             <div class="row g-3">
                 <div class="col-md-12">
                     <div class="btn-group" role="group">
+                        <a href="?page=manage-instructors&status=" class="btn <?php echo (($_GET['status'] ?? null) === '') ? 'btn-primary' : 'btn-outline-primary'; ?>">
+                            All
+                        </a>
                         <a href="?page=manage-instructors&status=Pending" class="btn <?php echo (($_GET['status'] ?? 'Pending') === 'Pending') ? 'btn-primary' : 'btn-outline-primary'; ?>">
                             Pending Approval
                         </a>
                         <a href="?page=manage-instructors&status=Approved" class="btn <?php echo (($_GET['status'] ?? '') === 'Approved') ? 'btn-primary' : 'btn-outline-primary'; ?>">
-                            Approved
+                            Active
                         </a>
                         <a href="?page=manage-instructors&status=Rejected" class="btn <?php echo (($_GET['status'] ?? '') === 'Rejected') ? 'btn-primary' : 'btn-outline-primary'; ?>">
-                            Rejected
+                            Inactive
                         </a>
                     </div>
                 </div>
@@ -85,7 +88,13 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                                                 default => 'bg-secondary'
                                             };
                                         ?>">
-                                            <?php echo $instructor['Status']; ?>
+                                            <?php
+                                                echo match($instructor['Status']) {
+                                                    'Approved' => 'Active',
+                                                    'Rejected' => 'Inactive',
+                                                    default => $instructor['Status']
+                                                };
+                                            ?>
                                         </span>
                                     </td>
                                     <td><?php echo date('M d, Y', strtotime($instructor['CreatedAt'])); ?></td>
@@ -98,12 +107,12 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                                                 <i class="bi bi-x-lg"></i> Reject
                                             </a>
                                         <?php elseif ($instructor['Status'] === 'Approved'): ?>
-                                            <a href="?page=reject-instructor&id=<?php echo $instructor['UserID']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Revoke approval?')">
-                                                <i class="bi bi-x-lg"></i> Revoke
+                                            <a href="?page=reject-instructor&id=<?php echo $instructor['UserID']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Mark this instructor inactive?')">
+                                                <i class="bi bi-x-lg"></i> Deactivate
                                             </a>
                                         <?php elseif ($instructor['Status'] === 'Rejected'): ?>
                                             <a href="?page=approve-instructor&id=<?php echo $instructor['UserID']; ?>" class="btn btn-sm btn-outline-success">
-                                                <i class="bi bi-check-lg"></i> Re-approve
+                                                <i class="bi bi-check-lg"></i> Activate
                                             </a>
                                         <?php endif; ?>
                                     </td>

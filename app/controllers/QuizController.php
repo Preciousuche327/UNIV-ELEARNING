@@ -200,7 +200,7 @@ class QuizController {
         $stmt = $this->pdo->prepare("SELECT SUM(q.Marks) as total_marks FROM questions q WHERE q.QuizID = ?");
         $stmt->execute([$quiz_id]);
         $result = $stmt->fetch();
-        $total_marks = ($result && isset($result['total_marks'])) ? $result['total_marks'] : 0;
+        $question_total = ($result && isset($result['total_marks'])) ? (float)$result['total_marks'] : 0;
 
         // Count correct answers
         $stmt = $this->pdo->prepare("SELECT SUM(q.Marks) as score FROM user_answers ua 
@@ -208,15 +208,16 @@ class QuizController {
                                      WHERE ua.UserID = ? AND q.QuizID = ? AND ua.IsCorrect = 1");
         $stmt->execute([$user_id, $quiz_id]);
         $result = $stmt->fetch();
-        $correct_marks = ($result && isset($result['score'])) ? $result['score'] : 0;
+        $correct_marks = ($result && isset($result['score'])) ? (float)$result['score'] : 0;
 
-        $score = ($total_marks > 0) ? round(($correct_marks / $total_marks) * 100, 2) : 0;
-
-        // Get course ID
-        $stmt = $this->pdo->prepare("SELECT CourseID FROM quizzes WHERE QuizID = ?");
+        // Get course ID and the assessment's displayed total
+        $stmt = $this->pdo->prepare("SELECT CourseID, TotalMarks FROM quizzes WHERE QuizID = ?");
         $stmt->execute([$quiz_id]);
         $quiz_data = $stmt->fetch();
         $course_id = $quiz_data ? $quiz_data['CourseID'] : null;
+        $quiz_total = $quiz_data ? (float)$quiz_data['TotalMarks'] : 0;
+        $score = ($question_total > 0 && $quiz_total > 0) ? round(($correct_marks / $question_total) * $quiz_total, 2) : 0;
+        $score = min($score, $quiz_total);
 
         // Save result
         $stmt = $this->pdo->prepare("INSERT INTO results (UserID, CourseID, QuizID, Score) VALUES (?, ?, ?, ?)");
@@ -248,7 +249,12 @@ class QuizController {
 
         $sql = "SELECT r.*, c.CourseName, q.QuizID, q.QuizName, q.QuizType, q.TotalMarks,
                 (SELECT COUNT(*) FROM results r2 WHERE r2.UserID = r.UserID AND r2.QuizID = r.QuizID) AS AttemptCount,
-                (SELECT COUNT(*) FROM results r2 WHERE r2.UserID = r.UserID AND r2.QuizID = r.QuizID AND r2.Score < 50) AS FailedAttempts
+                (SELECT COUNT(*) FROM results r2
+                 JOIN quizzes q2 ON r2.QuizID = q2.QuizID
+                 WHERE r2.UserID = r.UserID
+                   AND r2.QuizID = r.QuizID
+                   AND q2.TotalMarks > 0
+                   AND ((r2.Score / q2.TotalMarks) * 100) < 50) AS FailedAttempts
                 FROM results r
                 JOIN courses c ON r.CourseID = c.CourseID
                 JOIN quizzes q ON r.QuizID = q.QuizID

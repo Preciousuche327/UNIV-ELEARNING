@@ -124,7 +124,7 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                                     </td>
                                     <td><?php echo $percentage; ?>%</td>
                                     <td>
-                                        <?php if ($result['Score'] >= 70): ?>
+                                        <?php if ($percentage >= 50): ?>
                                             <span class="badge bg-success">Pass</span>
                                         <?php else: ?>
                                             <span class="badge bg-danger">Fail</span>

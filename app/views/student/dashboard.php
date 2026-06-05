@@ -95,9 +95,11 @@ $average_score = $average_score ?? 0;
                                             </div>
                                         </td>
                                         <td style="width: 200px;">
+                                            <?php $progress = (int)($course['Progress'] ?? 0); ?>
                                             <div class="progress" style="height: 6px;">
-                                                <div class="progress-bar bg-primary" style="width: 50%"></div>
+                                                <div class="progress-bar <?php echo ($course['CompletionStatus'] === 'Completed') ? 'bg-success' : 'bg-primary'; ?>" style="width: <?php echo $progress; ?>%"></div>
                                             </div>
+                                            <small class="text-muted"><?php echo $progress; ?>%</small>
                                         </td>
                                         <td>
                                             <?php 
