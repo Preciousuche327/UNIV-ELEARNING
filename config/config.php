@@ -148,6 +148,15 @@ try {
     error_log("Email verification column warning: " . $e->getMessage());
 }
 
+try {
+    $stmt = $pdo->query("SHOW COLUMNS FROM users LIKE 'LastActiveAt'");
+    if ($stmt->rowCount() === 0) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN LastActiveAt DATETIME NULL DEFAULT NULL AFTER CreatedAt");
+    }
+} catch (Exception $e) {
+    error_log("Presence tracking column warning: " . $e->getMessage());
+}
+
 /* -----------------------------
    HELPER FUNCTIONS
 ------------------------------*/

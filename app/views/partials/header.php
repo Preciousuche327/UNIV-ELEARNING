@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo defined('APP_NAME') ? APP_NAME : 'Univ E-Learning'; ?></title>
+    <title><?php echo (!empty($page_title) ? htmlspecialchars($page_title, ENT_QUOTES, 'UTF-8') . ' | ' : '') . (defined('APP_NAME') ? APP_NAME : 'Univ E-Learning'); ?></title>
     <link rel="icon" type="image/png" href="public/images/icons/icon-192.png">
     <link rel="apple-touch-icon" href="public/images/icons/icon-192.png">
     <!-- Bootstrap 5 CSS -->

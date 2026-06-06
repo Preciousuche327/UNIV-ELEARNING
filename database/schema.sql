@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS users (
     UserType ENUM('Admin', 'Instructor', 'Student') NOT NULL DEFAULT 'Student',
     Status ENUM('Pending', 'Approved', 'Rejected') NOT NULL DEFAULT 'Approved',
     EmailVerifiedAt DATETIME NULL DEFAULT NULL,
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    LastActiveAt DATETIME NULL DEFAULT NULL
 ) ENGINE=InnoDB;
 
 -- Password reset tokens

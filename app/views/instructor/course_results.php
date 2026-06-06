@@ -52,7 +52,7 @@ include __DIR__ . '/../partials/sidebar_v2.php';
 
     <form method="GET" class="row g-3 mb-4 align-items-end">
         <input type="hidden" name="page" value="course-results">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <label class="form-label small text-uppercase text-muted">Course</label>
             <select name="course_id" class="form-select">
                 <option value="">All courses</option>
@@ -63,7 +63,17 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                 <?php endforeach; ?>
             </select>
         </div>
-        <div class="col-md-5">
+        <div class="col-md-3">
+            <label class="form-label small text-uppercase text-muted">Assessment Type</label>
+            <select name="assessment_type" class="form-select">
+                <option value="" <?php echo (($assessment_type ?? '') === '') ? 'selected' : ''; ?>>All assessments</option>
+                <option value="Quiz" <?php echo (($assessment_type ?? '') === 'Quiz') ? 'selected' : ''; ?>>Quiz</option>
+                <option value="Midterm" <?php echo (($assessment_type ?? '') === 'Midterm') ? 'selected' : ''; ?>>Midterm</option>
+                <option value="Final" <?php echo (($assessment_type ?? '') === 'Final') ? 'selected' : ''; ?>>Final</option>
+                <option value="Assignment" <?php echo (($assessment_type ?? '') === 'Assignment') ? 'selected' : ''; ?>>Assignment</option>
+            </select>
+        </div>
+        <div class="col-md-3">
             <label class="form-label small text-uppercase text-muted">Search student</label>
             <input type="text" name="search" class="form-control" value="<?php echo htmlspecialchars($search ?? ''); ?>" placeholder="Search by student or course name">
         </div>

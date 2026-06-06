@@ -3,7 +3,8 @@
 include __DIR__ . '/../partials/header.php';
 include __DIR__ . '/../partials/sidebar_v2.php';
 
-$percentage = ($result['TotalMarks'] > 0) ? round(($result['Score'] / $result['TotalMarks']) * 100, 1) : 0;
+$display_total = max(1, min((float)($result['TotalMarks'] ?? 100), 100));
+$percentage = ($display_total > 0) ? round((($result['Score'] ?? 0) / $display_total) * 100, 1) : 0;
 $pass_threshold = 50;
 $is_pass = $percentage >= $pass_threshold;
 ?>
@@ -26,7 +27,7 @@ $is_pass = $percentage >= $pass_threshold;
                         </div>
                         <div class="text-end">
                             <h2 class="mb-0"><?php echo $percentage; ?>%</h2>
-                            <small><?php echo $result['Score']; ?>/<?php echo $result['TotalMarks']; ?> points</small>
+                            <small><?php echo number_format($percentage, 1); ?>% of 100 points</small>
                         </div>
                     </div>
                 </div>
@@ -61,7 +62,7 @@ $is_pass = $percentage >= $pass_threshold;
 
                     <div class="mb-3">
                         <label class="text-muted small d-block mb-1">Total Score</label>
-                        <h4 class="mb-0"><?php echo $result['Score']; ?> / <?php echo $result['TotalMarks']; ?></h4>
+                        <h4 class="mb-0"><?php echo number_format($percentage, 1); ?> / 100</h4>
                     </div>
 
                     <div class="mb-3">

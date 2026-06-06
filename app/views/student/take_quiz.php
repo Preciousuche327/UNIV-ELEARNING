@@ -35,7 +35,7 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                             <p class="mb-0 text-white-50"><i class="bi bi-info-circle me-1"></i> <?php echo htmlspecialchars(($quiz && isset($quiz['Description'])) ? $quiz['Description'] : 'Please answer all questions carefully.'); ?></p>
                         </div>
                         <div class="text-end bg-white bg-opacity-25 rounded-3 p-3 backdrop-blur shadow-sm">
-                            <h4 class="text-white mb-1 fw-bold"><?php echo isset($quiz['TotalMarks']) ? $quiz['TotalMarks'] : '100'; ?> <small class="fw-normal fs-6">Pts</small></h4>
+                            <h4 class="text-white mb-1 fw-bold"><?php echo min((int)($quiz['TotalMarks'] ?? 100), 100); ?> <small class="fw-normal fs-6">Pts</small></h4>
                             <small class="text-white-50"><?php echo isset($questions) ? count($questions) : '0'; ?> Questions</small>
                         </div>
                     </div>
@@ -56,9 +56,9 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                                     <div class="card border-0 shadow-sm mb-4">
                                         <div class="card-body">
                                             <h5 class="mb-2">Last Attempt</h5>
-                                            <p class="mb-1"><strong>Score:</strong> <?php echo htmlspecialchars($last_result['Score']); ?> / <?php echo htmlspecialchars($last_result['TotalMarks']); ?></p>
-                                            <p class="mb-1"><strong>Percentage:</strong> <?php echo ($last_result['TotalMarks'] > 0) ? round(($last_result['Score'] / $last_result['TotalMarks']) * 100, 1) : 0; ?>%</p>
-                                            <?php $last_percentage = ($last_result['TotalMarks'] > 0) ? round(($last_result['Score'] / $last_result['TotalMarks']) * 100, 1) : 0; ?>
+                                            <?php $last_display_total = max(1, min((float)($last_result['TotalMarks'] ?? 100), 100)); $last_percentage = ($last_display_total > 0) ? round((($last_result['Score'] ?? 0) / $last_display_total) * 100, 1) : 0; ?>
+                                            <p class="mb-1"><strong>Score:</strong> <?php echo number_format($last_percentage, 1); ?> / 100</p>
+                                            <p class="mb-1"><strong>Percentage:</strong> <?php echo $last_percentage; ?>%</p>
                                             <p class="mb-0"><strong>Status:</strong> <?php echo $last_percentage >= 50 ? 'Passed' : 'Needs Improvement'; ?></p>
                                         </div>
                                     </div>

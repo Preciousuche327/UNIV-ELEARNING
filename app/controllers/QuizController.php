@@ -210,14 +210,14 @@ class QuizController {
         $result = $stmt->fetch();
         $correct_marks = ($result && isset($result['score'])) ? (float)$result['score'] : 0;
 
-        // Get course ID and the assessment's displayed total
-        $stmt = $this->pdo->prepare("SELECT CourseID, TotalMarks FROM quizzes WHERE QuizID = ?");
+        // Get course ID and normalize all results to a 100-point scale.
+        $stmt = $this->pdo->prepare("SELECT CourseID FROM quizzes WHERE QuizID = ?");
         $stmt->execute([$quiz_id]);
         $quiz_data = $stmt->fetch();
         $course_id = $quiz_data ? $quiz_data['CourseID'] : null;
-        $quiz_total = $quiz_data ? (float)$quiz_data['TotalMarks'] : 0;
-        $score = ($question_total > 0 && $quiz_total > 0) ? round(($correct_marks / $question_total) * $quiz_total, 2) : 0;
-        $score = min($score, $quiz_total);
+
+        $score = ($question_total > 0) ? round(($correct_marks / $question_total) * 100, 2) : 0;
+        $score = min($score, 100);
 
         // Save result
         $stmt = $this->pdo->prepare("INSERT INTO results (UserID, CourseID, QuizID, Score) VALUES (?, ?, ?, ?)");

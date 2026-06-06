@@ -94,7 +94,9 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                         <?php else: ?>
                             <?php foreach ($results as $result): ?>
                                 <?php 
-                                    $percentage = ($result['TotalMarks'] > 0) ? round(($result['Score'] / $result['TotalMarks']) * 100, 1) : 0;
+                                    $display_total = max(1, min((float)($result['TotalMarks'] ?? 100), 100));
+                                    $display_score = ($display_total > 0) ? round((($result['Score'] ?? 0) / $display_total) * 100, 2) : 0;
+                                    $percentage = $display_score;
                                     $pass_threshold = 50;
                                     $is_pass = $percentage >= $pass_threshold;
                                 ?>
@@ -115,7 +117,7 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                                     <td><?php echo htmlspecialchars($result['CourseName']); ?></td>
                                     <td>
                                         <span class="fw-bold <?php echo $is_pass ? 'text-success' : 'text-danger'; ?>">
-                                            <?php echo $result['Score']; ?>/<?php echo $result['TotalMarks']; ?>
+                                            <?php echo number_format($display_score, 2); ?>/100
                                         </span>
                                     </td>
                                     <td><?php echo $percentage; ?>%</td>

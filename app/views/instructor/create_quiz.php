@@ -73,8 +73,8 @@ include __DIR__ . '/../partials/sidebar_v2.php';
 
                         <div class="mb-4">
                             <label for="total_marks" class="form-label fw-bold">Total Marks</label>
-                            <input type="number" class="form-control" id="total_marks" name="total_marks" value="100" min="1" max="500">
-                            <small class="text-muted">Maximum score for this assessment (capped at 500)</small>
+                            <input type="number" class="form-control" id="total_marks" name="total_marks" value="100" min="1" max="100">
+                            <small class="text-muted">Maximum score for this assessment (capped at 100)</small>
                         </div>
 
                         <div class="d-grid gap-2">

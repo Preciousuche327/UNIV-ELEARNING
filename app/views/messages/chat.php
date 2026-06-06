@@ -308,6 +308,7 @@ $userType = $_SESSION['user_type'];
                         $isActive = ($activeContactId == $contact['UserID']) ? 'active' : '';
                         $initial = strtoupper(substr($contact['Username'], 0, 1));
                         $unreadCount = $unreadCounts[$contact['UserID']] ?? 0;
+                        $isOnline = !empty($contact['IsOnline']);
                     ?>
                         <a href="?page=messages&contact_id=<?= $contact['UserID'] ?>" class="contact-item <?= $isActive ?>" data-username="<?= htmlspecialchars(strtolower($contact['Username'])) ?>">
                             <div class="avatar-circle me-3" style="background-color: <?= $bg ?>; color: <?= $fg ?>;">
@@ -316,6 +317,7 @@ $userType = $_SESSION['user_type'];
                             <div class="flex-grow-1 overflow-hidden">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <h6 class="mb-0 fw-bold text-dark text-truncate"><?= htmlspecialchars($contact['Username']) ?></h6>
+                                    <span class="badge <?= $isOnline ? 'bg-success' : 'bg-secondary' ?> ms-2"><?= $isOnline ? 'Active' : 'Inactive' ?></span>
                                     <?php if ($unreadCount > 0): ?>
                                         <span class="badge bg-danger ms-2"><?= $unreadCount ?></span>
                                     <?php endif; ?>
@@ -336,6 +338,7 @@ $userType = $_SESSION['user_type'];
                 $activeBg = "hsl($hue, 75%, 92%)";
                 $activeFg = "hsl($hue, 85%, 28%)";
                 $activeInitial = strtoupper(substr($activeContact['Username'], 0, 1));
+                $isOnline = !empty($activeContact['IsOnline']);
             ?>
                 <!-- Chat Header -->
                 <div class="chat-header">
@@ -347,8 +350,9 @@ $userType = $_SESSION['user_type'];
                     </div>
                     <div>
                         <h6 class="mb-0 fw-bold text-dark"><?= htmlspecialchars($activeContact['Username']) ?></h6>
-                        <small class="text-muted">
-                            <span class="badge bg-soft-primary text-primary"><?= $activeContact['UserType'] ?></span> &middot; Active
+                        <small class="text-muted d-flex align-items-center gap-2">
+                            <span class="badge bg-soft-primary text-primary"><?= $activeContact['UserType'] ?></span>
+                            <span class="badge <?= $isOnline ? 'bg-success' : 'bg-secondary' ?>"><?= $isOnline ? 'Active now' : 'Inactive' ?></span>
                         </small>
                     </div>
                 </div>

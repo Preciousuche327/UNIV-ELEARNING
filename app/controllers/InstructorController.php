@@ -216,7 +216,7 @@ class InstructorController {
                 $quiz_type = 'Quiz';
             }
 
-            $MAX_TOTAL_MARKS = 500; // global cap for an assessment's total marks
+            $MAX_TOTAL_MARKS = 100; // all assessments are graded on a 100-point scale
             $total_marks = (int)$total_marks;
             if ($total_marks < 1) $total_marks = 1;
             if ($total_marks > $MAX_TOTAL_MARKS) $total_marks = $MAX_TOTAL_MARKS;
@@ -234,8 +234,8 @@ class InstructorController {
 
             $quiz_id = $this->pdo->lastInsertId();
             $_SESSION['success'] = 'Assessment created successfully.';
-            if ($total_marks >= 500) {
-                $_SESSION['success'] = 'Assessment created successfully. Total marks were capped at the maximum allowed value of 500.';
+            if ((int)$_POST['total_marks'] > 100) {
+                $_SESSION['success'] = 'Assessment created successfully. Total marks were capped at the maximum allowed value of 100.';
             }
 
             header("Location: index.php?page=manage-quiz&id=$quiz_id");
@@ -267,6 +267,8 @@ class InstructorController {
             header("Location: index.php?page=dashboard");
             exit;
         }
+
+        $page_title = 'Manage ' . htmlspecialchars($quiz['QuizType']) . ': ' . htmlspecialchars($quiz['QuizName']);
 
         // Get questions
         $stmt = $this->pdo->prepare("SELECT * FROM questions WHERE QuizID = ? ORDER BY QuestionID");
@@ -482,9 +484,8 @@ class InstructorController {
             $stmt = $this->pdo->prepare("SELECT COALESCE(SUM(Marks), 0) FROM questions WHERE QuizID = ?");
             $stmt->execute([$answer['QuizID']]);
             $questionTotal = (float)$stmt->fetchColumn();
-            $quizTotal = (float)$answer['TotalMarks'];
-            $score = ($questionTotal > 0 && $quizTotal > 0) ? round(($correctMarks / $questionTotal) * $quizTotal, 2) : 0;
-            $score = min($score, $quizTotal);
+            $score = ($questionTotal > 0) ? round(($correctMarks / $questionTotal) * 100, 2) : 0;
+            $score = min($score, 100);
 
             $stmt = $this->pdo->prepare("UPDATE results SET Score = ? WHERE UserID = ? AND QuizID = ?");
             $stmt->execute([$score, $answer['UserID'], $answer['QuizID']]);
@@ -515,6 +516,7 @@ class InstructorController {
 
         $course_id = $_GET['id'] ?? $_GET['course_id'] ?? null;
         $search = trim($_GET['search'] ?? '');
+        $assessment_type = trim($_GET['assessment_type'] ?? '');
         $instructor_id = $_SESSION['user_id'];
 
         $stmt = $this->pdo->prepare("SELECT c.CourseID, c.CourseName FROM courses c
@@ -553,6 +555,10 @@ class InstructorController {
         if ($selected_course_id) {
             $stats_sql .= " AND r.CourseID = ?";
             $stats_params[] = $selected_course_id;
+        }
+        if ($assessment_type !== '') {
+            $stats_sql .= " AND q.QuizType = ?";
+            $stats_params[] = $assessment_type;
         }
         if ($search !== '') {
             $stats_sql .= " AND (u.Username LIKE ? OR c.CourseName LIKE ?)";
@@ -600,6 +606,10 @@ class InstructorController {
         if ($selected_course_id) {
             $results_sql .= " AND best.CourseID = ?";
             $results_params[] = $selected_course_id;
+        }
+        if ($assessment_type !== '') {
+            $results_sql .= " AND q.QuizType = ?";
+            $results_params[] = $assessment_type;
         }
         if ($search !== '') {
             $results_sql .= " AND (u.Username LIKE ? OR c.CourseName LIKE ?)";
