@@ -13,13 +13,20 @@ if (is_file($localConfigPath)) {
     }
 }
 
+// Support postgresql:// or postgres:// (Supabase) as well as mysql:// (Railway / local)
 $databaseUrl = getenv('DATABASE_URL') ?: getenv('MYSQL_URL') ?: '';
 $databaseConfig = [];
+$dbDriver = 'mysql'; // default
 
 if ($databaseUrl) {
     $parsedDatabaseUrl = parse_url($databaseUrl);
 
     if ($parsedDatabaseUrl !== false) {
+        $scheme = strtolower($parsedDatabaseUrl['scheme'] ?? 'mysql');
+        if ($scheme === 'postgresql' || $scheme === 'postgres' || $scheme === 'pgsql') {
+            $dbDriver = 'pgsql';
+        }
+
         $databaseConfig = [
             'host' => $parsedDatabaseUrl['host'] ?? null,
             'port' => $parsedDatabaseUrl['port'] ?? null,
@@ -30,11 +37,17 @@ if ($databaseUrl) {
     }
 }
 
-define('DB_HOST', $localConfig['db_host'] ?? $databaseConfig['host'] ?? getenv('MYSQLHOST') ?: getenv('DB_HOST') ?: '127.0.0.1');
-define('DB_PORT', $localConfig['db_port'] ?? $databaseConfig['port'] ?? getenv('MYSQLPORT') ?: getenv('DB_PORT') ?: '3306');
-define('DB_NAME', $localConfig['db_name'] ?? $databaseConfig['name'] ?? getenv('MYSQLDATABASE') ?: getenv('DB_NAME') ?: 'univ_elearning');
-define('DB_USER', $localConfig['db_user'] ?? $databaseConfig['user'] ?? getenv('MYSQLUSER') ?: getenv('DB_USER') ?: 'root');
-define('DB_PASS', $localConfig['db_pass'] ?? $databaseConfig['pass'] ?? getenv('MYSQLPASSWORD') ?: getenv('DB_PASS') ?: '');
+// Allow explicit override via env for Supabase direct connections
+if (getenv('DB_DRIVER') === 'pgsql' || getenv('PGSQL_HOST') || getenv('PGHOST')) {
+    $dbDriver = 'pgsql';
+}
+
+define('DB_DRIVER', $localConfig['db_driver'] ?? $dbDriver);
+define('DB_HOST',   $localConfig['db_host'] ?? $databaseConfig['host'] ?? getenv('PGHOST') ?: getenv('MYSQLHOST') ?: getenv('DB_HOST') ?: '127.0.0.1');
+define('DB_PORT',   $localConfig['db_port'] ?? $databaseConfig['port'] ?? getenv('PGPORT') ?: getenv('MYSQLPORT') ?: getenv('DB_PORT') ?: (DB_DRIVER === 'pgsql' ? '5432' : '3306'));
+define('DB_NAME',   $localConfig['db_name'] ?? $databaseConfig['name'] ?? getenv('PGDATABASE') ?: getenv('MYSQLDATABASE') ?: getenv('DB_NAME') ?: 'univ_elearning');
+define('DB_USER',   $localConfig['db_user'] ?? $databaseConfig['user'] ?? getenv('PGUSER') ?: getenv('MYSQLUSER') ?: getenv('DB_USER') ?: 'root');
+define('DB_PASS',   $localConfig['db_pass'] ?? $databaseConfig['pass'] ?? getenv('PGPASSWORD') ?: getenv('MYSQLPASSWORD') ?: getenv('DB_PASS') ?: '');
 
 /* -----------------------------
    APP CONFIGURATION
@@ -83,12 +96,15 @@ if (session_status() === PHP_SESSION_NONE) {
    PDO DATABASE CONNECTION
 ------------------------------*/
 try {
-    $pdo = new PDO(
-        "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=utf8mb4",
-        DB_USER,
-        DB_PASS
-    );
+    if (DB_DRIVER === 'pgsql') {
+        // PostgreSQL (Supabase) — require SSL
+        $dsn = "pgsql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";sslmode=require";
+    } else {
+        // MySQL / MariaDB (local XAMPP, Railway, InfinityFree, …)
+        $dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=utf8mb4";
+    }
 
+    $pdo = new PDO($dsn, DB_USER, DB_PASS);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
@@ -96,62 +112,86 @@ try {
     die("Database Connection Failed: " . $e->getMessage());
 }
 
-$schemaUpdates = [
-    "CREATE TABLE IF NOT EXISTS instructor_courses (
-        InstructorCourseID INT AUTO_INCREMENT PRIMARY KEY,
-        InstructorID INT NOT NULL,
-        CourseID INT NOT NULL,
-        AssignedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE KEY unique_instructor_course (InstructorID, CourseID),
-        FOREIGN KEY (InstructorID) REFERENCES users(UserID) ON DELETE CASCADE,
-        FOREIGN KEY (CourseID) REFERENCES courses(CourseID) ON DELETE CASCADE
-    ) ENGINE=InnoDB;",
-    "CREATE TABLE IF NOT EXISTS password_reset_tokens (
-        TokenID INT AUTO_INCREMENT PRIMARY KEY,
-        UserID INT NOT NULL,
-        TokenHash CHAR(64) NOT NULL UNIQUE,
-        ExpiresAt DATETIME NOT NULL,
-        UsedAt DATETIME NULL DEFAULT NULL,
-        CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        INDEX idx_password_reset_user (UserID),
-        INDEX idx_password_reset_expires (ExpiresAt),
-        FOREIGN KEY (UserID) REFERENCES users(UserID) ON DELETE CASCADE
-    ) ENGINE=InnoDB;",
-    "CREATE TABLE IF NOT EXISTS email_verification_tokens (
-        TokenID INT AUTO_INCREMENT PRIMARY KEY,
-        UserID INT NOT NULL,
-        TokenHash CHAR(64) NOT NULL UNIQUE,
-        ExpiresAt DATETIME NOT NULL,
-        UsedAt DATETIME NULL DEFAULT NULL,
-        CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        INDEX idx_email_verification_user (UserID),
-        INDEX idx_email_verification_expires (ExpiresAt),
-        FOREIGN KEY (UserID) REFERENCES users(UserID) ON DELETE CASCADE
-    ) ENGINE=InnoDB;",
-];
 
-foreach ($schemaUpdates as $schemaUpdate) {
-    try {
-        $pdo->exec($schemaUpdate);
-    } catch (Exception $e) {
-        error_log("Schema maintenance warning: " . $e->getMessage());
+// Schema maintenance: add missing tables on MySQL only.
+// On PostgreSQL (Supabase) these are already created via schema_pgsql.sql.
+if (DB_DRIVER !== 'pgsql') {
+    $schemaUpdates = [
+        "CREATE TABLE IF NOT EXISTS instructor_courses (
+            InstructorCourseID INT AUTO_INCREMENT PRIMARY KEY,
+            InstructorID INT NOT NULL,
+            CourseID INT NOT NULL,
+            AssignedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY unique_instructor_course (InstructorID, CourseID),
+            FOREIGN KEY (InstructorID) REFERENCES users(UserID) ON DELETE CASCADE,
+            FOREIGN KEY (CourseID) REFERENCES courses(CourseID) ON DELETE CASCADE
+        ) ENGINE=InnoDB;",
+        "CREATE TABLE IF NOT EXISTS password_reset_tokens (
+            TokenID INT AUTO_INCREMENT PRIMARY KEY,
+            UserID INT NOT NULL,
+            TokenHash CHAR(64) NOT NULL UNIQUE,
+            ExpiresAt DATETIME NOT NULL,
+            UsedAt DATETIME NULL DEFAULT NULL,
+            CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_password_reset_user (UserID),
+            INDEX idx_password_reset_expires (ExpiresAt),
+            FOREIGN KEY (UserID) REFERENCES users(UserID) ON DELETE CASCADE
+        ) ENGINE=InnoDB;",
+        "CREATE TABLE IF NOT EXISTS email_verification_tokens (
+            TokenID INT AUTO_INCREMENT PRIMARY KEY,
+            UserID INT NOT NULL,
+            TokenHash CHAR(64) NOT NULL UNIQUE,
+            ExpiresAt DATETIME NOT NULL,
+            UsedAt DATETIME NULL DEFAULT NULL,
+            CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_email_verification_user (UserID),
+            INDEX idx_email_verification_expires (ExpiresAt),
+            FOREIGN KEY (UserID) REFERENCES users(UserID) ON DELETE CASCADE
+        ) ENGINE=InnoDB;",
+    ];
+
+    foreach ($schemaUpdates as $schemaUpdate) {
+        try {
+            $pdo->exec($schemaUpdate);
+        } catch (Exception $e) {
+            error_log("Schema maintenance warning: " . $e->getMessage());
+        }
     }
 }
 
+
+// Schema maintenance — uses information_schema so it works on both MySQL and PostgreSQL
 try {
-    $stmt = $pdo->query("SHOW COLUMNS FROM users LIKE 'EmailVerifiedAt'");
-    if ($stmt->rowCount() === 0) {
-        $pdo->exec("ALTER TABLE users ADD COLUMN EmailVerifiedAt DATETIME NULL DEFAULT NULL AFTER Status");
-        $pdo->exec("UPDATE users SET EmailVerifiedAt = NOW() WHERE EmailVerifiedAt IS NULL");
+    $colCheck = $pdo->prepare(
+        "SELECT COUNT(*) FROM information_schema.columns
+          WHERE table_name = 'users' AND column_name = :col"
+    );
+    $colCheck->execute([':col' => 'EmailVerifiedAt']);
+    if ((int)$colCheck->fetchColumn() === 0) {
+        if (DB_DRIVER === 'pgsql') {
+            $pdo->exec('ALTER TABLE users ADD COLUMN "EmailVerifiedAt" TIMESTAMP NULL DEFAULT NULL');
+            $pdo->exec('UPDATE users SET "EmailVerifiedAt" = NOW() WHERE "EmailVerifiedAt" IS NULL');
+        } else {
+            $pdo->exec("ALTER TABLE users ADD COLUMN EmailVerifiedAt DATETIME NULL DEFAULT NULL AFTER Status");
+            $pdo->exec("UPDATE users SET EmailVerifiedAt = NOW() WHERE EmailVerifiedAt IS NULL");
+        }
     }
 } catch (Exception $e) {
     error_log("Email verification column warning: " . $e->getMessage());
 }
 
 try {
-    $stmt = $pdo->query("SHOW COLUMNS FROM users LIKE 'LastActiveAt'");
-    if ($stmt->rowCount() === 0) {
-        $pdo->exec("ALTER TABLE users ADD COLUMN LastActiveAt DATETIME NULL DEFAULT NULL AFTER CreatedAt");
+    $colCheck = $pdo->prepare(
+        "SELECT COUNT(*) FROM information_schema.columns
+          WHERE table_name = 'users' AND column_name = :col"
+    );
+    $colCheck->execute([':col' => 'LastActiveAt']);
+    if ((int)$colCheck->fetchColumn() === 0) {
+        if (DB_DRIVER === 'pgsql') {
+            $pdo->exec('ALTER TABLE users ADD COLUMN "LastActiveAt" TIMESTAMP NULL DEFAULT NULL');
+        } else {
+            $pdo->exec("ALTER TABLE users ADD COLUMN LastActiveAt DATETIME NULL DEFAULT NULL AFTER CreatedAt");
+        }
     }
 } catch (Exception $e) {
     error_log("Presence tracking column warning: " . $e->getMessage());
