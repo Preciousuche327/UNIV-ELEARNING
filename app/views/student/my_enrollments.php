@@ -36,24 +36,23 @@ include __DIR__ . '/../partials/sidebar_v2.php';
         <?php if (empty($enrollments)): ?>
             <div class="col-12 text-center py-5">
                 <div class="p-5 bg-white rounded shadow-sm">
-                    <img src="https://illustrations.popsy.co/white/abstract-art-4.svg" alt="Empty" class="img-fluid mb-4" style="max-height: 250px;">
-                    <h4>You haven't enrolled in any courses yet</h4>
-                    <p class="text-muted mb-4">Discover new skills by browsing our course catalog.</p>
-                    <a href="?page=courses" class="btn btn-primary">Browse Catalog</a>
+                    <img src="https://illustrations.popsy.co/white/abstract-art-4.svg" alt="Empty" class="img-fluid mb-4" style="max-height: 250px;" onerror="this.onerror=null; this.src='public/images/books.png';">
+                    <h3>No Enrolled Courses Yet</h3>
+                    <p class="text-muted">You haven't enrolled in any courses yet. Browse our catalog to start learning!</p>
+                    <a href="?page=courses" class="btn btn-primary btn-lg mt-3">Browse Courses</a>
                 </div>
             </div>
         <?php else: ?>
-            <?php foreach ($enrollments as $enrollment): ?>
-                <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 border-0 shadow-sm overflow-hidden">
-                        <div class="position-relative">
-                            <img src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=400&h=150&auto=format&fit=crop" class="card-img-top" alt="Course" style="height: 140px; object-fit: cover;">
+            <div class="row">
+                <?php foreach ($enrollments as $enrollment): ?>
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100 border-0 shadow-sm course-card">
+                            <img src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=400&h=150&auto=format&fit=crop" class="card-img-top" alt="Course" style="height: 140px; object-fit: cover;" onerror="this.onerror=null; this.src='public/images/books.png';">
                             <div class="position-absolute top-0 end-0 p-2">
                                 <span class="badge <?php echo ($enrollment['CompletionStatus'] == 'Completed') ? 'bg-success' : 'bg-primary'; ?> rounded-pill">
                                     <?php echo $enrollment['CompletionStatus']; ?>
                                 </span>
                             </div>
-                        </div>
                         <div class="card-body">
                             <h6 class="text-muted small mb-1">Enrolled on <?php echo date('M d, Y', strtotime($enrollment['EnrollmentDate'])); ?></h6>
                             <h5 class="card-title mb-3"><?php echo htmlspecialchars($enrollment['CourseName']); ?></h5>

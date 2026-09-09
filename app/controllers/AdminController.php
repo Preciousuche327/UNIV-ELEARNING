@@ -195,6 +195,10 @@ class AdminController {
                 $stmt = $this->pdo->prepare("INSERT INTO courses (CourseName, Description) VALUES (?, ?)");
                 $stmt->execute([$course_name, $description]);
                 $course_id = $this->pdo->lastInsertId();
+                if (!$course_id || (int)$course_id === 0) {
+                    $stmt = $this->pdo->query("SELECT MAX(CourseID) FROM courses");
+                    $course_id = $stmt->fetchColumn();
+                }
 
                 if ($instructor_id !== '') {
                     $stmt = $this->pdo->prepare("INSERT IGNORE INTO instructor_courses (InstructorID, CourseID) VALUES (?, ?)");

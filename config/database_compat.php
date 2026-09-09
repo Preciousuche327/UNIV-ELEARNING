@@ -79,6 +79,22 @@ class AppPDO extends PDO {
     #[\ReturnTypeWillChange]
     public function exec($statement) { return parent::exec($this->adaptSql($statement)); }
 
+    #[\ReturnTypeWillChange]
+    public function lastInsertId($name = null) {
+        $id = parent::lastInsertId($name);
+        if (($id === false || $id === "0" || $id === 0) && $this->driverName === 'pgsql') {
+            try {
+                $stmt = parent::query("SELECT lastval()");
+                if ($stmt && ($val = $stmt->fetchColumn()) !== false) {
+                    return (string)$val;
+                }
+            } catch (Exception $e) {
+                // Ignore fallback exception
+            }
+        }
+        return $id;
+    }
+
     private function adaptSql($sql) {
         if ($this->driverName !== 'pgsql') return $sql;
 

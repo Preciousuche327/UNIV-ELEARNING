@@ -61,6 +61,10 @@ class InstructorController {
                 $stmt->execute([$course_name, $description]);
 
                 $course_id = $this->pdo->lastInsertId();
+                if (!$course_id || (int)$course_id === 0) {
+                    $stmt = $this->pdo->query("SELECT MAX(CourseID) FROM courses");
+                    $course_id = $stmt->fetchColumn();
+                }
 
                 // Assign course to instructor
                 $stmt = $this->pdo->prepare("INSERT INTO instructor_courses (InstructorID, CourseID) VALUES (?, ?)");
@@ -588,10 +592,9 @@ class InstructorController {
                         (SELECT COUNT(*)
                          FROM results fr
                          JOIN quizzes fq ON fr.QuizID = fq.QuizID
-                         WHERE fr.UserID = best.UserID
-                           AND fr.CourseID = best.CourseID
-                           AND fq.TotalMarks > 0
-                           AND ((fr.Score / fq.TotalMarks) * 100) < 50) AS FailedAttempts
+                         WHERE fr.UserID = u.UserID
+                           AND fr.CourseID = c.CourseID
+                           AND fr.Score < 50) AS FailedAttempts
                         FROM (
                             SELECT UserID, QuizID, CourseID, MAX(Score) AS Score
                             FROM results

@@ -162,7 +162,7 @@ $average_score = $average_score ?? 0;
                     </div>
                 <?php else: ?>
                     <div class="text-center py-4">
-                        <img src="https://illustrations.popsy.co/white/student-going-to-school.svg" alt="Learn" class="img-fluid mb-3" style="max-height: 100px;">
+                        <img src="https://illustrations.popsy.co/white/student-going-to-school.svg" alt="Learn" class="img-fluid mb-3" style="max-height: 100px;" onerror="this.onerror=null; this.src='public/images/books.png';">
                         <p class="text-muted small">No assessments taken yet.</p>
                         <a href="?page=courses" class="btn btn-sm btn-primary">Start Learning</a>
                     </div>
