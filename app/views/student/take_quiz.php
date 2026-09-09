@@ -74,7 +74,7 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                         </div>
                     <?php elseif (empty($questions)): ?>
                         <div class="text-center py-5">
-                            <img src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=400&h=150&auto=format&fit=crop" alt="Empty" height="150" class="mb-4 rounded-3" style="object-fit: cover;" onerror="this.onerror=null; this.src='public/images/books.png';">
+                            <img src="public/images/login_hero.svg" alt="Empty" height="150" class="mb-4" style="object-fit: contain;" onerror="this.onerror=null; this.src='public/images/logo.png';">
                             <h4 class="text-muted fw-bold">No Questions Found</h4>
                             <p class="text-muted">This quiz is currently empty. Please contact your instructor.</p>
                             <a href="?page=course-details&id=<?php echo isset($quiz['CourseID']) ? $quiz['CourseID'] : ''; ?>" class="btn btn-primary mt-3 px-4">Return</a>

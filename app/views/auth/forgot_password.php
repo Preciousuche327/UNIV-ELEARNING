@@ -19,7 +19,7 @@
         <div class="row w-100 m-0">
             <div class="col-lg-6 d-none d-lg-flex auth-bg align-items-center justify-content-center flex-column text-white p-5 animate__animated animate__fadeIn">
                 <div style="z-index: 1;" class="text-center">
-                    <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80" alt="Password reset" class="img-fluid mb-5 rounded-4 shadow-sm" style="max-height: 350px; object-fit: cover;" onerror="this.onerror=null; this.src='public/images/books.png';">
+                    <img src="public/images/auth_hero.svg" alt="Password reset" class="img-fluid mb-4" style="max-height: 380px; width: 100%; object-fit: contain;" onerror="this.onerror=null; this.src='public/images/logo.png';">
                     <h1 class="display-5 fw-bold mb-3"><?php echo defined('APP_NAME') ? APP_NAME : 'Univ E-Learning'; ?></h1>
                     <p class="lead fw-normal text-white-50">Reset your password and get back to learning.</p>
                 </div>

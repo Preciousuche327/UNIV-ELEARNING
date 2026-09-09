@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="100%" height="100%">
+  <defs>
+    <linearGradient id="regBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.25"/>
+    </linearGradient>
+    <linearGradient id="regPrimary" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <linearGradient id="regCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+    <linearGradient id="regGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+    <filter id="regGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="15" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <filter id="regShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#000" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <circle cx="400" cy="300" r="230" fill="url(#regBgGrad)" filter="url(#regGlow)"/>
+
+  <!-- Main Portal Card -->
+  <g filter="url(#regShadow)">
+    <rect x="200" y="140" width="400" height="280" rx="24" fill="#ffffff" fill-opacity="0.95"/>
+    
+    <!-- Top Header Ribbon -->
+    <path d="M 200 164 A 24 24 0 0 1 224 140 L 576 140 A 24 24 0 0 1 600 164 L 600 210 L 200 210 Z" fill="url(#regPrimary)"/>
+    <text x="400" y="182" fill="#ffffff" font-family="Inter, sans-serif" font-size="20" font-weight="bold" text-anchor="middle">CREATE STUDENT ACCOUNT</text>
+    
+    <!-- Form Fields Illustration -->
+    <rect x="240" y="240" width="320" height="36" rx="8" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+    <circle cx="262" cy="258" r="8" fill="#94a3b8"/>
+    <rect x="280" y="253" width="120" height="10" rx="4" fill="#cbd5e1"/>
+    
+    <rect x="240" y="290" width="320" height="36" rx="8" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+    <circle cx="262" cy="308" r="8" fill="#94a3b8"/>
+    <rect x="280" y="303" width="150" height="10" rx="4" fill="#cbd5e1"/>
+
+    <rect x="240" y="345" width="320" height="42" rx="10" fill="url(#regCyan)"/>
+    <text x="400" y="371" fill="#ffffff" font-family="Inter, sans-serif" font-size="15" font-weight="bold" text-anchor="middle">REGISTER NOW →</text>
+  </g>
+
+  <!-- Floating Key / Unlock Icon -->
+  <g filter="url(#regShadow)" transform="translate(130, 220) rotate(-15)">
+    <circle cx="50" cy="50" r="40" fill="url(#regGold)"/>
+    <path d="M 40 42 A 12 12 0 1 1 56 56 L 66 66 L 60 72 L 66 72 L 72 66 L 68 62 L 56 50 Z" fill="#ffffff" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Floating Graduation Cap Badge -->
+  <g filter="url(#regShadow)" transform="translate(560, 100) rotate(12)">
+    <circle cx="50" cy="50" r="42" fill="#ffffff"/>
+    <polygon points="50,22 80,36 50,50 20,36" fill="url(#regPrimary)"/>
+    <path d="M 32 43 L 32 58 C 32 68 68 68 68 58 L 68 43" fill="#1d4ed8"/>
+  </g>
+</svg>

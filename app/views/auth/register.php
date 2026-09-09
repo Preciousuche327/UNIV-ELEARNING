@@ -109,7 +109,7 @@
             <!-- Right Side: Image/Branding -->
             <div class="col-lg-6 d-none d-lg-flex auth-bg align-items-center justify-content-center flex-column text-white p-5 animate__animated animate__fadeIn">
                 <div style="z-index: 1;" class="text-center">
-                    <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=800&q=80" alt="Register" class="img-fluid mb-5 rounded-4 shadow-sm" style="max-height: 350px; object-fit: cover;" onerror="this.onerror=null; this.src='public/images/books.png';">
+                    <img src="public/images/register_hero.svg" alt="Register" class="img-fluid mb-4" style="max-height: 380px; width: 100%; object-fit: contain;" onerror="this.onerror=null; this.src='public/images/logo.png';">
                     <h2 class="display-6 fw-bold mb-3">Unlock Your Potential</h2>
                     <p class="lead fw-normal text-white-50 px-5">Get unlimited access to top-tier courses, expert instructors, and a community of ambitious learners.</p>
                 </div>
