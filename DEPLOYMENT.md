@@ -1,8 +1,27 @@
 # Deployment
 
-This app is a PHP/MySQL application. Netlify cannot run it as-is because Netlify deploys static sites and serverless functions in JavaScript, TypeScript, and Go, not PHP runtime apps.
+This project supports seamless deployment on **Vercel** with **Supabase (PostgreSQL)** backend as well as traditional shared hosting / Railway / local XAMPP.
 
-## Free Hosting Options
+## Recommended Option: Vercel + Supabase
+
+### 1. Supabase Setup (PostgreSQL Database)
+1. Log in to [Supabase](https://supabase.com) and create a new project.
+2. Go to **SQL Editor** in your Supabase project dashboard.
+3. Copy the contents of [`database/schema_pgsql.sql`](file:///c:/xampp/htdocs/univ-elearning/database/schema_pgsql.sql) into the SQL Editor and click **Run**.
+4. In your Supabase project settings under **Database** -> **Connection String**, copy the **Transaction Connection Pooler** string (or URI format: `postgres://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres`).
+
+### 2. Vercel Setup (PHP Serverless Hosting)
+1. Push this repository to GitHub.
+2. Log in to [Vercel](https://vercel.com) and click **Add New Project** -> Select your GitHub repository.
+3. In **Environment Variables**, add:
+   - `DATABASE_URL` = Your Supabase Connection String
+   - `APP_SECRET` = A strong random secret string (used to encrypt session cookies)
+4. Click **Deploy**.
+5. Once deployed, navigate to `https://your-vercel-app.vercel.app/deploy_setup.php` to verify database health and schema status.
+
+---
+
+## Alternative Options
 
 For this codebase, free shared PHP hosting is the best fit.
 
