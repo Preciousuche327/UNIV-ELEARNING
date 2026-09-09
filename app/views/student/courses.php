@@ -105,7 +105,7 @@ $sort = $_GET['sort'] ?? 'new';
             <?php endforeach; ?>
         <?php else: ?>
             <div class="col-12 text-center py-5">
-                <img src="https://illustrations.popsy.co/white/surreal-search.svg" alt="No courses" style="height: 200px;" class="mb-4" onerror="this.onerror=null; this.src='public/images/books.png';">
+                <img src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=800&q=80" alt="No courses" style="height: 180px; object-fit: cover;" class="mb-4 rounded-4 shadow-sm" onerror="this.onerror=null; this.src='public/images/books.png';">
                 <h4 class="text-muted">No courses found matching your criteria.</h4>
                 <a href="?page=courses" class="btn btn-primary mt-3">Reset Filters</a>
             </div>

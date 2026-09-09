@@ -192,20 +192,24 @@ class AdminController {
             }
 
             if (empty($errors)) {
-                $stmt = $this->pdo->prepare("INSERT INTO courses (CourseName, Description) VALUES (?, ?)");
-                $stmt->execute([$course_name, $description]);
-                $course_id = $this->pdo->lastInsertId();
-                if (!$course_id || (int)$course_id === 0) {
-                    $stmt = $this->pdo->query("SELECT MAX(CourseID) FROM courses");
-                    $course_id = $stmt->fetchColumn();
-                }
+                try {
+                    $stmt = $this->pdo->prepare("INSERT INTO courses (CourseName, Description) VALUES (?, ?)");
+                    $stmt->execute([$course_name, $description]);
+                    $course_id = $this->pdo->lastInsertId();
+                    if (!$course_id || (int)$course_id === 0) {
+                        $stmt = $this->pdo->query("SELECT MAX(CourseID) FROM courses");
+                        $course_id = $stmt->fetchColumn();
+                    }
 
-                if ($instructor_id !== '') {
-                    $stmt = $this->pdo->prepare("INSERT IGNORE INTO instructor_courses (InstructorID, CourseID) VALUES (?, ?)");
-                    $stmt->execute([$instructor_id, $course_id]);
-                }
+                    if (!empty($instructor_id) && $course_id) {
+                        $stmt = $this->pdo->prepare("INSERT IGNORE INTO instructor_courses (InstructorID, CourseID) VALUES (?, ?)");
+                        $stmt->execute([$instructor_id, $course_id]);
+                    }
 
-                redirect('index.php?page=admin-courses');
+                    redirect('index.php?page=admin-courses');
+                } catch (Exception $e) {
+                    $errors[] = "Error creating course: " . $e->getMessage();
+                }
             }
         }
 

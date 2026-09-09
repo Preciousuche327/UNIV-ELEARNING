@@ -36,7 +36,7 @@ include __DIR__ . '/../partials/sidebar_v2.php';
         <?php if (empty($enrollments)): ?>
             <div class="col-12 text-center py-5">
                 <div class="p-5 bg-white rounded shadow-sm">
-                    <img src="https://illustrations.popsy.co/white/abstract-art-4.svg" alt="Empty" class="img-fluid mb-4" style="max-height: 250px;" onerror="this.onerror=null; this.src='public/images/books.png';">
+                    <img src="https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&w=800&q=80" alt="Empty" class="img-fluid mb-4 rounded-4 shadow-sm" style="max-height: 250px; object-fit: cover;" onerror="this.onerror=null; this.src='public/images/books.png';">
                     <h3>No Enrolled Courses Yet</h3>
                     <p class="text-muted">You haven't enrolled in any courses yet. Browse our catalog to start learning!</p>
                     <a href="?page=courses" class="btn btn-primary btn-lg mt-3">Browse Courses</a>

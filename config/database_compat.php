@@ -10,7 +10,17 @@ class AppPDOStatement {
     }
 
     public function execute($params = null) {
-        return $params === null ? $this->statement->execute() : $this->statement->execute($params);
+        try {
+            return $params === null ? $this->statement->execute() : $this->statement->execute($params);
+        } catch (PDOException $e) {
+            if ($this->driver === 'pgsql' && (strpos($e->getMessage(), '23505') !== false || strpos($e->getMessage(), 'unique constraint') !== false)) {
+                if (function_exists('syncAllPgSequences') && isset($GLOBALS['pdo'])) {
+                    try { syncAllPgSequences($GLOBALS['pdo']); } catch (Exception $ex) {}
+                }
+                return $params === null ? $this->statement->execute() : $this->statement->execute($params);
+            }
+            throw $e;
+        }
     }
 
     public function fetch($mode = null, $cursorOrientation = PDO::FETCH_ORI_NEXT, $cursorOffset = 0) {
@@ -131,3 +141,28 @@ class AppPDO extends PDO {
         return $sql;
     }
 }
+
+function syncAllPgSequences($pdo) {
+    if (!$pdo) return;
+    $tables = [
+        ['courses', 'courseid', 'courses_courseid_seq'],
+        ['users', 'userid', 'users_userid_seq'],
+        ['quizzes', 'quizid', 'quizzes_quizid_seq'],
+        ['instructor_courses', 'instructorcourseid', 'instructor_courses_instructorcourseid_seq'],
+        ['enrollments', 'enrollmentid', 'enrollments_enrollmentid_seq'],
+        ['course_contents', 'contentid', 'course_contents_contentid_seq'],
+        ['results', 'resultid', 'results_resultid_seq'],
+        ['questions', 'questionid', 'questions_questionid_seq'],
+        ['question_options', 'optionid', 'question_options_optionid_seq'],
+        ['user_answers', 'answerid', 'user_answers_answerid_seq'],
+        ['quiz_attempts', 'attemptid', 'quiz_attempts_attemptid_seq'],
+        ['course_progress', 'progressid', 'course_progress_progressid_seq'],
+        ['messages', 'messageid', 'messages_messageid_seq']
+    ];
+    foreach ($tables as $t) {
+        try {
+            $pdo->exec("SELECT setval('{$t[2]}', COALESCE((SELECT MAX({$t[1]}) FROM {$t[0]}), 1))");
+        } catch (Exception $e) {}
+    }
+}
+

@@ -53,25 +53,34 @@ class InstructorController {
             exit;
         }
 
+        $errors = [];
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $course_name = $_POST['course_name'] ?? '';
-            $description = $_POST['description'] ?? '';
+            $course_name = trim($_POST['course_name'] ?? '');
+            $description = trim($_POST['description'] ?? '');
             if (!empty($course_name)) {
-                $stmt = $this->pdo->prepare("INSERT INTO courses (CourseName, Description) VALUES (?, ?)");
-                $stmt->execute([$course_name, $description]);
+                try {
+                    $stmt = $this->pdo->prepare("INSERT INTO courses (CourseName, Description) VALUES (?, ?)");
+                    $stmt->execute([$course_name, $description]);
 
-                $course_id = $this->pdo->lastInsertId();
-                if (!$course_id || (int)$course_id === 0) {
-                    $stmt = $this->pdo->query("SELECT MAX(CourseID) FROM courses");
-                    $course_id = $stmt->fetchColumn();
+                    $course_id = $this->pdo->lastInsertId();
+                    if (!$course_id || (int)$course_id === 0) {
+                        $stmt = $this->pdo->query("SELECT MAX(CourseID) FROM courses");
+                        $course_id = $stmt->fetchColumn();
+                    }
+
+                    // Assign course to instructor
+                    if ($course_id) {
+                        $stmt = $this->pdo->prepare("INSERT IGNORE INTO instructor_courses (InstructorID, CourseID) VALUES (?, ?)");
+                        $stmt->execute([$_SESSION['user_id'], $course_id]);
+                    }
+
+                    header("Location: index.php?page=manage-courses");
+                    exit;
+                } catch (Exception $e) {
+                    $errors[] = "Error creating course: " . $e->getMessage();
                 }
-
-                // Assign course to instructor
-                $stmt = $this->pdo->prepare("INSERT INTO instructor_courses (InstructorID, CourseID) VALUES (?, ?)");
-                $stmt->execute([$_SESSION['user_id'], $course_id]);
-
-                header("Location: index.php?page=manage-courses");
-                exit;
+            } else {
+                $errors[] = "Course name is required.";
             }
         }
 
@@ -513,31 +522,42 @@ class InstructorController {
     }
 
     public function courseResults() {
-        if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'Instructor') {
+        if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_type'] ?? '', ['Instructor', 'Admin'])) {
             header("Location: index.php?page=login");
             exit;
         }
 
+        $user_id = $_SESSION['user_id'];
+        $user_type = $_SESSION['user_type'];
         $course_id = $_GET['id'] ?? $_GET['course_id'] ?? null;
         $search = trim($_GET['search'] ?? '');
         $assessment_type = trim($_GET['assessment_type'] ?? '');
-        $instructor_id = $_SESSION['user_id'];
 
-        $stmt = $this->pdo->prepare("SELECT c.CourseID, c.CourseName FROM courses c
-                                     JOIN instructor_courses ic ON c.CourseID = ic.CourseID
-                                     WHERE ic.InstructorID = ?
-                                     ORDER BY c.CourseName");
-        $stmt->execute([$instructor_id]);
-        $courses = $stmt->fetchAll();
+        if ($user_type === 'Admin') {
+            $stmt = $this->pdo->query("SELECT CourseID, CourseName FROM courses ORDER BY CourseName");
+            $courses = $stmt->fetchAll();
+        } else {
+            $stmt = $this->pdo->prepare("SELECT c.CourseID, c.CourseName FROM courses c
+                                         JOIN instructor_courses ic ON c.CourseID = ic.CourseID
+                                         WHERE ic.InstructorID = ?
+                                         ORDER BY c.CourseName");
+            $stmt->execute([$user_id]);
+            $courses = $stmt->fetchAll();
+        }
 
         $selected_course_id = $course_id;
         $course = null;
 
         if ($selected_course_id) {
-            $stmt = $this->pdo->prepare("SELECT c.* FROM courses c
-                                         JOIN instructor_courses ic ON c.CourseID = ic.CourseID
-                                         WHERE c.CourseID = ? AND ic.InstructorID = ?");
-            $stmt->execute([$selected_course_id, $instructor_id]);
+            if ($user_type === 'Admin') {
+                $stmt = $this->pdo->prepare("SELECT * FROM courses WHERE CourseID = ?");
+                $stmt->execute([$selected_course_id]);
+            } else {
+                $stmt = $this->pdo->prepare("SELECT c.* FROM courses c
+                                             JOIN instructor_courses ic ON c.CourseID = ic.CourseID
+                                             WHERE c.CourseID = ? AND ic.InstructorID = ?");
+                $stmt->execute([$selected_course_id, $user_id]);
+            }
             $course = $stmt->fetch();
 
             if (!$course) {
@@ -551,13 +571,19 @@ class InstructorController {
         $stats_sql = "SELECT q.QuizType, COUNT(*) as count
                       FROM results r
                       JOIN quizzes q ON r.QuizID = q.QuizID
-                      JOIN courses c ON r.CourseID = c.CourseID
-                      JOIN users u ON r.UserID = u.UserID
-                      JOIN instructor_courses ic ON c.CourseID = ic.CourseID
-                      WHERE ic.InstructorID = ?";
-        $stats_params = [$instructor_id];
+                      JOIN courses c ON COALESCE(NULLIF(r.CourseID, 0), q.CourseID) = c.CourseID
+                      JOIN users u ON r.UserID = u.UserID";
+        $stats_params = [];
+
+        if ($user_type !== 'Admin') {
+            $stats_sql .= " JOIN instructor_courses ic ON c.CourseID = ic.CourseID WHERE ic.InstructorID = ?";
+            $stats_params[] = $user_id;
+        } else {
+            $stats_sql .= " WHERE 1=1";
+        }
+
         if ($selected_course_id) {
-            $stats_sql .= " AND r.CourseID = ?";
+            $stats_sql .= " AND c.CourseID = ?";
             $stats_params[] = $selected_course_id;
         }
         if ($assessment_type !== '') {
@@ -574,40 +600,46 @@ class InstructorController {
         $stmt = $this->pdo->prepare($stats_sql);
         $stmt->execute($stats_params);
         foreach ($stmt->fetchAll() as $row) {
-            if (isset($stats[$row['QuizType']])) {
-                $stats[$row['QuizType']] = (int)$row['count'];
+            $key = ucfirst(strtolower($row['QuizType'] ?? ''));
+            if (isset($stats[$key])) {
+                $stats[$key] = (int)$row['count'];
             }
         }
 
         $results_sql = "SELECT u.UserID, u.Username, c.CourseID, c.CourseName,
-                        SUM(CASE WHEN q.QuizType = 'Quiz' THEN best.Score ELSE 0 END) AS QuizScore,
-                        SUM(CASE WHEN q.QuizType = 'Quiz' THEN q.TotalMarks ELSE 0 END) AS QuizTotal,
-                        SUM(CASE WHEN q.QuizType = 'Midterm' THEN best.Score ELSE 0 END) AS MidtermScore,
-                        SUM(CASE WHEN q.QuizType = 'Midterm' THEN q.TotalMarks ELSE 0 END) AS MidtermTotal,
-                        SUM(CASE WHEN q.QuizType = 'Final' THEN best.Score ELSE 0 END) AS FinalScore,
-                        SUM(CASE WHEN q.QuizType = 'Final' THEN q.TotalMarks ELSE 0 END) AS FinalTotal,
-                        SUM(CASE WHEN q.QuizType = 'Assignment' THEN best.Score ELSE 0 END) AS AssignmentScore,
-                        SUM(CASE WHEN q.QuizType = 'Assignment' THEN q.TotalMarks ELSE 0 END) AS AssignmentTotal,
+                        SUM(CASE WHEN LOWER(q.QuizType) = 'quiz' THEN best.Score ELSE 0 END) AS QuizScore,
+                        SUM(CASE WHEN LOWER(q.QuizType) = 'quiz' THEN q.TotalMarks ELSE 0 END) AS QuizTotal,
+                        SUM(CASE WHEN LOWER(q.QuizType) = 'midterm' THEN best.Score ELSE 0 END) AS MidtermScore,
+                        SUM(CASE WHEN LOWER(q.QuizType) = 'midterm' THEN q.TotalMarks ELSE 0 END) AS MidtermTotal,
+                        SUM(CASE WHEN LOWER(q.QuizType) = 'final' THEN best.Score ELSE 0 END) AS FinalScore,
+                        SUM(CASE WHEN LOWER(q.QuizType) = 'final' THEN q.TotalMarks ELSE 0 END) AS FinalTotal,
+                        SUM(CASE WHEN LOWER(q.QuizType) = 'assignment' THEN best.Score ELSE 0 END) AS AssignmentScore,
+                        SUM(CASE WHEN LOWER(q.QuizType) = 'assignment' THEN q.TotalMarks ELSE 0 END) AS AssignmentTotal,
                         COUNT(*) AS TotalAttempts,
                         (SELECT COUNT(*)
                          FROM results fr
-                         JOIN quizzes fq ON fr.QuizID = fq.QuizID
                          WHERE fr.UserID = u.UserID
-                           AND fr.CourseID = c.CourseID
+                           AND (fr.CourseID = c.CourseID OR fr.CourseID IS NULL OR fr.CourseID = 0)
                            AND fr.Score < 50) AS FailedAttempts
                         FROM (
-                            SELECT UserID, QuizID, CourseID, MAX(Score) AS Score
+                            SELECT UserID, QuizID, MAX(Score) AS Score
                             FROM results
-                            GROUP BY UserID, QuizID, CourseID
+                            GROUP BY UserID, QuizID
                         ) best
                         JOIN users u ON best.UserID = u.UserID
                         JOIN quizzes q ON best.QuizID = q.QuizID
-                        JOIN courses c ON best.CourseID = c.CourseID
-                        JOIN instructor_courses ic ON c.CourseID = ic.CourseID
-                        WHERE ic.InstructorID = ?";
-        $results_params = [$instructor_id];
+                        JOIN courses c ON q.CourseID = c.CourseID";
+        $results_params = [];
+
+        if ($user_type !== 'Admin') {
+            $results_sql .= " JOIN instructor_courses ic ON c.CourseID = ic.CourseID WHERE ic.InstructorID = ?";
+            $results_params[] = $user_id;
+        } else {
+            $results_sql .= " WHERE 1=1";
+        }
+
         if ($selected_course_id) {
-            $results_sql .= " AND best.CourseID = ?";
+            $results_sql .= " AND c.CourseID = ?";
             $results_params[] = $selected_course_id;
         }
         if ($assessment_type !== '') {

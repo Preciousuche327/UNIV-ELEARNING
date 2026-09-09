@@ -135,6 +135,11 @@ try {
     setupMessage('Error checking seed data: ' . $e->getMessage(), false);
 }
 
+if (DB_DRIVER === 'pgsql') {
+    syncAllPgSequences($pdo);
+    setupMessage('PostgreSQL sequence counters resynchronized.');
+}
+
 echo "<h2>Environment Status</h2>";
 echo "<ul>";
 echo "<li><strong>APP_NAME:</strong> " . APP_NAME . "</li>";

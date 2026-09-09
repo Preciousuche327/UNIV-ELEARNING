@@ -23,7 +23,7 @@ include __DIR__ . '/../partials/sidebar_v2.php';
                 </p>
             </div>
             <div class="text-end d-none d-md-block">
-                <img src="https://illustrations.popsy.co/white/surreal-hourglass.svg" alt="Course" style="height: 180px;" onerror="this.onerror=null; this.src='public/images/books.png';">
+                <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80" alt="Course" style="height: 180px; object-fit: cover;" class="rounded-4 shadow-sm" onerror="this.onerror=null; this.src='public/images/books.png';">
             </div>
         </div>
     </div>

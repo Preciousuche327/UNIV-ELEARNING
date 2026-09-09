@@ -20,14 +20,14 @@
     </div>
 
     <div class="student-feedback-widget" id="studentFeedbackWidget" data-hidden-key="studentFeedbackHidden">
-        <button type="button" class="student-feedback-tab" id="studentFeedbackRestore" aria-label="Show feedback button">
+        <button type="button" class="student-feedback-tab border-0 shadow-sm" id="studentFeedbackRestore" aria-label="Show feedback button">
             <i class="bi bi-chat-left-text"></i>
         </button>
         <div class="student-feedback-card">
-            <button type="button" class="student-feedback-hide" id="studentFeedbackHide" aria-label="Hide feedback button" title="Slide away">
+            <button type="button" class="student-feedback-hide border-0 shadow-sm" id="studentFeedbackHide" aria-label="Hide feedback button" title="Slide away">
                 <i class="bi bi-chevron-right"></i>
             </button>
-            <button type="button" class="student-feedback-button" id="studentFeedbackOpen" data-bs-toggle="modal" data-bs-target="#studentFeedbackModal">
+            <button type="button" class="student-feedback-button border-0 shadow" id="studentFeedbackOpen" data-bs-toggle="modal" data-bs-target="#studentFeedbackModal">
                 <i class="bi bi-chat-heart"></i>
                 <span>Feedback</span>
             </button>
