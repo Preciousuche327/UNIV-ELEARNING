@@ -160,28 +160,47 @@ try {
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
 } catch (PDOException $e) {
-    $canRetrySupabaseDirect = DB_DRIVER === 'pgsql'
-        && stripos(DB_HOST, 'pooler.supabase.com') !== false
-        && preg_match('/^postgres\.([a-z0-9]+)$/i', DB_USER, $matches);
-
-    if ($canRetrySupabaseDirect) {
-        $supabaseRef = strtolower($matches[1]);
-        $directHost = 'db.' . $supabaseRef . '.supabase.co';
-        try {
-            $pdo = createAppPdoConnection(DB_DRIVER, $directHost, '5432', DB_NAME, 'postgres', DB_PASS);
-            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-        } catch (PDOException $fallbackException) {
-            $msg = "Database Connection Failed:\n";
-            $msg .= "• Primary connection attempt (" . DB_HOST . ":" . DB_PORT . ") failed: " . $e->getMessage() . "\n";
-            $msg .= "• Fallback connection attempt (" . $directHost . ":5432) failed: " . $fallbackException->getMessage() . "\n\n";
-            $msg .= "Troubleshooting Tips:\n";
-            $msg .= "1. Verify database credentials in .env or config/hosting.local.php.\n";
-            $msg .= "2. Note: Direct Supabase hostnames (db.<ref>.supabase.co) only support IPv6 unless an IPv4 add-on is active. Ensure you use the Supabase Connection Pooler hostname (e.g. aws-0-[region].pooler.supabase.com) on IPv4 networks.\n";
-            $msg .= "3. Confirm that your Supabase database project is active and not paused in the Supabase Dashboard.";
-            die($msg);
+    $connected = false;
+    if (DB_DRIVER === 'pgsql') {
+        $supabaseRef = null;
+        if (preg_match('/^postgres\.([a-z0-9]+)$/i', DB_USER, $m)) {
+            $supabaseRef = strtolower($m[1]);
+        } elseif (preg_match('/^db\.([a-z0-9]+)\.supabase\.co$/i', DB_HOST, $m)) {
+            $supabaseRef = strtolower($m[1]);
         }
-    } else {
+
+        if ($supabaseRef) {
+            $poolUser = 'postgres.' . $supabaseRef;
+            $candidateHosts = [
+                "aws-0-us-east-1.pooler.supabase.com",
+                "aws-0-us-east-2.pooler.supabase.com",
+                "aws-0-us-west-1.pooler.supabase.com",
+                "aws-0-us-west-2.pooler.supabase.com",
+                "aws-0-eu-central-1.pooler.supabase.com",
+                "aws-0-eu-west-1.pooler.supabase.com",
+                "aws-0-eu-west-2.pooler.supabase.com",
+                "aws-0-ap-southeast-1.pooler.supabase.com",
+                "aws-0-ap-northeast-1.pooler.supabase.com",
+                "aws-0-sa-east-1.pooler.supabase.com",
+                "aws-0-ca-central-1.pooler.supabase.com",
+                "db." . $supabaseRef . ".supabase.co"
+            ];
+            foreach ($candidateHosts as $host) {
+                foreach (['6543', '5432'] as $port) {
+                    try {
+                        $userToTry = (strpos($host, 'pooler') !== false) ? $poolUser : 'postgres';
+                        $pdo = createAppPdoConnection(DB_DRIVER, $host, $port, DB_NAME, $userToTry, DB_PASS);
+                        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                        $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+                        $connected = true;
+                        break 2;
+                    } catch (Exception $ex) {}
+                }
+            }
+        }
+    }
+
+    if (!$connected) {
         $msg = "Database Connection Failed: " . $e->getMessage() . "\n\n";
         $msg .= "Troubleshooting Tips:\n";
         $msg .= "1. Check DB_HOST, DB_PORT, DB_NAME, DB_USER, and DB_PASS in .env or config/hosting.local.php.\n";
