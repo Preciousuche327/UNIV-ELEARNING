@@ -4,7 +4,97 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
-    
+    let deferredInstallPrompt = null;
+    const pwaDismissedKey = 'univLearnPwaInstallDismissedV2';
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    const isAppleMobile = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isMobileViewport = window.matchMedia('(max-width: 767.98px)').matches;
+
+    let pwaInstallWidget = document.getElementById('pwaInstallWidget');
+    if (!pwaInstallWidget) {
+        pwaInstallWidget = document.createElement('div');
+        pwaInstallWidget.className = 'pwa-install-widget';
+        pwaInstallWidget.id = 'pwaInstallWidget';
+        pwaInstallWidget.hidden = true;
+        pwaInstallWidget.innerHTML = `
+            <button type="button" class="pwa-install-button" id="pwaInstallButton">
+                <i class="bi bi-download"></i>
+                <span>Install App</span>
+            </button>
+            <button type="button" class="pwa-install-dismiss" id="pwaInstallDismiss" aria-label="Hide install prompt">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        `;
+        document.body.appendChild(pwaInstallWidget);
+    }
+
+    const pwaInstallButton = document.getElementById('pwaInstallButton');
+    const pwaInstallDismiss = document.getElementById('pwaInstallDismiss');
+    const hasDismissedInstall = () => {
+        try {
+            return localStorage.getItem(pwaDismissedKey) === '1';
+        } catch (e) {
+            return false;
+        }
+    };
+    const showPwaInstallWidget = (force = false) => {
+        if (pwaInstallWidget && !isStandalone && !hasDismissedInstall() && (force || deferredInstallPrompt)) {
+            pwaInstallWidget.hidden = false;
+        }
+    };
+
+    window.addEventListener('beforeinstallprompt', (event) => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        showPwaInstallWidget();
+    });
+
+    window.setTimeout(() => {
+        showPwaInstallWidget(isMobileViewport);
+    }, 1200);
+
+    if (pwaInstallButton) {
+        pwaInstallButton.addEventListener('click', async () => {
+            if (!deferredInstallPrompt) {
+                const message = isAppleMobile
+                    ? 'Tap Share, then choose Add to Home Screen.'
+                    : 'Use your browser menu and choose Install app or Add to Home screen.';
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Install UnivLearn',
+                        text: message,
+                        icon: 'info',
+                        confirmButtonColor: '#6366f1'
+                    });
+                } else {
+                    alert(message);
+                }
+                return;
+            }
+
+            deferredInstallPrompt.prompt();
+            await deferredInstallPrompt.userChoice;
+            deferredInstallPrompt = null;
+            pwaInstallWidget.hidden = true;
+        });
+    }
+
+    if (pwaInstallDismiss) {
+        pwaInstallDismiss.addEventListener('click', () => {
+            try {
+                localStorage.setItem(pwaDismissedKey, '1');
+            } catch (e) {}
+            pwaInstallWidget.hidden = true;
+        });
+    }
+
+    window.addEventListener('appinstalled', () => {
+        deferredInstallPrompt = null;
+        if (pwaInstallWidget) {
+            pwaInstallWidget.hidden = true;
+        }
+    });
+
     // Enable Bootstrap tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
@@ -22,6 +112,24 @@ document.addEventListener('DOMContentLoaded', function() {
             form.classList.add('was-validated');
         }, false);
     });
+
+    // Login password visibility toggle
+    const passwordInput = document.getElementById('passwordInput');
+    const togglePassword = document.getElementById('togglePassword');
+    if (passwordInput && togglePassword) {
+        togglePassword.addEventListener('click', function() {
+            const isVisible = passwordInput.type === 'text';
+            passwordInput.type = isVisible ? 'password' : 'text';
+            this.setAttribute('aria-pressed', isVisible ? 'false' : 'true');
+            this.setAttribute('aria-label', isVisible ? 'Show password' : 'Hide password');
+
+            const icon = this.querySelector('i');
+            if (icon) {
+                icon.classList.toggle('bi-eye', isVisible);
+                icon.classList.toggle('bi-eye-slash', !isVisible);
+            }
+        });
+    }
 
     // Dynamic search filter for course catalog
     const searchInput = document.getElementById('courseSearch');

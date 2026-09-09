@@ -2,7 +2,6 @@
 # Development & local files
 scratch/
 scratch_db_test.php
-deploy_setup.php
 hosting.local.php
 
 # Database dev files (not needed in deployment)
@@ -17,7 +16,7 @@ univ_elearning_recovery_v2.sql
 phpmailer.zip
 phpmailer_extract/
 
-# Documentation (optional — remove these lines to keep docs deployed)
+# Documentation (optional ??? remove these lines to keep docs deployed)
 CODEBASE_ANALYSIS.md
 UI_UX_IMPROVEMENTS.md
 DEPLOYMENT.md
@@ -29,3 +28,8 @@ config/hosting.local.php
 # Platform-specific
 nixpacks.toml
 Procfile
+
+.npm-cache/
+.vercel-cli/
+.vercel/
+.tools/

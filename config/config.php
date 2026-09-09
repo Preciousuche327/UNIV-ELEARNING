@@ -1,4 +1,29 @@
 <?php
+require_once __DIR__ . '/database_compat.php';
+require_once __DIR__ . '/CookieSessionHandler.php';
+
+/* -----------------------------
+   LOAD ENV FILE (IF EXISTS)
+------------------------------*/
+$envPath = dirname(__DIR__) . '/.env';
+if (is_file($envPath)) {
+    $envLines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($envLines as $line) {
+        $line = trim($line);
+        if ($line === '' || strpos($line, '#') === 0) continue;
+        if (strpos($line, '=') !== false) {
+            list($name, $value) = explode('=', $line, 2);
+            $name = trim($name);
+            $value = trim($value, " \t\n\r\0\x0B\"'");
+            if (getenv($name) === false) {
+                putenv("{$name}={$value}");
+                $_ENV[$name] = $value;
+                $_SERVER[$name] = $value;
+            }
+        }
+    }
+}
+
 /* -----------------------------
    DATABASE CONFIGURATION
 ------------------------------*/
@@ -14,7 +39,7 @@ if (is_file($localConfigPath)) {
 }
 
 // Support postgresql:// or postgres:// (Supabase) as well as mysql:// (Railway / local)
-$databaseUrl = getenv('DATABASE_URL') ?: getenv('MYSQL_URL') ?: '';
+$databaseUrl = getenv('DATABASE_URL') ?: getenv('POSTGRES_URL') ?: getenv('MYSQL_URL') ?: '';
 $databaseConfig = [];
 $dbDriver = 'mysql'; // default
 
@@ -53,7 +78,9 @@ define('DB_PASS',   $localConfig['db_pass'] ?? $databaseConfig['pass'] ?? getenv
    APP CONFIGURATION
 ------------------------------*/
 define('APP_NAME', 'Univ E-Learning');
-define('BASE_URL', $localConfig['base_url'] ?? getenv('BASE_URL') ?: 'http://localhost/univ_elearning/');
+$vercelHost = getenv('VERCEL_PROJECT_PRODUCTION_URL') ?: getenv('VERCEL_URL') ?: '';
+$defaultBaseUrl = $vercelHost !== '' ? 'https://' . $vercelHost . '/' : 'http://localhost/univ_elearning/';
+define('BASE_URL', $localConfig['base_url'] ?? getenv('BASE_URL') ?: $defaultBaseUrl);
 
 $mailFrom = $localConfig['mail_from'] ?? '';
 if ($mailFrom === '') $mailFrom = getenv('MAIL_FROM') ?: 'no-reply@univ-elearning.local';
@@ -85,31 +112,82 @@ define('SMTP_PASSWORD', $smtpPassword);
 define('SMTP_SECURE', strtolower($smtpSecure));
 define('PLATFORM_FEEDBACK_EMAIL', $localConfig['platform_feedback_email'] ?? getenv('PLATFORM_FEEDBACK_EMAIL') ?: 'univelearning01@gmail.com');
 
+$isVercelRuntime = getenv('VERCEL') === '1' || getenv('VERCEL_URL') !== false || getenv('VERCEL_PROJECT_PRODUCTION_URL') !== false;
+define('IS_LOCAL_DEV', !$isVercelRuntime && in_array($_SERVER['SERVER_NAME'] ?? 'localhost', ['localhost', '127.0.0.1', '::1'], true));
+
 /* -----------------------------
-   START SESSION (SAFE)
+   START SESSION (STATELESS FOR VERCEL)
 ------------------------------*/
 if (session_status() === PHP_SESSION_NONE) {
+    if ($isVercelRuntime) {
+        $sessionSecret = getenv('APP_SECRET') ?: getenv('DATABASE_URL') ?: 'univ_elearning_secret_key_2026';
+        $cookieHandler = new CookieSessionHandler($sessionSecret);
+        session_set_save_handler($cookieHandler, true);
+    } else {
+        $baseUrlParts = parse_url(BASE_URL);
+        $basePath = $baseUrlParts['path'] ?? '/';
+        $cookiePath = rtrim($basePath, '/');
+        $cookiePath = $cookiePath === '' ? '/' : $cookiePath . '/';
+        session_set_cookie_params([
+            'lifetime' => 0,
+            'path' => $cookiePath,
+            'secure' => false,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+    }
     session_start();
 }
 
 /* -----------------------------
    PDO DATABASE CONNECTION
 ------------------------------*/
-try {
-    if (DB_DRIVER === 'pgsql') {
-        // PostgreSQL (Supabase) — require SSL
-        $dsn = "pgsql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";sslmode=require";
+function createAppPdoConnection($driver, $host, $port, $name, $user, $pass) {
+    if ($driver === 'pgsql') {
+        $dsn = "pgsql:host=" . $host . ";port=" . $port . ";dbname=" . $name . ";sslmode=require";
+        $pdoOptions = [PDO::ATTR_EMULATE_PREPARES => true];
     } else {
-        // MySQL / MariaDB (local XAMPP, Railway, InfinityFree, …)
-        $dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=utf8mb4";
+        $dsn = "mysql:host=" . $host . ";port=" . $port . ";dbname=" . $name . ";charset=utf8mb4";
+        $pdoOptions = [];
     }
 
-    $pdo = new PDO($dsn, DB_USER, DB_PASS);
+    return new AppPDO($dsn, $user, $pass, $pdoOptions, $driver);
+}
+
+try {
+    $pdo = createAppPdoConnection(DB_DRIVER, DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASS);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
 } catch (PDOException $e) {
-    die("Database Connection Failed: " . $e->getMessage());
+    $canRetrySupabaseDirect = DB_DRIVER === 'pgsql'
+        && stripos(DB_HOST, 'pooler.supabase.com') !== false
+        && preg_match('/^postgres\.([a-z0-9]+)$/i', DB_USER, $matches);
+
+    if ($canRetrySupabaseDirect) {
+        $supabaseRef = strtolower($matches[1]);
+        $directHost = 'db.' . $supabaseRef . '.supabase.co';
+        try {
+            $pdo = createAppPdoConnection(DB_DRIVER, $directHost, '5432', DB_NAME, 'postgres', DB_PASS);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+        } catch (PDOException $fallbackException) {
+            $msg = "Database Connection Failed:\n";
+            $msg .= "• Primary connection attempt (" . DB_HOST . ":" . DB_PORT . ") failed: " . $e->getMessage() . "\n";
+            $msg .= "• Fallback connection attempt (" . $directHost . ":5432) failed: " . $fallbackException->getMessage() . "\n\n";
+            $msg .= "Troubleshooting Tips:\n";
+            $msg .= "1. Verify database credentials in .env or config/hosting.local.php.\n";
+            $msg .= "2. Note: Direct Supabase hostnames (db.<ref>.supabase.co) only support IPv6 unless an IPv4 add-on is active. Ensure you use the Supabase Connection Pooler hostname (e.g. aws-0-[region].pooler.supabase.com) on IPv4 networks.\n";
+            $msg .= "3. Confirm that your Supabase database project is active and not paused in the Supabase Dashboard.";
+            die($msg);
+        }
+    } else {
+        $msg = "Database Connection Failed: " . $e->getMessage() . "\n\n";
+        $msg .= "Troubleshooting Tips:\n";
+        $msg .= "1. Check DB_HOST, DB_PORT, DB_NAME, DB_USER, and DB_PASS in .env or config/hosting.local.php.\n";
+        $msg .= "2. For Supabase, check DATABASE_URL in .env or set environment variables in your deployment settings.";
+        die($msg);
+    }
 }
 
 
@@ -148,6 +226,19 @@ if (DB_DRIVER !== 'pgsql') {
             INDEX idx_email_verification_expires (ExpiresAt),
             FOREIGN KEY (UserID) REFERENCES users(UserID) ON DELETE CASCADE
         ) ENGINE=InnoDB;",
+        "CREATE TABLE IF NOT EXISTS messages (
+            MessageID INT AUTO_INCREMENT PRIMARY KEY,
+            SenderID INT NOT NULL,
+            ReceiverID INT NOT NULL,
+            MessageText TEXT NOT NULL,
+            SentAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            IsRead TINYINT(1) NOT NULL DEFAULT 0,
+            INDEX idx_messages_sender_receiver (SenderID, ReceiverID),
+            INDEX idx_messages_receiver_read (ReceiverID, IsRead),
+            INDEX idx_messages_sent_at (SentAt),
+            FOREIGN KEY (SenderID) REFERENCES users(UserID) ON DELETE CASCADE,
+            FOREIGN KEY (ReceiverID) REFERENCES users(UserID) ON DELETE CASCADE
+        ) ENGINE=InnoDB;",
     ];
 
     foreach ($schemaUpdates as $schemaUpdate) {
@@ -160,17 +251,18 @@ if (DB_DRIVER !== 'pgsql') {
 }
 
 
-// Schema maintenance — uses information_schema so it works on both MySQL and PostgreSQL
+// Schema maintenance - uses information_schema so it works on both MySQL and PostgreSQL
 try {
     $colCheck = $pdo->prepare(
         "SELECT COUNT(*) FROM information_schema.columns
           WHERE table_name = 'users' AND column_name = :col"
     );
-    $colCheck->execute([':col' => 'EmailVerifiedAt']);
+    $columnName = DB_DRIVER === 'pgsql' ? 'emailverifiedat' : 'EmailVerifiedAt';
+    $colCheck->execute([':col' => $columnName]);
     if ((int)$colCheck->fetchColumn() === 0) {
         if (DB_DRIVER === 'pgsql') {
-            $pdo->exec('ALTER TABLE users ADD COLUMN "EmailVerifiedAt" TIMESTAMP NULL DEFAULT NULL');
-            $pdo->exec('UPDATE users SET "EmailVerifiedAt" = NOW() WHERE "EmailVerifiedAt" IS NULL');
+            $pdo->exec('ALTER TABLE users ADD COLUMN emailverifiedat TIMESTAMP NULL DEFAULT NULL');
+            $pdo->exec('UPDATE users SET emailverifiedat = NOW() WHERE emailverifiedat IS NULL');
         } else {
             $pdo->exec("ALTER TABLE users ADD COLUMN EmailVerifiedAt DATETIME NULL DEFAULT NULL AFTER Status");
             $pdo->exec("UPDATE users SET EmailVerifiedAt = NOW() WHERE EmailVerifiedAt IS NULL");
@@ -185,10 +277,11 @@ try {
         "SELECT COUNT(*) FROM information_schema.columns
           WHERE table_name = 'users' AND column_name = :col"
     );
-    $colCheck->execute([':col' => 'LastActiveAt']);
+    $columnName = DB_DRIVER === 'pgsql' ? 'lastactiveat' : 'LastActiveAt';
+    $colCheck->execute([':col' => $columnName]);
     if ((int)$colCheck->fetchColumn() === 0) {
         if (DB_DRIVER === 'pgsql') {
-            $pdo->exec('ALTER TABLE users ADD COLUMN "LastActiveAt" TIMESTAMP NULL DEFAULT NULL');
+            $pdo->exec('ALTER TABLE users ADD COLUMN lastactiveat TIMESTAMP NULL DEFAULT NULL');
         } else {
             $pdo->exec("ALTER TABLE users ADD COLUMN LastActiveAt DATETIME NULL DEFAULT NULL AFTER CreatedAt");
         }
@@ -202,11 +295,24 @@ try {
 ------------------------------*/
 
 function redirect($url) {
+    if (strpos($url, 'page=login') !== false) {
+        $currentPage = $_GET['page'] ?? '';
+        if (!empty($currentPage) && $currentPage !== 'login' && $currentPage !== 'logout') {
+            $queryString = $_SERVER['QUERY_STRING'] ?? '';
+            $_SESSION['return_to'] = $queryString ? 'index.php?' . $queryString : 'index.php?page=' . $currentPage;
+        }
+    }
+
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+
     // Allow both relative and absolute URLs
-    if (strpos($url, 'http') === 0) {
+    if (strpos($url, 'http://') === 0 || strpos($url, 'https://') === 0) {
         header("Location: " . $url);
     } else {
-        header("Location: " . BASE_URL . $url);
+        $target = ltrim($url, '/');
+        header("Location: " . $target);
     }
     exit();
 }
@@ -216,7 +322,7 @@ function isLoggedIn() {
 }
 
 function hasRole($role) {
-    return isset($_SESSION['user_type']) && $_SESSION['user_type'] === $role;
+    return isset($_SESSION['user_type']) && strcasecmp($_SESSION['user_type'], $role) === 0;
 }
 
 function requireLogin() {

@@ -15,7 +15,7 @@
     <!-- Animate.css -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="public/css/style.css">
+    <link rel="stylesheet" href="public/css/style.css?v=11">
     <!-- PWA Support -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#c5a059">
@@ -80,8 +80,11 @@
                         </div>
                         
                         <div class="form-floating mb-4 position-relative">
-                            <input type="password" name="password" class="form-control" id="passwordInput" placeholder="Password" required>
+                            <input type="password" name="password" class="form-control pe-5" id="passwordInput" placeholder="Password" required>
                             <label for="passwordInput"><i class="bi bi-lock me-2 text-muted"></i>Password</label>
+                            <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-2 text-muted" id="togglePassword" aria-label="Show password" aria-pressed="false">
+                                <i class="bi bi-eye" aria-hidden="true"></i>
+                            </button>
                             <div class="invalid-feedback">Password is required.</div>
                         </div>
 
@@ -108,6 +111,6 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="public/js/main.js"></script>
+    <script src="public/js/main.js?v=12"></script>
 </body>
 </html>

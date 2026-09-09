@@ -6,6 +6,10 @@
       "use": "vercel-php@0.7.1"
     },
     {
+      "src": "deploy_setup.php",
+      "use": "vercel-php@0.7.1"
+    },
+    {
       "src": "feedback.php",
       "use": "vercel-php@0.7.1"
     },
@@ -14,7 +18,23 @@
       "use": "vercel-php@0.7.1"
     },
     {
-      "src": "public/**",
+      "src": "public/course_material.php",
+      "use": "vercel-php@0.7.1"
+    },
+    {
+      "src": "public/course_pdf.php",
+      "use": "vercel-php@0.7.1"
+    },
+    {
+      "src": "public/css/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "public/js/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "public/images/**",
       "use": "@vercel/static"
     }
   ],
@@ -30,6 +50,26 @@
     {
       "src": "^/manifest\\.json$",
       "dest": "/manifest.json"
+    },
+    {
+      "src": "^/deploy_setup\\.php$",
+      "dest": "/deploy_setup.php"
+    },
+    {
+      "src": "^/public/course_material\\.php$",
+      "dest": "/public/course_material.php"
+    },
+    {
+      "src": "^/public/course_pdf\\.php$",
+      "dest": "/public/course_pdf.php"
+    },
+    {
+      "src": "^/course_material\\.php$",
+      "dest": "/public/course_material.php"
+    },
+    {
+      "src": "^/course_pdf\\.php$",
+      "dest": "/public/course_pdf.php"
     },
     {
       "src": "^/(.*)",
