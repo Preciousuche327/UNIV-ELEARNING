@@ -6,3 +6,5 @@ config/hosting.local.php
 .vercel-cli/
 .vercel/
 .tools/
+.vercel
+.env*

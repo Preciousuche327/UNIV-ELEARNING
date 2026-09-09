@@ -241,22 +241,20 @@ class QuizController {
 
         $stmt = $this->pdo->prepare("SELECT DISTINCT c.CourseID, c.CourseName
                                      FROM results r
-                                     JOIN courses c ON r.CourseID = c.CourseID
-                                     WHERE r.UserID = ?
+                                     LEFT JOIN courses c ON r.CourseID = c.CourseID
+                                     WHERE r.UserID = ? AND c.CourseID IS NOT NULL
                                      ORDER BY c.CourseName");
         $stmt->execute([$user_id]);
         $courses = $stmt->fetchAll();
 
-        $sql = "SELECT r.*, c.CourseName, q.QuizID, q.QuizName, q.QuizType, q.TotalMarks,
+        $sql = "SELECT r.*, COALESCE(c.CourseName, 'Unknown Course') AS CourseName, q.QuizID, q.QuizName, q.QuizType, q.TotalMarks,
                 (SELECT COUNT(*) FROM results r2 WHERE r2.UserID = r.UserID AND r2.QuizID = r.QuizID) AS AttemptCount,
                 (SELECT COUNT(*) FROM results r2
-                 JOIN quizzes q2 ON r2.QuizID = q2.QuizID
                  WHERE r2.UserID = r.UserID
                    AND r2.QuizID = r.QuizID
-                   AND q2.TotalMarks > 0
-                   AND ((r2.Score / q2.TotalMarks) * 100) < 50) AS FailedAttempts
+                   AND r2.Score < 50) AS FailedAttempts
                 FROM results r
-                JOIN courses c ON r.CourseID = c.CourseID
+                LEFT JOIN courses c ON r.CourseID = c.CourseID
                 JOIN quizzes q ON r.QuizID = q.QuizID
                 WHERE r.UserID = ?";
         $params = [$user_id];
